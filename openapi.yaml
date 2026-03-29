@@ -1,0 +1,1660 @@
+openapi: 3.0.3
+
+info:
+  title: ЗОВ Денег — REST API
+  description: |
+    REST API мобильного приложения для торговли ценными бумагами.
+
+    ## Аутентификация
+    Используется JWT (Bearer). Access token передаётся в заголовке `Authorization: Bearer <token>`.
+    Access token живёт **15 минут**, refresh token — **30 дней**.
+
+    ## Роли
+    | Роль  | Описание                    |
+    |-------|-----------------------------|
+    | user  | Аутентифицированный инвестор |
+    | admin | Администратор системы        |
+
+    Все эндпоинты, кроме `/auth/register`, `/auth/login` и `/auth/token/refresh`, требуют авторизации.
+    Права admin дают доступ к операциям над любым пользователем.
+
+    ## Коды ошибок
+    Все ошибки возвращаются в формате `{ code, message, details? }`.
+    Полный список кодов — в описании каждого эндпоинта.
+  version: 1.0.0
+  contact:
+    name: ЗОВ Денег Team
+    email: api@zovdengi.ru
+
+servers:
+  - url: https://api.zovdengi.ru/v1
+    description: Production
+
+tags:
+  - name: auth
+    description: Аутентификация и управление сессией
+  - name: users
+    description: Профиль пользователя
+  - name: securities
+    description: Ценные бумаги, котировки, история цен, стакан
+  - name: portfolio
+    description: Портфель пользователя
+  - name: orders
+    description: Торговые заявки (покупка / продажа)
+  - name: transactions
+    description: История операций
+  - name: balance
+    description: Брокерский счёт и баланс
+  - name: admin
+    description: Операции, доступные только пользователям с ролью admin
+
+security:
+  - BearerAuth: []
+
+# ─────────────────────────────────────────────────────────────────────────────
+# COMPONENTS
+# ─────────────────────────────────────────────────────────────────────────────
+components:
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token, получается через /auth/login или /auth/token/refresh
+
+  # ── Schemas ────────────────────────────────────────────────────────────────
+  schemas:
+
+    # ── Общие ──────────────────────────────────────────────────────────────
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Машиночитаемый код ошибки
+          example: INVALID_PIN
+        message:
+          type: string
+          description: Человекочитаемое описание
+          example: Неверный PIN-код
+        details:
+          type: object
+          additionalProperties: true
+          description: Дополнительные данные (необязательно)
+
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            fields:
+              type: array
+              description: Список полей с ошибками валидации
+              items:
+                type: object
+                required: [field, message]
+                properties:
+                  field:
+                    type: string
+                    example: email
+                  message:
+                    type: string
+                    example: Некорректный формат email
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 20
+        totalItems:
+          type: integer
+          example: 142
+        totalPages:
+          type: integer
+          example: 8
+
+    # ── Пользователи ───────────────────────────────────────────────────────
+    UserRole:
+      type: string
+      enum: [user, admin]
+      description: Роль пользователя в системе
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        firstName:
+          type: string
+          example: Иван
+        lastName:
+          type: string
+          example: Иванов
+        email:
+          type: string
+          format: email
+          example: ivan@example.com
+        phone:
+          type: string
+          example: "+79001234567"
+        role:
+          $ref: '#/components/schemas/UserRole'
+        isBlocked:
+          type: boolean
+          example: false
+        createdAt:
+          type: integer
+          description: Unix timestamp (секунды с 01.01.1970 UTC)
+          example: 1731571200
+        updatedAt:
+          type: integer
+          description: Unix timestamp (секунды с 01.01.1970 UTC)
+          example: 1731571200
+
+    # ── Токены ─────────────────────────────────────────────────────────────
+    Tokens:
+      type: object
+      description: |
+        Access и refresh токены. На Android клиенте должны храниться
+        исключительно через CredentialManager (android.security.keystore),
+        НЕ в SharedPreferences или файловой системе.
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token (TTL 15 мин)
+        refreshToken:
+          type: string
+          description: Refresh token (TTL 30 дней)
+        expiresIn:
+          type: integer
+          description: Время жизни access token в секундах
+          example: 900
+
+    # ── Ценные бумаги ──────────────────────────────────────────────────────
+    SecurityType:
+      type: string
+      enum: [stock, bond, etf]
+      description: |
+        Тип ценной бумаги:
+        - `stock` — акция
+        - `bond` — облигация
+        - `etf` — ETF (биржевой фонд)
+
+    ChartPeriod:
+      type: string
+      enum: [1D, 1W, 1M, 1Y]
+      description: |
+        Период отображения графика:
+        - `1D` — 1 день (свечи по 5 минут)
+        - `1W` — 1 неделя (свечи по 1 часу)
+        - `1M` — 1 месяц (свечи по 1 дню)
+        - `1Y` — 1 год (свечи по 1 дню)
+
+    Exchange:
+      type: string
+      enum:
+        - MOEX
+        - SPB
+      description: |
+        Торговая площадка:
+        - `MOEX` — Московская биржа
+        - `SPB` — СПБ Биржа
+
+    SecuritySector:
+      type: string
+      enum:
+        - Финансы
+        - Энергетика
+        - Металлургия
+        - Телекоммуникации
+        - Потребительский сектор
+        - Информационные технологии
+        - Транспорт
+        - Химическая промышленность
+        - Строительство
+        - Другое
+      description: Сектор экономики ценной бумаги
+
+    Security:
+      type: object
+      properties:
+        ticker:
+          type: string
+          example: SBER
+        name:
+          type: string
+          example: Сбербанк
+        description:
+          type: string
+          nullable: true
+          description: Краткое описание компании
+          example: Крупнейший банк России и Восточной Европы
+        type:
+          $ref: '#/components/schemas/SecurityType'
+        exchange:
+          $ref: '#/components/schemas/Exchange'
+        sector:
+          $ref: '#/components/schemas/SecuritySector'
+        lotSize:
+          type: integer
+          description: Размер лота в штуках
+          example: 10
+        currency:
+          type: string
+          example: RUB
+        lastPrice:
+          type: number
+          format: double
+          example: 298.45
+        priceChange:
+          type: number
+          format: double
+          description: Изменение цены за торговый день в рублях
+          example: 13.12
+        priceChangePct:
+          type: number
+          format: double
+          description: Изменение цены за торговый день в процентах
+          example: 4.6
+    PricePoint:
+      type: object
+      description: Точка на линейном графике цены
+      properties:
+        timestamp:
+          type: integer
+          description: Unix timestamp (секунды с 01.01.1970 UTC)
+          example: 1731571200
+        price:
+          type: number
+          format: double
+          description: Цена бумаги в момент времени
+          example: 298.45
+
+    OrderBookLevel:
+      type: object
+      properties:
+        price:
+          type: number
+          format: double
+          example: 299.20
+        quantity:
+          type: integer
+          description: Количество в штуках
+          example: 500
+
+    OrderBook:
+      type: object
+      properties:
+        ticker:
+          type: string
+          example: SBER
+        timestamp:
+          type: integer
+          description: Unix timestamp (секунды с 01.01.1970 UTC)
+          example: 1731571200
+        asks:
+          type: array
+          description: Заявки на продажу — от наименьшей цены к наибольшей
+          items:
+            $ref: '#/components/schemas/OrderBookLevel'
+        bids:
+          type: array
+          description: Заявки на покупку — от наибольшей цены к наименьшей
+          items:
+            $ref: '#/components/schemas/OrderBookLevel'
+        spread:
+          type: number
+          format: double
+          description: Спред между лучшим Ask и лучшим Bid
+          example: 0.80
+
+    # ── Портфель ───────────────────────────────────────────────────────────
+    PortfolioItem:
+      type: object
+      properties:
+        ticker:
+          type: string
+          example: SBER
+        security:
+          $ref: '#/components/schemas/Security'
+        quantity:
+          type: integer
+          description: Количество бумаг в портфеле
+          example: 10
+        averagePrice:
+          type: number
+          format: double
+          description: Средняя цена покупки
+          example: 285.00
+        currentPrice:
+          type: number
+          format: double
+          example: 298.45
+        currentValue:
+          type: number
+          format: double
+          description: Текущая стоимость позиции
+          example: 2984.50
+        profitLoss:
+          type: number
+          format: double
+          description: Прибыль / убыток в рублях
+          example: 134.50
+        profitLossPct:
+          type: number
+          format: double
+          description: Прибыль / убыток в процентах
+          example: 4.72
+
+    Portfolio:
+      type: object
+      properties:
+        totalValue:
+          type: number
+          format: double
+          description: Общая стоимость портфеля (ценные бумаги + кэш)
+          example: 128450.00
+        securitiesValue:
+          type: number
+          format: double
+          description: Стоимость ценных бумаг
+          example: 83130.00
+        cashBalance:
+          type: number
+          format: double
+          description: Свободные денежные средства
+          example: 45320.00
+        dailyChange:
+          type: number
+          format: double
+          description: Изменение стоимости за день в рублях
+          example: 1342.00
+        dailyChangePct:
+          type: number
+          format: double
+          example: 1.06
+        totalProfitLoss:
+          type: number
+          format: double
+          description: Совокупный P&L с момента покупки
+          example: 4210.50
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PortfolioItem'
+
+    # ── Заявки ─────────────────────────────────────────────────────────────
+    OrderType:
+      type: string
+      enum: [market, limit]
+      description: |
+        - `market` — рыночная заявка, исполняется по лучшей доступной цене
+        - `limit` — лимитная заявка, исполняется по указанной цене или лучше
+
+    OrderSide:
+      type: string
+      enum: [buy, sell]
+      description: Направление сделки
+
+    OrderStatus:
+      type: string
+      enum: [pending, executed, partial, cancelled, rejected]
+      description: |
+        - `pending` — ожидает исполнения
+        - `executed` — исполнена полностью
+        - `partial` — исполнена частично
+        - `cancelled` — отменена пользователем
+        - `rejected` — отклонена системой
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ticker:
+          type: string
+          example: SBER
+        type:
+          $ref: '#/components/schemas/OrderType'
+        side:
+          $ref: '#/components/schemas/OrderSide'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        quantity:
+          type: integer
+          description: Запрошенное количество
+          example: 10
+        requestedPrice:
+          type: number
+          format: double
+          nullable: true
+          description: Цена для лимитной заявки; null для рыночной
+          example: 295.00
+        executedPrice:
+          type: number
+          format: double
+          nullable: true
+          description: Фактическая цена исполнения
+          example: 298.45
+        executedQuantity:
+          type: integer
+          nullable: true
+          description: Фактически исполненное количество
+          example: 10
+        totalAmount:
+          type: number
+          format: double
+          nullable: true
+          description: Итоговая сумма сделки
+          example: 2984.50
+        commission:
+          type: number
+          format: double
+          nullable: true
+          description: Комиссия брокера
+          example: 8.95
+        createdAt:
+          type: integer
+          description: Unix timestamp (секунды с 01.01.1970 UTC)
+          example: 1731571200
+        updatedAt:
+          type: integer
+          description: Unix timestamp (секунды с 01.01.1970 UTC)
+          example: 1731571200
+
+    CreateOrderRequest:
+      type: object
+      required: [ticker, type, side, quantity]
+      properties:
+        ticker:
+          type: string
+          example: SBER
+        type:
+          $ref: '#/components/schemas/OrderType'
+        side:
+          $ref: '#/components/schemas/OrderSide'
+        quantity:
+          type: integer
+          minimum: 1
+          description: Должно быть кратно размеру лота
+          example: 10
+        price:
+          type: number
+          format: double
+          description: Обязательно для type=limit
+          example: 295.00
+
+    # ── Транзакции ─────────────────────────────────────────────────────────
+    TransactionType:
+      type: string
+      enum: [buy, sell, deposit, withdrawal, dividend]
+      description: |
+        - `buy` — покупка бумаги
+        - `sell` — продажа бумаги
+        - `deposit` — пополнение счёта
+        - `withdrawal` — вывод средств
+        - `dividend` — зачисление дивидендов
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        ticker:
+          type: string
+          nullable: true
+          example: SBER
+        securityName:
+          type: string
+          nullable: true
+          example: Сбербанк
+        quantity:
+          type: integer
+          nullable: true
+          example: 10
+        price:
+          type: number
+          format: double
+          nullable: true
+          example: 298.45
+        amount:
+          type: number
+          format: double
+          description: Сумма операции (положительная — приход, отрицательная — расход)
+          example: -2984.50
+        commission:
+          type: number
+          format: double
+          nullable: true
+          example: 8.95
+        orderId:
+          type: string
+          format: uuid
+          nullable: true
+        createdAt:
+          type: integer
+          description: Unix timestamp (секунды с 01.01.1970 UTC)
+          example: 1731571200
+
+    # ── Баланс ─────────────────────────────────────────────────────────────
+    Balance:
+      type: object
+      properties:
+        available:
+          type: number
+          format: double
+          description: Доступно для торговли
+          example: 45320.00
+        total:
+          type: number
+          format: double
+          description: Общий баланс включая заблокированные средства
+          example: 47800.00
+        blocked:
+          type: number
+          format: double
+          description: Заблокировано в активных лимитных заявках
+          example: 2480.00
+        currency:
+          type: string
+          example: RUB
+
+  # ── Reusable responses ─────────────────────────────────────────────────────
+  responses:
+    BadRequest:
+      description: Некорректный запрос / ошибка валидации
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            code: VALIDATION_ERROR
+            message: Ошибка валидации входных данных
+            fields:
+              - field: email
+                message: Некорректный формат email
+
+    Unauthorized:
+      description: Не аутентифицирован — отсутствует или недействителен access token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: UNAUTHORIZED
+            message: Требуется аутентификация
+
+    Forbidden:
+      description: Нет прав доступа к ресурсу
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: FORBIDDEN
+            message: Недостаточно прав для выполнения операции
+
+    NotFound:
+      description: Ресурс не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: NOT_FOUND
+            message: Ресурс не найден
+
+    Conflict:
+      description: Конфликт — ресурс уже существует
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    UnprocessableEntity:
+      description: Бизнес-логика не позволяет выполнить операцию
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalServerError:
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: INTERNAL_ERROR
+            message: Внутренняя ошибка сервера
+
+  # ── Reusable parameters ────────────────────────────────────────────────────
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Номер страницы (начиная с 1)
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+
+    PageSizeParam:
+      name: pageSize
+      in: query
+      description: Количество элементов на странице
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+
+    TickerPath:
+      name: ticker
+      in: path
+      required: true
+      description: Тикер ценной бумаги
+      schema:
+        type: string
+        example: SBER
+
+    UserIdPath:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    OrderIdPath:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    TransactionIdPath:
+      name: transactionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PATHS
+# ─────────────────────────────────────────────────────────────────────────────
+paths:
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # AUTH
+  # ══════════════════════════════════════════════════════════════════════════
+
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Регистрация нового пользователя
+      description: |
+        Создаёт аккаунт и возвращает токены для немедленного входа.
+        Клиент сохраняет токены в Android CredentialManager.
+        PIN и биометрия настраиваются локально на устройстве — на сервер не передаются.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, email, phone, password]
+              properties:
+                firstName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                  example: Иван
+                lastName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                  example: Иванов
+                email:
+                  type: string
+                  format: email
+                  example: ivan@example.com
+                phone:
+                  type: string
+                  pattern: '^\+7\d{10}$'
+                  example: "+79001234567"
+                password:
+                  type: string
+                  minLength: 8
+                  description: Пароль для восстановления доступа при переустановке приложения
+      responses:
+        '201':
+          description: Пользователь успешно зарегистрирован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+                  tokens:
+                    $ref: '#/components/schemas/Tokens'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+              examples:
+                validation:
+                  summary: Ошибка валидации
+                  value:
+                    code: VALIDATION_ERROR
+                    message: Ошибка валидации входных данных
+                    fields:
+                      - field: phone
+                        message: Некорректный формат номера телефона
+        '409':
+          description: Пользователь с таким email или телефоном уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                email_taken:
+                  value:
+                    code: EMAIL_ALREADY_EXISTS
+                    message: Пользователь с таким email уже зарегистрирован
+                phone_taken:
+                  value:
+                    code: PHONE_ALREADY_EXISTS
+                    message: Пользователь с таким номером телефона уже зарегистрирован
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Повторный вход (восстановление сессии)
+      description: |
+        Используется при переустановке приложения или смене устройства,
+        когда локально сохранённые токены недоступны.
+        PIN и биометрия — локальные механизмы блокировки приложения,
+        на сервер не передаются и на сервере не хранятся.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, password]
+              properties:
+                phone:
+                  type: string
+                  pattern: '^\+7\d{10}$'
+                  example: "+79001234567"
+                password:
+                  type: string
+                  description: Пароль, установленный при регистрации
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+                  tokens:
+                    $ref: '#/components/schemas/Tokens'
+        '401':
+          description: Неверный пароль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_CREDENTIALS
+                message: Неверный логин или пароль
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: USER_NOT_FOUND
+                message: Пользователь не найден
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/token/refresh:
+    post:
+      tags: [auth]
+      summary: Обновление access token
+      description: |
+        Выдаёт новую пару access + refresh токенов.
+        Использованный refresh token сразу инвалидируется (rotation) —
+        повторное использование того же токена вернёт 401.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Токены обновлены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tokens'
+        '401':
+          description: Refresh token недействителен, истёк или уже использован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                expired:
+                  value:
+                    code: REFRESH_TOKEN_EXPIRED
+                    message: Refresh token истёк, необходима повторная авторизация
+                invalid:
+                  value:
+                    code: INVALID_REFRESH_TOKEN
+                    message: Refresh token недействителен
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # USERS
+  # ══════════════════════════════════════════════════════════════════════════
+
+  /users/me:
+    get:
+      tags: [users]
+      summary: Профиль текущего пользователя
+      description: Возвращает профиль пользователя, чей access token передан в запросе.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags: [users]
+      summary: Обновить профиль
+      description: Обновляет личные данные текущего пользователя.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                lastName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                  pattern: '^\+7\d{10}$'
+      responses:
+        '200':
+          description: Профиль обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Email или телефон уже занят другим пользователем
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: EMAIL_ALREADY_EXISTS
+                message: Этот email уже используется другим аккаунтом
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users:
+    get:
+      tags: [users, admin]
+      summary: Список пользователей (только admin)
+      description: |
+        Возвращает постраничный список всех пользователей системы.
+        Доступен только пользователям с ролью admin.
+        Поддерживает фильтрацию по роли, статусу блокировки и текстовый поиск.
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: search
+          in: query
+          description: Поиск по имени, фамилии, email или телефону
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserRole'
+        - name: isBlocked
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserProfile'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserIdPath'
+    get:
+      tags: [users, admin]
+      summary: Пользователь по ID (только admin)
+      description: Возвращает полный профиль любого пользователя по его UUID. Доступен только admin.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [users, admin]
+      summary: Редактировать пользователя
+      description: |
+        Обычный пользователь может редактировать только себя.
+        Admin может редактировать любого пользователя, включая смену роли и статуса блокировки.
+        Права проверяются на сервере.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                lastName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                  pattern: '^\+7\d{10}$'
+                role:
+                  $ref: '#/components/schemas/UserRole'
+                  description: Только admin может менять роль
+                isBlocked:
+                  type: boolean
+                  description: Только admin может блокировать / разблокировать
+      responses:
+        '200':
+          description: Данные обновлены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Email или телефон уже занят другим пользователем
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: EMAIL_ALREADY_EXISTS
+                message: Пользователь с таким email уже зарегистрирован
+
+    delete:
+      tags: [users, admin]
+      summary: Удалить пользователя (только admin)
+      description: |
+        Удаляет аккаунт пользователя из системы. Доступен только admin.
+        Нельзя удалить собственный аккаунт и пользователя с открытыми позициями или активными заявками.
+      responses:
+        '204':
+          description: Пользователь удалён
+        '400':
+          description: Нельзя удалить самого себя или пользователя с активными позициями
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                self_delete:
+                  value:
+                    code: CANNOT_DELETE_SELF
+                    message: Нельзя удалить собственный аккаунт
+                has_positions:
+                  value:
+                    code: USER_HAS_ACTIVE_POSITIONS
+                    message: Нельзя удалить пользователя с открытыми позициями
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # SECURITIES
+  # ══════════════════════════════════════════════════════════════════════════
+
+  /securities:
+    get:
+      tags: [securities]
+      summary: Поиск и список ценных бумаг
+      description: |
+        Возвращает постраничный список бумаг с последними котировками.
+        Поддерживает поиск по тикеру и названию, фильтрацию по типу, бирже и сектору.
+      parameters:
+        - name: q
+          in: query
+          description: Поиск по тикеру или названию компании
+          schema:
+            type: string
+            example: Сбер
+        - name: type
+          in: query
+          description: Фильтр по типу бумаги. Без параметра — возвращаются все типы
+          schema:
+            $ref: '#/components/schemas/SecurityType'
+        - name: exchange
+          in: query
+          schema:
+            $ref: '#/components/schemas/Exchange'
+        - name: sector
+          in: query
+          schema:
+            $ref: '#/components/schemas/SecuritySector'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Security'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /securities/{ticker}:
+    parameters:
+      - $ref: '#/components/parameters/TickerPath'
+    get:
+      tags: [securities]
+      summary: Детальная информация по бумаге
+      description: Возвращает полные данные по одной бумаге, включая последнюю цену и изменение за день.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Security'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /securities/{ticker}/price/history:
+    parameters:
+      - $ref: '#/components/parameters/TickerPath'
+    get:
+      tags: [securities]
+      summary: История цен для построения графика
+      description: |
+        Возвращает массив точек (timestamp, price) за выбранный период для построения линейного графика.
+        Частота точек определяется сервером автоматически: 1D → каждые 5 мин, 1W → каждый час, 1M / 1Y → каждый день.
+      parameters:
+        - name: period
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChartPeriod'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticker:
+                    type: string
+                    example: SBER
+                  period:
+                    $ref: '#/components/schemas/ChartPeriod'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PricePoint'
+              example:
+                ticker: SBER
+                period: 1D
+                data:
+                  - timestamp: 1731571200
+                    price: 286.30
+                  - timestamp: 1731571500
+                    price: 289.20
+                  - timestamp: 1731571800
+                    price: 298.45
+        '400':
+          description: Некорректный период
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_PERIOD
+                message: Недопустимое значение period
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /securities/{ticker}/orderbook:
+    parameters:
+      - $ref: '#/components/parameters/TickerPath'
+    get:
+      tags: [securities]
+      summary: Стакан заявок
+      description: |
+        Возвращает текущий стакан заявок по бумаге: списки лучших цен на покупку (bids)
+        и продажу (asks). Параметр depth задаёт глубину — количество уровней с каждой стороны.
+      parameters:
+        - name: depth
+          in: query
+          description: Глубина стакана — количество уровней с каждой стороны (asks и bids)
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 50
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderBook'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # PORTFOLIO
+  # ══════════════════════════════════════════════════════════════════════════
+
+  /portfolio:
+    get:
+      tags: [portfolio]
+      summary: Полный портфель текущего пользователя
+      description: |
+        Возвращает список всех позиций пользователя с текущей стоимостью,
+        средней ценой покупки и финансовым результатом по каждой бумаге.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portfolio'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /portfolio/summary:
+    get:
+      tags: [portfolio]
+      summary: Сводка по портфелю для главного экрана
+      description: |
+        Данные для плашки на главном экране: общая стоимость портфеля,
+        суммарный прирост в рублях и процентах.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalValue:
+                    type: number
+                    format: double
+                    description: Общая стоимость портфеля в рублях
+                    example: 128400.00
+                  profitLoss:
+                    type: number
+                    format: double
+                    description: Суммарный прирост в рублях (может быть отрицательным)
+                    example: 2640.00
+                  profitLossPct:
+                    type: number
+                    format: double
+                    description: Суммарный прирост в процентах (может быть отрицательным)
+                    example: 2.1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # ORDERS
+  # ══════════════════════════════════════════════════════════════════════════
+
+  /orders:
+    get:
+      tags: [orders]
+      summary: Список заявок пользователя
+      description: |
+        Возвращает постраничную историю торговых заявок текущего пользователя.
+        Поддерживает фильтрацию по статусу, направлению (buy/sell), тикеру и диапазону дат.
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+        - name: side
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderSide'
+        - name: ticker
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: integer
+            description: Unix timestamp (секунды)
+        - name: to
+          in: query
+          schema:
+            type: integer
+            description: Unix timestamp (секунды)
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [orders]
+      summary: Создать торговую заявку (купить / продать)
+      description: |
+        Создаёт заявку на покупку или продажу бумаги.
+        Рыночная заявка исполняется мгновенно по текущей цене — деньги списываются сразу.
+        Лимитная заявка становится pending: нужная сумма блокируется на балансе до исполнения или отмены.
+        Количество должно быть кратно lotSize бумаги.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+            examples:
+              market_buy:
+                summary: Рыночная покупка 10 акций SBER
+                value:
+                  ticker: SBER
+                  type: market
+                  side: buy
+                  quantity: 10
+              limit_sell:
+                summary: Лимитная продажа по 305 ₽
+                value:
+                  ticker: SBER
+                  type: limit
+                  side: sell
+                  quantity: 10
+                  price: 305.00
+      responses:
+        '201':
+          description: Заявка принята
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Ошибка валидации или бизнес-ограничение
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                insufficient_funds:
+                  summary: Недостаточно средств
+                  value:
+                    code: INSUFFICIENT_FUNDS
+                    message: Недостаточно средств для совершения сделки
+                    details:
+                      required: 2984.50
+                      available: 1200.00
+                insufficient_securities:
+                  summary: Недостаточно бумаг для продажи
+                  value:
+                    code: INSUFFICIENT_SECURITIES
+                    message: Недостаточно бумаг в портфеле
+                    details:
+                      requested: 20
+                      available: 10
+                price_required:
+                  summary: Не указана цена для лимитной заявки
+                  value:
+                    code: PRICE_REQUIRED
+                    message: Для лимитной заявки необходимо указать цену
+                invalid_lot:
+                  summary: Количество не кратно лоту
+                  value:
+                    code: INVALID_LOT_SIZE
+                    message: Количество должно быть кратно размеру лота
+                    details:
+                      lotSize: 10
+                      requested: 7
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Бумага с таким тикером не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: SECURITY_NOT_FOUND
+                message: Бумага SBER не найдена
+        '422':
+          description: Рынок закрыт или бумага приостановлена к торгам
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                market_closed:
+                  value:
+                    code: MARKET_CLOSED
+                    message: Рынок закрыт. Торговая сессия завершена
+                trading_suspended:
+                  value:
+                    code: TRADING_SUSPENDED
+                    message: Торги по данной бумаге приостановлены
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /orders/{orderId}:
+    parameters:
+      - $ref: '#/components/parameters/OrderIdPath'
+    get:
+      tags: [orders]
+      summary: Детали заявки
+      description: Возвращает полную информацию по одной заявке, включая цену и количество исполнения.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Заявка принадлежит другому пользователю
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: Доступ к чужой заявке запрещён
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [orders]
+      summary: Отменить заявку
+      description: |
+        Отменяет лимитную заявку в статусе pending.
+        После отмены заблокированные средства возвращаются на доступный баланс.
+        Заявки в статусах executed, partial, cancelled, rejected отменить нельзя.
+      responses:
+        '204':
+          description: Заявка отменена
+        '400':
+          description: Заявку в текущем статусе нельзя отменить
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: ORDER_NOT_CANCELLABLE
+                message: Заявку в статусе «executed» нельзя отменить
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # TRANSACTIONS
+  # ══════════════════════════════════════════════════════════════════════════
+
+  /transactions:
+    get:
+      tags: [transactions]
+      summary: История транзакций пользователя
+      description: |
+        Возвращает постраничную историю всех денежных операций: покупки, продажи,
+        пополнения, выводы и дивиденды. Поддерживает фильтрацию по типу, тикеру и диапазону дат.
+      parameters:
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+        - name: ticker
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: integer
+            description: Unix timestamp (секунды)
+        - name: to
+          in: query
+          schema:
+            type: integer
+            description: Unix timestamp (секунды)
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /transactions/{transactionId}:
+    parameters:
+      - $ref: '#/components/parameters/TransactionIdPath'
+    get:
+      tags: [transactions]
+      summary: Детали транзакции
+      description: Возвращает полную информацию по одной транзакции, включая связанную заявку (orderId).
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # BALANCE
+  # ══════════════════════════════════════════════════════════════════════════
+
+  /balance:
+    get:
+      tags: [balance]
+      summary: Текущий баланс брокерского счёта
+      description: |
+        Возвращает три значения: доступный баланс (можно тратить на покупки),
+        заблокированный (резерв под активные лимитные заявки) и общий (сумма двух).
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /balance/deposit:
+    post:
+      tags: [balance]
+      summary: Пополнение счёта
+      description: |
+        Зачисляет указанную сумму на брокерский счёт пользователя.
+        После успешного пополнения возвращает обновлённый баланс.
+        Минимальная сумма — 1 рубль.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: number
+                  format: double
+                  minimum: 1
+                  example: 10000.00
+      responses:
+        '200':
+          description: Счёт пополнен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+        '400':
+          description: Некорректная сумма
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_AMOUNT
+                message: Сумма пополнения должна быть больше нуля
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
