@@ -275,7 +275,7 @@ style:
     active: false
   ForbiddenComment:
     active: true
-    autoCorrect: true
+    autoCorrect: false
     comments:
       - value: '.*'
     allowedPatterns: ''
