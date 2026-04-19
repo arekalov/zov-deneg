@@ -18,6 +18,7 @@
 | Технология | Назначение |
 |------------|------------|
 | **Jetpack Compose** | Декларативный UI. |
+| **Navigation for Compose** (`androidx.navigation:navigation-compose`) | Навигация между экранами: граф, **`NavHost`**, при необходимости **type-safe** маршруты (Kotlin DSL / сериализация — по мере внедрения в `libs.versions.toml`). |
 | **Material Design 3** (`androidx.compose.material3`) | Компоненты, тема, типографика и цвета в духе M3; выравнивание с макетами из Figma-плагина. |
 
 ---
@@ -56,7 +57,7 @@
 
 | Инструмент | Статус |
 |------------|--------|
-| **Detekt** | Линтер статического анализа для Kotlin. **Файл конфигурации и подключение к Gradle** будут добавлены позже; после появления — обязательный прогон перед merge по договорённости команды. |
+| **Detekt** | Линтер для Kotlin: плагин **`io.gitlab.arturbosch.detekt` 1.23.8**, конфиг **[`detekt.yml`](../detekt.yml)** (скопирован из учебного проекта lab1 и дополнен `ignoreAnnotated: Composable` для имён `@Composable`). Плагин и **`detekt-formatting`** подключены в **`:app`**; из корня Gradle доступна задача **`detekt`** (делегирует на `:app:detekt`). **`check`** в `:app` зависит от **`detekt`**. Отчёты: `app/build/reports/detekt/`. |
 
 При необходимости позже можно явно зафиксировать **ktlint** или форматирование через IDE — пока в стеке основной линтер **Detekt**.
 

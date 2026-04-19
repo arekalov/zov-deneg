@@ -1,6 +1,9 @@
+import io.gitlab.arturbosch.detekt.Detekt
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -40,6 +43,8 @@ android {
 }
 
 dependencies {
+    detektPlugins(libs.detekt.formatting)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -55,4 +60,27 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom(rootProject.layout.projectDirectory.file("detekt.yml"))
+}
+
+tasks.withType<Detekt>().configureEach {
+    jvmTarget = "11"
+    reports {
+        html.required.set(true)
+        html.outputLocation.set(file("build/reports/detekt/detekt.html"))
+        txt.required.set(true)
+        txt.outputLocation.set(file("build/reports/detekt/detekt.txt"))
+        xml.required.set(false)
+        sarif.required.set(false)
+        md.required.set(false)
+    }
+}
+
+tasks.named("check") {
+    dependsOn(tasks.named("detekt"))
 }

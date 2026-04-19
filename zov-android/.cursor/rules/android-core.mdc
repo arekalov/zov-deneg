@@ -11,12 +11,13 @@ alwaysApply: true
 
   `./gradlew detekt`
 
-- Если задача **`detekt`** ещё не подключена (Gradle сообщает, что задачи нет) — кратко напиши об этом в ответе и продолжай без ложного «успеха»; как только Detekt появится в `build.gradle`, **не завершай** правки без успешного прогона.
+- Конфиг линтера — **`detekt.yml`** в корне `zov-android/` (правила как в lab1; для Compose добавлено `ignoreAnnotated: Composable` у `FunctionNaming`).
+- **Не завершай** правки без успешного прогона `./gradlew detekt` (или `./gradlew :app:detekt`).
 - Исправляй замечания Detekt в том же заходе, если это разумно по объёму; не отключай правила без явной просьбы пользователя.
 
 ## Стиль кода
 
-- Пиши **чистый Kotlin** в духе [Kotlin style guide](https://kotlinlang.org/docs/coding-conventions.html) и рекомендаций **Android/Kotlin** ([developer.android.com](https://developer.android.com/kotlin/style-guide)); учитывай настройки **Detekt**, когда конфиг добавлен.
+- Пиши **чистый Kotlin** в духе [Kotlin style guide](https://kotlinlang.org/docs/coding-conventions.html) и рекомендаций **Android/Kotlin** ([developer.android.com](https://developer.android.com/kotlin/style-guide)); учитывай **`detekt.yml`** и `detekt-formatting`.
 - Именование, области видимости, null-safety — без «заглушек» и пустых `catch`.
 
 ## Архитектура
