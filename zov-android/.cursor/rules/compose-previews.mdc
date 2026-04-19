@@ -1,0 +1,37 @@
+---
+description: У каждого @Composable — превью в светлой и тёмной теме
+globs: app/src/main/java/**/*.kt
+alwaysApply: false
+---
+
+# Jetpack Compose — превью
+
+## Требование
+
+- Для **каждого публичного** `@Composable`, который рисует UI экрана или переиспользуемого блока (не мелкие `private` хелперы на 1–2 строки), добавляй **понятные `@Preview`**.
+- Минимум **два превью**: **светлая** и **тёмная** тема приложения (обёртка в корневой `Theme` / `MaterialTheme` проекта).
+
+## Пример
+
+```kotlin
+import androidx.compose.ui.tooling.preview.Preview
+import com.zovdeneg.app.ui.theme.ZovdenegandroidappTheme
+
+@Preview(name = "Light", showBackground = true)
+@Composable
+private fun MyScreenPreviewLight() {
+    ZovdenegandroidappTheme(darkTheme = false, dynamicColor = false) {
+        MyScreen(/* стаб-стейт или заглушки */)
+    }
+}
+
+@Preview(name = "Dark", showBackground = true)
+@Composable
+private fun MyScreenPreviewDark() {
+    ZovdenegandroidappTheme(darkTheme = true, dynamicColor = false) {
+        MyScreen(/* стаб-стейт или заглушки */)
+    }
+}
+```
+
+- Превью должны **собираться** (без обращения к реальной сети); для стейта используй фиктивные данные или фakes.
