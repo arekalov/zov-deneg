@@ -1,13 +1,19 @@
 package com.zovdeneg.app.ui.auth
 
 import androidx.lifecycle.ViewModel
+import com.zovdeneg.app.domain.auth.LocalAuthStorage
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
 
 private const val REGISTER_PIN_LENGTH = 4
 
-internal class ZovRegisterFlowViewModel : ViewModel() {
+@HiltViewModel
+internal class ZovRegisterFlowViewModel @Inject constructor(
+    private val localAuthStorage: LocalAuthStorage,
+) : ViewModel() {
     private val _draftPin = MutableStateFlow("")
     val draftPin: StateFlow<String> = _draftPin.asStateFlow()
 
@@ -54,6 +60,7 @@ internal class ZovRegisterFlowViewModel : ViewModel() {
             _draftPin.value = ""
             return false
         }
+        localAuthStorage.savePinFromPlain(_draftPin.value)
         _draftPin.value = ""
         _firstPin.value = ""
         _confirmPinMismatch.value = false

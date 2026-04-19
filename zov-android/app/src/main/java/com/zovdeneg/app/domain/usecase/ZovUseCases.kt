@@ -101,12 +101,6 @@ class ChangeAppPinUseCase @Inject constructor(
     suspend operator fun invoke(): Result<Unit> = userProfileRepository.changePin()
 }
 
-class LoginWithMockBackendUseCase @Inject constructor(
-    private val authRepository: AuthRepository,
-) {
-    suspend operator fun invoke(): Result<Unit> = authRepository.loginDemo()
-}
-
 class RegisterNewAccountUseCase @Inject constructor(
     private val authRepository: AuthRepository,
 ) {

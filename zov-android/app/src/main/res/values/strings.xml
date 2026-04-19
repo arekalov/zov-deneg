@@ -2,6 +2,23 @@
 <resources>
     <string name="app_name">zovdeneg-android-app</string>
 
+    <string name="nav_bottom_home">Главная</string>
+    <string name="nav_bottom_search">Поиск</string>
+    <string name="nav_bottom_history">История</string>
+
+    <string name="nav_top_home">Главная</string>
+    <string name="nav_top_search">Поиск бумаг</string>
+    <string name="nav_top_history">История операций</string>
+    <string name="nav_top_profile">Профиль и настройки</string>
+    <string name="nav_top_edit_profile">Редактирование профиля</string>
+    <string name="nav_top_change_pin">Смена PIN</string>
+    <string name="nav_top_deposit">Брокерский счёт</string>
+    <string name="nav_top_sign_up">Регистрация</string>
+    <string name="nav_top_detail_prefix">Детали · </string>
+    <string name="nav_top_buy_prefix">Покупка </string>
+
+    <string name="cd_nav_profile">Профиль</string>
+
     <string name="cd_fingerprint">Отпечаток пальца</string>
     <string name="cd_chevron">Открыть</string>
 
@@ -147,6 +164,14 @@
     <string name="balance_blocked">В резерве: %1$s</string>
     <string name="balance_total">Всего: %1$s</string>
     <string name="login_failed_network">Не удалось войти. Проверьте соединение</string>
+    <string name="login_wrong_pin">Неверный PIN</string>
+    <string name="login_register_first">Сначала зарегистрируйтесь и задайте PIN</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="auth_biometric_prompt_title">Вход по отпечатку</string>
+    <string name="auth_biometric_prompt_subtitle">Подтвердите личность</string>
+    <string name="biometric_hardware_unavailable">Биометрия недоступна на этом устройстве</string>
+    <string name="biometric_not_recognized">Не распознано. Повторите</string>
+    <string name="biometric_login_disabled">Включите вход по отпечатку в профиле или при регистрации</string>
     <string name="register_validation_error">Проверьте поля: телефон +7XXXXXXXXXX, пароль не короче 8 символов</string>
     <string name="register_network_error">Не удалось зарегистрироваться</string>
     <string name="field_password">Пароль</string>

@@ -1,23 +1,30 @@
 package com.zovdeneg.app
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.fragment.app.FragmentActivity
 import com.zovdeneg.app.navigation.ZovNavHost
 import com.zovdeneg.app.ui.theme.ZovAppTheme
+import com.zovdeneg.app.ui.theme.applyZovSystemBars
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        applyZovSystemBars()
         setContent {
             ZovAppTheme {
-                ZovNavHost(modifier = Modifier.fillMaxSize())
+                Surface(
+                    color = MaterialTheme.colorScheme.background,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    ZovNavHost(modifier = Modifier.fillMaxSize())
+                }
             }
         }
     }

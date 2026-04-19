@@ -2,6 +2,7 @@ package com.zovdeneg.app.ui.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zovdeneg.app.domain.auth.LocalAuthStorage
 import com.zovdeneg.app.domain.profile.UserProfile
 import com.zovdeneg.app.domain.usecase.LoadUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,13 +17,18 @@ data class ProfileUiState(
     val profile: UserProfile? = null,
     val isLoading: Boolean = true,
     val loadFailed: Boolean = false,
+    val biometricUnlockEnabled: Boolean = false,
 )
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val loadUserProfile: LoadUserProfileUseCase,
+    private val localAuthStorage: LocalAuthStorage,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(ProfileUiState())
+    private val _uiState =
+        MutableStateFlow(
+            ProfileUiState(biometricUnlockEnabled = localAuthStorage.isBiometricUnlockEnabled()),
+        )
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     init {
@@ -31,11 +37,34 @@ class ProfileViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            _uiState.update { ProfileUiState(isLoading = true, loadFailed = false) }
+            _uiState.update {
+                it.copy(isLoading = true, loadFailed = false, biometricUnlockEnabled = localAuthStorage.isBiometricUnlockEnabled())
+            }
             loadUserProfile().fold(
-                onSuccess = { p -> _uiState.update { ProfileUiState(profile = p, isLoading = false) } },
-                onFailure = { _uiState.update { ProfileUiState(isLoading = false, loadFailed = true) } },
+                onSuccess = { p ->
+                    _uiState.update {
+                        ProfileUiState(
+                            profile = p,
+                            isLoading = false,
+                            biometricUnlockEnabled = localAuthStorage.isBiometricUnlockEnabled(),
+                        )
+                    }
+                },
+                onFailure = {
+                    _uiState.update {
+                        ProfileUiState(
+                            isLoading = false,
+                            loadFailed = true,
+                            biometricUnlockEnabled = localAuthStorage.isBiometricUnlockEnabled(),
+                        )
+                    }
+                },
             )
         }
+    }
+
+    fun setBiometricUnlockEnabled(enabled: Boolean) {
+        localAuthStorage.setBiometricUnlockEnabled(enabled)
+        _uiState.update { it.copy(biometricUnlockEnabled = enabled) }
     }
 }

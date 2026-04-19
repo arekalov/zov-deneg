@@ -5,7 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -37,35 +39,10 @@ import com.zovdeneg.app.ui.screens.RegisterPinConfirmScreen
 import com.zovdeneg.app.ui.screens.RegisterPinScreen
 import com.zovdeneg.app.ui.screens.SearchTabScreen
 import com.zovdeneg.app.ui.screens.SecurityDetailScreen
+import com.zovdeneg.app.di.ZovLocalAuthEntryPoint
 import com.zovdeneg.app.ui.tabs.ZovHistoryTabViewModel
 import com.zovdeneg.app.ui.tabs.ZovSearchTabViewModel
-
-internal class ZovNavGraph private constructor() {
-    companion object {
-        const val BOTTOM_HOME = "Home"
-        const val BOTTOM_SEARCH = "Search"
-        const val BOTTOM_HISTORY = "History"
-
-        const val CD_BACK = "Back"
-        const val CD_PROFILE = "Profile"
-
-        const val TOP_HOME = "Home"
-        const val TOP_SEARCH = "Search securities"
-        const val TOP_HISTORY = "Transaction history"
-        const val TOP_PROFILE = "Profile and settings"
-        const val TOP_EDIT_PROFILE = "Edit profile"
-        const val TOP_CHANGE_PIN = "Change PIN"
-        const val TOP_DEPOSIT = "Brokerage account"
-        const val TOP_SIGN_UP = "Sign up"
-
-        private const val TOP_DETAIL_PREFIX = "Details · "
-        private const val TOP_BUY_PREFIX = "Buy "
-
-        fun topBarDetail(ticker: String): String = TOP_DETAIL_PREFIX + ticker
-
-        fun topBarBuy(ticker: String): String = TOP_BUY_PREFIX + ticker
-    }
-}
+import dagger.hilt.android.EntryPointAccessors
 
 @Composable
 internal fun ZovNavGraphHost(
@@ -100,13 +77,10 @@ private fun NavGraphBuilder.zovAuthDestinations(navController: NavHostController
 }
 
 @Composable
-private fun registerFlowViewModel(navController: NavHostController): ZovRegisterFlowViewModel {
-    val registerEntry =
-        remember(navController) {
-            navController.getBackStackEntry(ZovRoutes.REGISTER_FLOW)
-        }
-    return androidx.lifecycle.viewmodel.compose.viewModel(registerEntry)
-}
+private fun registerFlowBackStackEntry(navController: NavHostController): NavBackStackEntry =
+    remember(navController) {
+        navController.getBackStackEntry(ZovRoutes.REGISTER_FLOW)
+    }
 
 private fun NavGraphBuilder.zovRegisterFlow(navController: NavHostController) {
     navigation(
@@ -114,7 +88,7 @@ private fun NavGraphBuilder.zovRegisterFlow(navController: NavHostController) {
         startDestination = ZovRoutes.REGISTER_STEP1,
     ) {
         composable(ZovRoutes.REGISTER_STEP1) {
-            val registerVm = registerFlowViewModel(navController)
+            val registerVm: ZovRegisterFlowViewModel = hiltViewModel(registerFlowBackStackEntry(navController))
             val step1Vm: ZovRegisterStep1ViewModel = hiltViewModel()
             LaunchedEffect(Unit) { registerVm.resetFlow() }
             RegisterDataScreen(
@@ -124,7 +98,7 @@ private fun NavGraphBuilder.zovRegisterFlow(navController: NavHostController) {
             )
         }
         composable(ZovRoutes.REGISTER_STEP2) {
-            val registerVm = registerFlowViewModel(navController)
+            val registerVm: ZovRegisterFlowViewModel = hiltViewModel(registerFlowBackStackEntry(navController))
             LaunchedEffect(Unit) { registerVm.clearDraft() }
             RegisterPinScreen(
                 viewModel = registerVm,
@@ -136,7 +110,7 @@ private fun NavGraphBuilder.zovRegisterFlow(navController: NavHostController) {
             )
         }
         composable(ZovRoutes.REGISTER_STEP3) {
-            val registerVm = registerFlowViewModel(navController)
+            val registerVm: ZovRegisterFlowViewModel = hiltViewModel(registerFlowBackStackEntry(navController))
             LaunchedEffect(Unit) { registerVm.clearDraft() }
             RegisterPinConfirmScreen(
                 viewModel = registerVm,
@@ -148,11 +122,26 @@ private fun NavGraphBuilder.zovRegisterFlow(navController: NavHostController) {
             )
         }
         composable(ZovRoutes.REGISTER_STEP4) {
+            val context = LocalContext.current
+            val navigateHome = {
+                navController.navigate(ZovRoutes.MAIN_HOME) {
+                    popUpTo(ZovRoutes.LOGIN) { inclusive = true }
+                }
+            }
             RegisterBiometricScreen(
-                onDone = {
-                    navController.navigate(ZovRoutes.MAIN_HOME) {
-                        popUpTo(ZovRoutes.LOGIN) { inclusive = true }
-                    }
+                onAllow = {
+                    EntryPointAccessors.fromApplication(
+                        context.applicationContext,
+                        ZovLocalAuthEntryPoint::class.java,
+                    ).localAuthStorage().setBiometricUnlockEnabled(true)
+                    navigateHome()
+                },
+                onSkip = {
+                    EntryPointAccessors.fromApplication(
+                        context.applicationContext,
+                        ZovLocalAuthEntryPoint::class.java,
+                    ).localAuthStorage().setBiometricUnlockEnabled(false)
+                    navigateHome()
                 },
             )
         }

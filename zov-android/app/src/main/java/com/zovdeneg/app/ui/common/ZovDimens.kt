@@ -54,8 +54,6 @@ val ZovCardElevation = ZovHalfUnit
 
 val ZovTopBarContentHeight = (ZovHorizontalPadding * 7) / 2
 
-val ZovNavigationBarHeight = ZovUnit * 17
-
 val ZovTouchMin = ZovUnit * 12
 
 val ZovAuthTopInset = ZovHorizontalPadding * 3

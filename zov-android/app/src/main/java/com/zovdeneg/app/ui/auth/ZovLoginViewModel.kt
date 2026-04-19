@@ -1,37 +1,39 @@
 package com.zovdeneg.app.ui.auth
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.zovdeneg.app.domain.usecase.LoginWithMockBackendUseCase
+import com.zovdeneg.app.domain.auth.LocalAuthStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val LOGIN_PIN_LENGTH = 4
 
 @HiltViewModel
 class ZovLoginViewModel @Inject constructor(
-    private val loginWithMockBackend: LoginWithMockBackendUseCase,
+    private val localAuthStorage: LocalAuthStorage,
 ) : ViewModel() {
     private val _draftPin = MutableStateFlow("")
     val draftPin: StateFlow<String> = _draftPin.asStateFlow()
 
-    private val _loginFailed = MutableStateFlow(false)
-    val loginFailed: StateFlow<Boolean> = _loginFailed.asStateFlow()
+    private val _wrongPin = MutableStateFlow(false)
+    val wrongPin: StateFlow<Boolean> = _wrongPin.asStateFlow()
+
+    private val _mustRegisterFirst = MutableStateFlow(false)
+    val mustRegisterFirst: StateFlow<Boolean> = _mustRegisterFirst.asStateFlow()
 
     fun appendDigit(digit: Int) {
         if (digit !in 0..9) return
         if (_draftPin.value.length >= LOGIN_PIN_LENGTH) return
         _draftPin.value += digit.toString()
-        _loginFailed.value = false
+        clearHints()
     }
 
     fun deleteLast() {
         val cur = _draftPin.value
         if (cur.isNotEmpty()) _draftPin.value = cur.dropLast(1)
+        clearHints()
     }
 
     fun clearDraft() {
@@ -42,29 +44,32 @@ class ZovLoginViewModel @Inject constructor(
 
     fun tryCompleteLogin(onLoggedIn: () -> Unit) {
         if (!hasFullPin()) return
-        viewModelScope.launch {
-            runLogin(onLoggedIn)
-        }
-    }
-
-    fun loginWithBiometric(onLoggedIn: () -> Unit) {
-        viewModelScope.launch {
+        clearHints()
+        if (!localAuthStorage.hasPin()) {
+            _mustRegisterFirst.value = true
             clearDraft()
-            runLogin(onLoggedIn)
+            return
+        }
+        val pin = _draftPin.value
+        if (localAuthStorage.verifyPin(pin)) {
+            clearDraft()
+            onLoggedIn()
+        } else {
+            _wrongPin.value = true
+            clearDraft()
         }
     }
 
-    private suspend fun runLogin(onLoggedIn: () -> Unit) {
-        _loginFailed.value = false
-        loginWithMockBackend().fold(
-            onSuccess = {
-                clearDraft()
-                onLoggedIn()
-            },
-            onFailure = {
-                clearDraft()
-                _loginFailed.value = true
-            },
-        )
+    fun onBiometricAuthenticated(onLoggedIn: () -> Unit) {
+        clearHints()
+        clearDraft()
+        onLoggedIn()
     }
+
+    fun clearHints() {
+        _wrongPin.value = false
+        _mustRegisterFirst.value = false
+    }
+
+    fun isBiometricUnlockEnabled(): Boolean = localAuthStorage.isBiometricUnlockEnabled()
 }

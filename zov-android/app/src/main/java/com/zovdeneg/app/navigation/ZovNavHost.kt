@@ -30,8 +30,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.zovdeneg.app.R
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -39,7 +41,6 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.zovdeneg.app.ui.common.ZovNavigationBarHeight
 import com.zovdeneg.app.ui.common.ZovSpace6
 import com.zovdeneg.app.ui.common.ZovTopBarContentHeight
 import com.zovdeneg.app.ui.common.ZovTouchMin
@@ -52,11 +53,12 @@ private data class BottomDestination(
     val icon: ImageVector,
 )
 
-private val bottomDestinations =
+@Composable
+private fun bottomTabDestinations(): List<BottomDestination> =
     listOf(
-        BottomDestination(ZovRoutes.MAIN_HOME, ZovNavGraph.BOTTOM_HOME, Icons.Filled.Home),
-        BottomDestination(ZovRoutes.MAIN_SEARCH, ZovNavGraph.BOTTOM_SEARCH, Icons.Filled.Search),
-        BottomDestination(ZovRoutes.MAIN_HISTORY, ZovNavGraph.BOTTOM_HISTORY, Icons.Filled.History),
+        BottomDestination(ZovRoutes.MAIN_HOME, stringResource(R.string.nav_bottom_home), Icons.Filled.Home),
+        BottomDestination(ZovRoutes.MAIN_SEARCH, stringResource(R.string.nav_bottom_search), Icons.Filled.Search),
+        BottomDestination(ZovRoutes.MAIN_HISTORY, stringResource(R.string.nav_bottom_history), Icons.Filled.History),
     )
 
 private val registerRoutes =
@@ -77,19 +79,20 @@ private val mainTabRoutes =
 private val bottomBarRoutes =
     mainTabRoutes + ZovRoutes.PROFILE
 
+@Composable
 internal fun zovTopBarTitle(route: String?, backStack: NavBackStackEntry?): String? {
     val ticker = backStack?.arguments?.getString("ticker").orEmpty().replace('_', '/')
     return when (route) {
-        ZovRoutes.MAIN_HOME -> ZovNavGraph.TOP_HOME
-        ZovRoutes.MAIN_SEARCH -> ZovNavGraph.TOP_SEARCH
-        ZovRoutes.MAIN_HISTORY -> ZovNavGraph.TOP_HISTORY
-        ZovRoutes.PROFILE -> ZovNavGraph.TOP_PROFILE
-        ZovRoutes.EDIT_PROFILE -> ZovNavGraph.TOP_EDIT_PROFILE
-        ZovRoutes.CHANGE_PIN -> ZovNavGraph.TOP_CHANGE_PIN
-        ZovRoutes.DEPOSIT -> ZovNavGraph.TOP_DEPOSIT
-        in registerRoutes -> ZovNavGraph.TOP_SIGN_UP
-        ZovRoutes.DETAIL -> ZovNavGraph.topBarDetail(ticker)
-        ZovRoutes.BUY -> ZovNavGraph.topBarBuy(ticker)
+        ZovRoutes.MAIN_HOME -> stringResource(R.string.nav_top_home)
+        ZovRoutes.MAIN_SEARCH -> stringResource(R.string.nav_top_search)
+        ZovRoutes.MAIN_HISTORY -> stringResource(R.string.nav_top_history)
+        ZovRoutes.PROFILE -> stringResource(R.string.nav_top_profile)
+        ZovRoutes.EDIT_PROFILE -> stringResource(R.string.nav_top_edit_profile)
+        ZovRoutes.CHANGE_PIN -> stringResource(R.string.nav_top_change_pin)
+        ZovRoutes.DEPOSIT -> stringResource(R.string.nav_top_deposit)
+        in registerRoutes -> stringResource(R.string.nav_top_sign_up)
+        ZovRoutes.DETAIL -> stringResource(R.string.nav_top_detail_prefix) + ticker
+        ZovRoutes.BUY -> stringResource(R.string.nav_top_buy_prefix) + ticker
         else -> null
     }
 }
@@ -104,7 +107,7 @@ private fun ZovNavTopBar(
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
-    Surface(color = c.surface, tonalElevation = 0.dp, shadowElevation = 0.dp) {
+    Surface(color = c.background, tonalElevation = 0.dp, shadowElevation = 0.dp) {
         Column(Modifier.statusBarsPadding()) {
             Row(
                 Modifier
@@ -121,7 +124,7 @@ private fun ZovNavTopBar(
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = ZovNavGraph.CD_BACK,
+                                contentDescription = stringResource(R.string.action_back),
                                 tint = c.onSurface,
                             )
                         }
@@ -143,7 +146,7 @@ private fun ZovNavTopBar(
                         IconButton(onClick = { navController.navigate(ZovRoutes.PROFILE) }) {
                             Icon(
                                 Icons.Filled.Person,
-                                contentDescription = ZovNavGraph.CD_PROFILE,
+                                contentDescription = stringResource(R.string.cd_nav_profile),
                                 tint = c.onSurface,
                                 modifier = Modifier.size(ZovSpace6),
                             )
@@ -166,14 +169,12 @@ private fun ZovNavBottomBar(
     val c = ZovTheme.colors
     val t = ZovTheme.text
     NavigationBar(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(ZovNavigationBarHeight),
-        containerColor = c.surface,
+        modifier = Modifier.fillMaxWidth(),
+        containerColor = c.background,
         contentColor = c.onSurface,
         tonalElevation = 0.dp,
     ) {
-        bottomDestinations.forEach { dest ->
+        bottomTabDestinations().forEach { dest ->
             val selected = current?.hierarchy?.any { it.route == dest.route } == true
             NavigationBarItem(
                 selected = selected,
@@ -220,6 +221,7 @@ fun ZovNavHost(modifier: Modifier = Modifier) {
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = ZovTheme.colors.background,
         topBar = {
             if (topTitle != null) {
                 ZovNavTopBar(

@@ -23,7 +23,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -55,7 +54,6 @@ fun ProfileScreen(
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
-    var bio by remember { mutableStateOf(true) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     ZovScrollScreen {
         when {
@@ -95,7 +93,10 @@ fun ProfileScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(stringResource(R.string.profile_sign_in_fingerprint), style = t.bodyReg14, color = c.onSurface)
-                    Switch(checked = bio, onCheckedChange = { bio = it })
+                    Switch(
+                        checked = state.biometricUnlockEnabled,
+                        onCheckedChange = viewModel::setBiometricUnlockEnabled,
+                    )
                 }
                 Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.action_sign_out), style = t.bodyMed14)

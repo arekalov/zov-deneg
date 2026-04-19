@@ -25,15 +25,22 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zovdeneg.app.R
+import com.zovdeneg.app.ui.auth.canAuthenticateWithBiometric
+import com.zovdeneg.app.ui.auth.showFingerprintLoginPrompt
 import com.zovdeneg.app.ui.auth.ZovLoginViewModel
 import com.zovdeneg.app.ui.auth.ZovRegisterFlowViewModel
 import com.zovdeneg.app.ui.auth.ZovRegisterStep1ViewModel
@@ -65,7 +72,8 @@ internal fun LoginScreen(
 ) {
     val c = ZovTheme.colors
     val draftPin by viewModel.draftPin.collectAsStateWithLifecycle()
-    val loginFailed by viewModel.loginFailed.collectAsStateWithLifecycle()
+    val wrongPin by viewModel.wrongPin.collectAsStateWithLifecycle()
+    val mustRegisterFirst by viewModel.mustRegisterFirst.collectAsStateWithLifecycle()
     Box(
         Modifier
             .fillMaxSize()
@@ -74,7 +82,8 @@ internal fun LoginScreen(
     ) {
         LoginScreenColumn(
             pinLen = draftPin.length,
-            loginFailed = loginFailed,
+            wrongPin = wrongPin,
+            mustRegisterFirst = mustRegisterFirst,
             viewModel = viewModel,
             onLoggedIn = onLoggedIn,
             onRegister = onRegister,
@@ -85,13 +94,16 @@ internal fun LoginScreen(
 @Composable
 private fun LoginScreenColumn(
     pinLen: Int,
-    loginFailed: Boolean,
+    wrongPin: Boolean,
+    mustRegisterFirst: Boolean,
     viewModel: ZovLoginViewModel,
     onLoggedIn: () -> Unit,
     onRegister: () -> Unit,
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
+    val context = LocalContext.current
+    var biometricHint by remember { mutableStateOf<String?>(null) }
     Column(
         Modifier
             .widthIn(max = ZovContentMaxWidth)
@@ -113,9 +125,25 @@ private fun LoginScreenColumn(
             )
         }
         ZovPinDots(filledCount = pinLen, total = 4)
-        if (loginFailed) {
+        if (wrongPin) {
             Text(
-                stringResource(R.string.login_failed_network),
+                stringResource(R.string.login_wrong_pin),
+                style = t.bodyReg14,
+                color = c.negative,
+                textAlign = TextAlign.Center,
+            )
+        }
+        if (mustRegisterFirst) {
+            Text(
+                stringResource(R.string.login_register_first),
+                style = t.bodyReg14,
+                color = c.negative,
+                textAlign = TextAlign.Center,
+            )
+        }
+        biometricHint?.let { hint ->
+            Text(
+                hint,
                 style = t.bodyReg14,
                 color = c.negative,
                 textAlign = TextAlign.Center,
@@ -128,7 +156,23 @@ private fun LoginScreenColumn(
             onConfirm = { viewModel.tryCompleteLogin(onLoggedIn) },
         )
         ZovBiometricFilledButton(
-            onClick = { viewModel.loginWithBiometric(onLoggedIn) },
+            onClick = {
+                biometricHint = null
+                val act = context as? FragmentActivity ?: return@ZovBiometricFilledButton
+                if (!viewModel.isBiometricUnlockEnabled()) {
+                    biometricHint = context.getString(R.string.biometric_login_disabled)
+                    return@ZovBiometricFilledButton
+                }
+                if (!canAuthenticateWithBiometric(act)) {
+                    biometricHint = context.getString(R.string.biometric_hardware_unavailable)
+                    return@ZovBiometricFilledButton
+                }
+                showFingerprintLoginPrompt(
+                    activity = act,
+                    onSuccess = { viewModel.onBiometricAuthenticated(onLoggedIn) },
+                    onError = { msg -> if (msg.isNotBlank()) biometricHint = msg },
+                )
+            },
         ) {
             Icon(
                 Icons.Filled.Fingerprint,
@@ -343,7 +387,10 @@ internal fun RegisterPinConfirmScreen(
 }
 
 @Composable
-fun RegisterBiometricScreen(onDone: () -> Unit) {
+fun RegisterBiometricScreen(
+    onAllow: () -> Unit,
+    onSkip: () -> Unit,
+) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
     ZovScrollScreen {
@@ -381,11 +428,11 @@ fun RegisterBiometricScreen(onDone: () -> Unit) {
             )
             Text(stringResource(R.string.register_step_4_of_4), style = t.subtitleReg13, color = c.onSurfaceVariant)
             Button(
-                onClick = onDone,
+                onClick = onAllow,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = c.onPrimary),
             ) { Text(stringResource(R.string.action_allow), style = t.bodyMed14) }
-            OutlinedButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = onSkip, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.action_skip), style = t.bodyMed14, color = c.onSurfaceVariant)
             }
         }
