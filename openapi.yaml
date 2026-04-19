@@ -426,10 +426,9 @@ components:
     # ── Заявки ─────────────────────────────────────────────────────────────
     OrderType:
       type: string
-      enum: [market, limit]
+      enum: [market]
       description: |
-        - `market` — рыночная заявка, исполняется по лучшей доступной цене
-        - `limit` — лимитная заявка, исполняется по указанной цене или лучше
+        Поддерживается только рыночная заявка: исполнение по лучшей доступной цене в момент приёма.
 
     OrderSide:
       type: string
@@ -480,11 +479,6 @@ components:
           type: integer
           description: Запрошенное количество
           example: 10
-        requestedPrice:
-          type: string
-          nullable: true
-          description: Цена для лимитной заявки, десятичная строка; null для рыночной
-          example: "295.00"
         executedPrice:
           type: string
           nullable: true
@@ -516,15 +510,13 @@ components:
 
     CreateOrderRequest:
       type: object
-      required: [securityId, type, side, quantity]
+      required: [securityId, side, quantity]
       properties:
         securityId:
           type: string
           format: uuid
           description: Идентификатор бумаги (из `GET /securities` или карточки бумаги)
           example: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
-        type:
-          $ref: '#/components/schemas/OrderType'
         side:
           $ref: '#/components/schemas/OrderSide'
         quantity:
@@ -532,11 +524,6 @@ components:
           minimum: 1
           description: Должно быть кратно размеру лота
           example: 10
-        price:
-          allOf:
-            - $ref: '#/components/schemas/DecimalString'
-          description: Обязательно для type=limit
-          example: "295.00"
 
     # ── Транзакции ─────────────────────────────────────────────────────────
     TransactionType:
@@ -617,7 +604,7 @@ components:
         blocked:
           allOf:
             - $ref: '#/components/schemas/DecimalString'
-          description: Заблокировано в активных лимитных заявках
+          description: Заблокировано в резерве под активные заявки в обработке
           example: "2480.00"
 
   # ── Reusable responses ─────────────────────────────────────────────────────
@@ -1433,9 +1420,8 @@ paths:
       tags: [orders]
       summary: Создать торговую заявку (купить / продать)
       description: |
-        Создаёт заявку на покупку или продажу бумаги.
-        Рыночная заявка исполняется мгновенно по текущей цене — деньги списываются сразу.
-        Лимитная заявка становится pending: нужная сумма блокируется на балансе до исполнения или отмены.
+        Создаёт **рыночную** заявку на покупку или продажу бумаги.
+        Исполнение — по лучшей доступной цене в момент приёма; списание средств / бумаг — по факту исполнения.
         Количество должно быть кратно lotSize бумаги.
       requestBody:
         required: true
@@ -1445,20 +1431,17 @@ paths:
               $ref: '#/components/schemas/CreateOrderRequest'
             examples:
               market_buy:
-                summary: Рыночная покупка 10 акций SBER
+                summary: Покупка 10 акций SBER (рыночная)
                 value:
                   securityId: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
-                  type: market
                   side: buy
                   quantity: 10
-              limit_sell:
-                summary: Лимитная продажа по 305 ₽
+              market_sell:
+                summary: Продажа 10 акций SBER (рыночная)
                 value:
                   securityId: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
-                  type: limit
                   side: sell
                   quantity: 10
-                  price: "305.00"
       responses:
         '201':
           description: Заявка принята
@@ -1489,11 +1472,6 @@ paths:
                     details:
                       requested: 20
                       available: 10
-                price_required:
-                  summary: Не указана цена для лимитной заявки
-                  value:
-                    code: PRICE_REQUIRED
-                    message: Для лимитной заявки необходимо указать цену
                 invalid_lot:
                   summary: Количество не кратно лоту
                   value:
@@ -1563,8 +1541,8 @@ paths:
       tags: [orders]
       summary: Отменить заявку
       description: |
-        Отменяет лимитную заявку в статусе pending.
-        После отмены заблокированные средства возвращаются на доступный баланс.
+        Отменяет заявку в статусе `pending`, если отмена ещё допустима (заявка не ушла в исполнение).
+        После отмены зарезервированные средства возвращаются на доступный баланс.
         Заявки в статусах executed, partial, cancelled, rejected отменить нельзя.
       responses:
         '204':
@@ -1667,7 +1645,7 @@ paths:
       summary: Текущий баланс брокерского счёта
       description: |
         Возвращает три значения: доступный баланс (можно тратить на покупки),
-        заблокированный (резерв под активные лимитные заявки) и общий (сумма двух).
+        заблокированный (резерв под заявки в обработке) и общий (сумма двух).
       responses:
         '200':
           description: OK
@@ -1715,6 +1693,59 @@ paths:
               example:
                 code: INVALID_AMOUNT
                 message: Сумма пополнения должна быть больше нуля
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /balance/withdraw:
+    post:
+      tags: [balance]
+      summary: Вывод средств со счёта
+      description: |
+        Создаёт заявку на вывод доступных средств с брокерского счёта (не зарезервированных под заявки в обработке).
+        После успешной операции возвращает обновлённый баланс.
+        Сумма не может превышать доступный остаток; минимальная сумма — 1 рубль (строка `"1.00"`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  allOf:
+                    - $ref: '#/components/schemas/DecimalString'
+                  description: Сумма вывода в рублях; не менее `"1.00"`, не больше доступного баланса
+                  example: "5000.00"
+      responses:
+        '200':
+          description: Вывод зарегистрирован, баланс обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+        '400':
+          description: Некорректная сумма или превышение доступного баланса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_amount:
+                  summary: Некорректная сумма
+                  value:
+                    code: INVALID_AMOUNT
+                    message: Сумма вывода должна быть больше нуля
+                insufficient_funds:
+                  summary: Недостаточно средств для вывода
+                  value:
+                    code: INSUFFICIENT_FUNDS
+                    message: Недостаточно средств для вывода
+                    details:
+                      requested: "100000.00"
+                      available: "45320.00"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':

@@ -3172,44 +3172,9 @@ divBuy.fills = [{ type: "SOLID", color: c.outline }];
 bodyBuy.appendChild(divBuy);
 divBuy.layoutSizingHorizontal = "FILL"; divBuy.layoutSizingVertical = "FIXED";
 
-// ─── Тип заявки (radio) ──────────────────────────────────────────────────
-bodyBuy.appendChild(txt("Тип заявки", 14, "semi", c.onSurface, "Секция"));
-bodyBuy.children[bodyBuy.children.length - 1].layoutSizingHorizontal = "HUG";
+bodyBuy.appendChild(txt("Только рыночная заявка · исполнение по лучшей доступной цене", 12, "reg", c.onSurfaceVariant, "Тип заявки"));
+bodyBuy.children[bodyBuy.children.length - 1].layoutSizingHorizontal = "FILL";
 bodyBuy.children[bodyBuy.children.length - 1].layoutSizingVertical = "HUG";
-
-function makeRadio(label, selected) {
-  const row = figma.createFrame();
-  row.name = `Радио · ${label}`;
-  row.layoutMode = "HORIZONTAL"; row.itemSpacing = 12;
-  row.counterAxisAlignItems = "CENTER";
-  row.fills = []; row.primaryAxisSizingMode = "AUTO"; row.counterAxisSizingMode = "AUTO";
-  const dot = figma.createEllipse();
-  dot.name = "Точка"; dot.resize(20, 20);
-  dot.fills = selected ? tokenFill("primary") : [];
-  dot.strokes = [{ type: "SOLID", color: selected ? c.primary : c.outline }];
-  dot.strokeWeight = selected ? 6 : 2;
-  row.appendChild(dot);
-  dot.layoutSizingHorizontal = "FIXED"; dot.layoutSizingVertical = "FIXED";
-  row.appendChild(txt(label, 14, "reg", c.onSurface, "Лейбл"));
-  row.children[1].layoutSizingHorizontal = "HUG"; row.children[1].layoutSizingVertical = "HUG";
-  return row;
-}
-
-const radioMarket = makeRadio("Рыночная  ·  по лучшей цене", true);
-const radioLimit  = makeRadio("Лимитная  ·  по заданной цене", false);
-bodyBuy.appendChild(radioMarket);
-radioMarket.layoutSizingHorizontal = "FILL"; radioMarket.layoutSizingVertical = "HUG";
-created.push(radioMarket.id);
-bodyBuy.appendChild(radioLimit);
-radioLimit.layoutSizingHorizontal = "FILL"; radioLimit.layoutSizingVertical = "HUG";
-created.push(radioLimit.id);
-
-// Разделитель
-const divBuy2 = figma.createRectangle();
-divBuy2.name = "Разделитель"; divBuy2.resize(1, 1);
-divBuy2.fills = [{ type: "SOLID", color: c.outline }];
-bodyBuy.appendChild(divBuy2);
-divBuy2.layoutSizingHorizontal = "FILL"; divBuy2.layoutSizingVertical = "FIXED";
 
 // ─── Доступно ────────────────────────────────────────────────────────────
 const avRow = figma.createFrame();
