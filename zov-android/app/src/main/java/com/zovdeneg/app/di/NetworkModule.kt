@@ -3,6 +3,7 @@ package com.zovdeneg.app.di
 import com.zovdeneg.app.BuildConfig
 import com.zovdeneg.app.data.remote.ZovHttpClientFactory
 import com.zovdeneg.app.data.remote.ZovJson
+import com.zovdeneg.app.data.remote.mock.ZovMockAssetJson
 import com.zovdeneg.app.data.remote.mock.zovMockEngine
 import dagger.Module
 import dagger.Provides
@@ -25,7 +26,7 @@ internal object NetworkModule {
     @Provides
     @Singleton
     @ZovMockHttpEngine
-    fun provideMockEngine(): HttpClientEngine = zovMockEngine()
+    fun provideMockEngine(mockJson: ZovMockAssetJson): HttpClientEngine = zovMockEngine(mockJson)
 
     @Provides
     @Singleton

@@ -1,0 +1,11 @@
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "firstName": "Иван",
+  "lastName": "Иванов",
+  "email": "ivan@example.com",
+  "phone": "+79001234567",
+  "role": "user",
+  "isBlocked": false,
+  "createdAt": 1731484800,
+  "updatedAt": 1731571200
+}

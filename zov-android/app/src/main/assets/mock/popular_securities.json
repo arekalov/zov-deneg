@@ -1,0 +1,420 @@
+{
+  "items": [
+    {
+      "ticker": "GAZP",
+      "subtitle": "Газпром · энергетика",
+      "valueText": "167,4 ₽",
+      "deltaText": "+0,8%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "SBER",
+      "subtitle": "Сбербанк · финансы",
+      "valueText": "298,12 ₽",
+      "deltaText": "+1,2%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "LKOH",
+      "subtitle": "ЛУКОЙЛ · энергетика",
+      "valueText": "6 542 ₽",
+      "deltaText": "−0,4%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "ROSN",
+      "subtitle": "Роснефть · энергетика",
+      "valueText": "512,3 ₽",
+      "deltaText": "+0,5%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "NVTK",
+      "subtitle": "Новатэк · энергетика",
+      "valueText": "1 284,5 ₽",
+      "deltaText": "−0,2%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "GMKN",
+      "subtitle": "Норникель · металлы",
+      "valueText": "15 890 ₽",
+      "deltaText": "+1,1%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "PLZL",
+      "subtitle": "Полюс · золото",
+      "valueText": "11 234 ₽",
+      "deltaText": "+0,3%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "TATNP",
+      "subtitle": "Татнефть pref · энергетика",
+      "valueText": "598,0 ₽",
+      "deltaText": "+0,4%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "TATN",
+      "subtitle": "Татнефть · энергетика",
+      "valueText": "642,1 ₽",
+      "deltaText": "+0,6%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "MGNT",
+      "subtitle": "Магнит · ритейл",
+      "valueText": "7 015 ₽",
+      "deltaText": "−0,9%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "YDEX",
+      "subtitle": "Яндекс · IT",
+      "valueText": "4 128 ₽",
+      "deltaText": "+2,1%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "VTBR",
+      "subtitle": "ВТБ · финансы",
+      "valueText": "0,0284 ₽",
+      "deltaText": "+3,2%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "MOEX",
+      "subtitle": "МосБиржа · финансы",
+      "valueText": "214,8 ₽",
+      "deltaText": "+0,4%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "CHMF",
+      "subtitle": "Северсталь · металлы",
+      "valueText": "1 098 ₽",
+      "deltaText": "−0,3%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "PHOR",
+      "subtitle": "ФосАгро · химия",
+      "valueText": "7 456 ₽",
+      "deltaText": "+0,7%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "ALRS",
+      "subtitle": "Алроса · добыча",
+      "valueText": "76,42 ₽",
+      "deltaText": "+1,5%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "SNGS",
+      "subtitle": "Сургутнефтегаз · энергетика",
+      "valueText": "28,15 ₽",
+      "deltaText": "0,0%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "SNGSP",
+      "subtitle": "Сургутнефтегаз pref",
+      "valueText": "45,02 ₽",
+      "deltaText": "+0,2%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "FEES",
+      "subtitle": "Россети · электроэнергетика",
+      "valueText": "0,1042 ₽",
+      "deltaText": "−0,5%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "HYDR",
+      "subtitle": "РусГидро · электроэнергетика",
+      "valueText": "0,542 ₽",
+      "deltaText": "+0,1%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "IRAO",
+      "subtitle": "Интер РАО · электроэнергетика",
+      "valueText": "3,12 ₽",
+      "deltaText": "−0,3%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "MTSS",
+      "subtitle": "МТС · телеком",
+      "valueText": "234,5 ₽",
+      "deltaText": "+0,8%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "RTKM",
+      "subtitle": "Ростелеком · телеком",
+      "valueText": "72,8 ₽",
+      "deltaText": "−0,2%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "AFLT",
+      "subtitle": "Аэрофлот · транспорт",
+      "valueText": "58,34 ₽",
+      "deltaText": "+1,1%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "PIKK",
+      "subtitle": "ПИК · девелопмент",
+      "valueText": "678 ₽",
+      "deltaText": "+0,5%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "LSRG",
+      "subtitle": "ЛСР · девелопмент",
+      "valueText": "712 ₽",
+      "deltaText": "−0,7%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "POLY",
+      "subtitle": "Polymetal · металлы",
+      "valueText": "412 ₽",
+      "deltaText": "+0,9%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "RUAL",
+      "subtitle": "Русал · металлы",
+      "valueText": "38,90 ₽",
+      "deltaText": "−1,2%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "ENRU",
+      "subtitle": "Энел Россия · электроэнергетика",
+      "valueText": "0,7156 ₽",
+      "deltaText": "+0,4%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "TRNFP",
+      "subtitle": "Транснефть pref · энергетика",
+      "valueText": "1 456 ₽",
+      "deltaText": "+0,1%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "BSPB",
+      "subtitle": "Банк Санкт-Петербург · финансы",
+      "valueText": "312 ₽",
+      "deltaText": "+2,4%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "MVID",
+      "subtitle": "М.Видео · ритейл",
+      "valueText": "98,5 ₽",
+      "deltaText": "−0,8%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "OZON",
+      "subtitle": "Ozon · e-commerce",
+      "valueText": "4 890 ₽",
+      "deltaText": "+4,2%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "POSI",
+      "subtitle": "Positive Technologies · IT",
+      "valueText": "612 ₽",
+      "deltaText": "+1,0%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "SOFL",
+      "subtitle": "Софтлайн · IT",
+      "valueText": "98,2 ₽",
+      "deltaText": "−2,1%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "SPBE",
+      "subtitle": "СПБ Биржа · финансы",
+      "valueText": "124,3 ₽",
+      "deltaText": "+0,6%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "TCSG",
+      "subtitle": "Т-Технологии · финансы",
+      "valueText": "3 012 ₽",
+      "deltaText": "+0,9%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "VKCO",
+      "subtitle": "VK · IT",
+      "valueText": "312 ₽",
+      "deltaText": "+0,3%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "X5",
+      "subtitle": "X5 Group · ритейл",
+      "valueText": "3 156 ₽",
+      "deltaText": "−0,6%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "MAGN",
+      "subtitle": "ММК · металлы",
+      "valueText": "42,15 ₽",
+      "deltaText": "+0,2%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "AFKS",
+      "subtitle": "Система · финансы",
+      "valueText": "15,42 ₽",
+      "deltaText": "+0,5%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "APTK",
+      "subtitle": "Аптеки36,6 · ритейл",
+      "valueText": "8,12 ₽",
+      "deltaText": "−0,4%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "OGKB",
+      "subtitle": "ОГК-2 · электроэнергетика",
+      "valueText": "0,612 ₽",
+      "deltaText": "+0,9%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "CBOM",
+      "subtitle": "МКБ · финансы",
+      "valueText": "98,4 ₽",
+      "deltaText": "+1,3%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "MDMG",
+      "subtitle": "МДМ Групп · девелопмент",
+      "valueText": "156 ₽",
+      "deltaText": "−0,2%",
+      "deltaPositive": false,
+      "kind": "stock"
+    },
+    {
+      "ticker": "SIBN",
+      "subtitle": "Газпром нефть · энергетика",
+      "valueText": "412 ₽",
+      "deltaText": "+0,6%",
+      "deltaPositive": true,
+      "kind": "stock"
+    },
+    {
+      "ticker": "SU26238RMFS5",
+      "subtitle": "ОФЗ 26238",
+      "valueText": "98,2 ₽",
+      "deltaText": "−0,1%",
+      "deltaPositive": false,
+      "kind": "bond"
+    },
+    {
+      "ticker": "SU26233RMFS5",
+      "subtitle": "ОФЗ 26233",
+      "valueText": "101,4 ₽",
+      "deltaText": "+0,05%",
+      "deltaPositive": true,
+      "kind": "bond"
+    },
+    {
+      "ticker": "SU26229RMFS4",
+      "subtitle": "ОФЗ 26229",
+      "valueText": "95,8 ₽",
+      "deltaText": "−0,2%",
+      "deltaPositive": false,
+      "kind": "bond"
+    },
+    {
+      "ticker": "LQDT",
+      "subtitle": "Видео · IT",
+      "valueText": "6 540 ₽",
+      "deltaText": "+0,3%",
+      "deltaPositive": true,
+      "kind": "etf"
+    },
+    {
+      "ticker": "SBGB",
+      "subtitle": "Сберегательный ETF · облигации",
+      "valueText": "12,45 ₽",
+      "deltaText": "+0,1%",
+      "deltaPositive": true,
+      "kind": "etf"
+    },
+    {
+      "ticker": "TMOS",
+      "subtitle": "Тинькофф голубые фишки",
+      "valueText": "18,92 ₽",
+      "deltaText": "+0,4%",
+      "deltaPositive": true,
+      "kind": "etf"
+    }
+  ]
+}

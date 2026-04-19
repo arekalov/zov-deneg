@@ -1,0 +1,376 @@
+{
+  "transactions": [
+    {
+      "title": "Покупка · SBER",
+      "date": "19 апр. 2026, 15:42",
+      "amountText": "+35 774 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · LKOH",
+      "date": "19 апр. 2026, 11:08",
+      "amountText": "−52 336 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Дивиденды · GMKN",
+      "date": "18 апр. 2026, 09:00",
+      "amountText": "+1 240 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · OZON",
+      "date": "18 апр. 2026, 14:22",
+      "amountText": "+29 340 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · MGNT",
+      "date": "17 апр. 2026, 16:01",
+      "amountText": "−35 075 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · YDEX",
+      "date": "17 апр. 2026, 10:30",
+      "amountText": "+41 280 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · NVTK",
+      "date": "16 апр. 2026, 12:55",
+      "amountText": "+19 267 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · RUAL",
+      "date": "16 апр. 2026, 09:12",
+      "amountText": "−11 670 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · TCSG",
+      "date": "15 апр. 2026, 13:40",
+      "amountText": "+21 084 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · VTBR",
+      "date": "15 апр. 2026, 09:05",
+      "amountText": "+14 200 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · X5",
+      "date": "14 апр. 2026, 15:18",
+      "amountText": "−12 624 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · ROSN",
+      "date": "14 апр. 2026, 11:00",
+      "amountText": "+30 738 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · GAZP",
+      "date": "13 апр. 2026, 16:44",
+      "amountText": "+66 960 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · AFLT",
+      "date": "13 апр. 2026, 10:20",
+      "amountText": "−8 751 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · MOEX",
+      "date": "12 апр. 2026, 14:11",
+      "amountText": "+17 184 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · CHMF",
+      "date": "12 апр. 2026, 09:33",
+      "amountText": "+32 940 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · FEES",
+      "date": "11 апр. 2026, 15:50",
+      "amountText": "−8 336 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · PHOR",
+      "date": "11 апр. 2026, 12:08",
+      "amountText": "+29 824 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · PLZL",
+      "date": "10 апр. 2026, 16:02",
+      "amountText": "+32 802 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · ENRU",
+      "date": "10 апр. 2026, 09:45",
+      "amountText": "−3 578 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · ALRS",
+      "date": "9 апр. 2026, 13:17",
+      "amountText": "+15 284 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · SNGS",
+      "date": "9 апр. 2026, 09:28",
+      "amountText": "+28 150 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · PIKK",
+      "date": "8 апр. 2026, 15:33",
+      "amountText": "−13 560 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · BSPB",
+      "date": "8 апр. 2026, 10:55",
+      "amountText": "+12 480 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · SPBE",
+      "date": "7 апр. 2026, 14:40",
+      "amountText": "+11 187 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · VKCO",
+      "date": "7 апр. 2026, 09:15",
+      "amountText": "−10 920 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · MAGN",
+      "date": "6 апр. 2026, 16:08",
+      "amountText": "+16 860 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · AFKS",
+      "date": "6 апр. 2026, 11:22",
+      "amountText": "+12 336 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · LQDT",
+      "date": "5 апр. 2026, 15:01",
+      "amountText": "−13 080 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · TATN",
+      "date": "5 апр. 2026, 09:50",
+      "amountText": "+16 052 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · HYDR",
+      "date": "4 апр. 2026, 13:25",
+      "amountText": "+5 420 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · IRAO",
+      "date": "4 апр. 2026, 10:11",
+      "amountText": "−3 120 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · MTSS",
+      "date": "3 апр. 2026, 14:58",
+      "amountText": "+7 035 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · RTKM",
+      "date": "3 апр. 2026, 09:02",
+      "amountText": "+3 640 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · CBOM",
+      "date": "2 апр. 2026, 16:30",
+      "amountText": "−3 936 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · OGKB",
+      "date": "2 апр. 2026, 12:44",
+      "amountText": "+3 060 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · SU26238RMFS5",
+      "date": "1 апр. 2026, 15:10",
+      "amountText": "+98 200 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · SU26233RMFS5",
+      "date": "1 апр. 2026, 09:30",
+      "amountText": "−50 700 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · SBGB",
+      "date": "31 мар. 2026, 14:05",
+      "amountText": "+12 450 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · TMOS",
+      "date": "31 мар. 2026, 10:18",
+      "amountText": "+18 920 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · SOFL",
+      "date": "30 мар. 2026, 16:55",
+      "amountText": "−4 910 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · POSI",
+      "date": "30 мар. 2026, 11:40",
+      "amountText": "+6 120 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · MDMG",
+      "date": "29 мар. 2026, 15:22",
+      "amountText": "+6 240 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · MVID",
+      "date": "29 мар. 2026, 09:08",
+      "amountText": "−4 925 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · SIBN",
+      "date": "28 мар. 2026, 13:33",
+      "amountText": "+16 480 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · TRNFP",
+      "date": "28 мар. 2026, 09:55",
+      "amountText": "+14 560 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · LSRG",
+      "date": "27 мар. 2026, 16:12",
+      "amountText": "−7 120 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · POLY",
+      "date": "27 мар. 2026, 10:44",
+      "amountText": "+4 120 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · SBER",
+      "date": "26 мар. 2026, 14:32",
+      "amountText": "+2 981 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · LKOH",
+      "date": "26 мар. 2026, 10:14",
+      "amountText": "−13 080 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · GAZP",
+      "date": "25 мар. 2026, 09:00",
+      "amountText": "+5 000 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · VTBR",
+      "date": "24 мар. 2026, 15:40",
+      "amountText": "−7 100 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · FEES",
+      "date": "24 мар. 2026, 11:05",
+      "amountText": "+8 160 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Комиссия брокера",
+      "date": "24 мар. 2026, 09:00",
+      "amountText": "−125 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · OZON",
+      "date": "23 мар. 2026, 14:18",
+      "amountText": "+9 780 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · YDEX",
+      "date": "23 мар. 2026, 10:22",
+      "amountText": "−20 640 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · NVTK",
+      "date": "22 мар. 2026, 16:50",
+      "amountText": "+12 845 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Покупка · GMKN",
+      "date": "22 мар. 2026, 09:33",
+      "amountText": "+31 780 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Продажа · SNGSP",
+      "date": "21 мар. 2026, 15:11",
+      "amountText": "−4 502 ₽",
+      "side": "sale"
+    },
+    {
+      "title": "Покупка · APTK",
+      "date": "21 мар. 2026, 12:00",
+      "amountText": "+812 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Пополнение счёта",
+      "date": "20 мар. 2026, 10:00",
+      "amountText": "+100 000 ₽",
+      "side": "purchase"
+    },
+    {
+      "title": "Вывод средств",
+      "date": "19 мар. 2026, 14:00",
+      "amountText": "−25 000 ₽",
+      "side": "sale"
+    }
+  ]
+}

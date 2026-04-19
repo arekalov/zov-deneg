@@ -1,0 +1,214 @@
+{
+  "holdings": [
+    {
+      "ticker": "SBER",
+      "subtitle": "120 шт. · ср. 276 ₽",
+      "valueText": "33 120 ₽",
+      "deltaText": "+2 640 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "LKOH",
+      "subtitle": "8 шт. · ср. 6 100 ₽",
+      "valueText": "52 336 ₽",
+      "deltaText": "+2 536 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "GAZP",
+      "subtitle": "400 шт. · ср. 162 ₽",
+      "valueText": "66 960 ₽",
+      "deltaText": "+1 920 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "ROSN",
+      "subtitle": "60 шт. · ср. 498 ₽",
+      "valueText": "30 738 ₽",
+      "deltaText": "+858 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "NVTK",
+      "subtitle": "15 шт. · ср. 1 260 ₽",
+      "valueText": "19 267 ₽",
+      "deltaText": "−101 ₽",
+      "deltaPositive": false
+    },
+    {
+      "ticker": "GMKN",
+      "subtitle": "4 шт. · ср. 15 200 ₽",
+      "valueText": "63 560 ₽",
+      "deltaText": "+2 760 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "PLZL",
+      "subtitle": "3 шт. · ср. 10 900 ₽",
+      "valueText": "32 802 ₽",
+      "deltaText": "+102 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "TATN",
+      "subtitle": "25 шт. · ср. 618 ₽",
+      "valueText": "16 052 ₽",
+      "deltaText": "+602 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "MGNT",
+      "subtitle": "5 шт. · ср. 7 200 ₽",
+      "valueText": "35 075 ₽",
+      "deltaText": "−925 ₽",
+      "deltaPositive": false
+    },
+    {
+      "ticker": "YDEX",
+      "subtitle": "10 шт. · ср. 3 900 ₽",
+      "valueText": "41 280 ₽",
+      "deltaText": "+2 280 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "VTBR",
+      "subtitle": "500 000 шт. · ср. 0,027 ₽",
+      "valueText": "14 200 ₽",
+      "deltaText": "+700 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "MOEX",
+      "subtitle": "80 шт. · ср. 205 ₽",
+      "valueText": "17 184 ₽",
+      "deltaText": "+784 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "CHMF",
+      "subtitle": "30 шт. · ср. 1 080 ₽",
+      "valueText": "32 940 ₽",
+      "deltaText": "+540 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "PHOR",
+      "subtitle": "4 шт. · ср. 7 300 ₽",
+      "valueText": "29 824 ₽",
+      "deltaText": "+624 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "ALRS",
+      "subtitle": "200 шт. · ср. 72 ₽",
+      "valueText": "15 284 ₽",
+      "deltaText": "+884 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "SNGS",
+      "subtitle": "1 000 шт. · ср. 27,5 ₽",
+      "valueText": "28 150 ₽",
+      "deltaText": "+150 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "FEES",
+      "subtitle": "80 000 шт. · ср. 0,102 ₽",
+      "valueText": "8 336 ₽",
+      "deltaText": "+176 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "OZON",
+      "subtitle": "6 шт. · ср. 4 500 ₽",
+      "valueText": "29 340 ₽",
+      "deltaText": "+2 340 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "TCSG",
+      "subtitle": "7 шт. · ср. 2 850 ₽",
+      "valueText": "21 084 ₽",
+      "deltaText": "+1 134 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "X5",
+      "subtitle": "4 шт. · ср. 3 200 ₽",
+      "valueText": "12 624 ₽",
+      "deltaText": "+224 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "AFLT",
+      "subtitle": "150 шт. · ср. 55 ₽",
+      "valueText": "8 751 ₽",
+      "deltaText": "+501 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "PIKK",
+      "subtitle": "20 шт. · ср. 640 ₽",
+      "valueText": "13 560 ₽",
+      "deltaText": "+760 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "RUAL",
+      "subtitle": "300 шт. · ср. 40 ₽",
+      "valueText": "11 670 ₽",
+      "deltaText": "−330 ₽",
+      "deltaPositive": false
+    },
+    {
+      "ticker": "ENRU",
+      "subtitle": "5 000 шт. · ср. 0,70 ₽",
+      "valueText": "3 578 ₽",
+      "deltaText": "+78 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "BSPB",
+      "subtitle": "40 шт. · ср. 285 ₽",
+      "valueText": "12 480 ₽",
+      "deltaText": "+1 080 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "SPBE",
+      "subtitle": "90 шт. · ср. 118 ₽",
+      "valueText": "11 187 ₽",
+      "deltaText": "+567 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "VKCO",
+      "subtitle": "35 шт. · ср. 298 ₽",
+      "valueText": "10 920 ₽",
+      "deltaText": "+390 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "MAGN",
+      "subtitle": "400 шт. · ср. 41 ₽",
+      "valueText": "16 860 ₽",
+      "deltaText": "+420 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "AFKS",
+      "subtitle": "800 шт. · ср. 14,8 ₽",
+      "valueText": "12 336 ₽",
+      "deltaText": "+496 ₽",
+      "deltaPositive": true
+    },
+    {
+      "ticker": "LQDT",
+      "subtitle": "2 шт. · ср. 6 400 ₽",
+      "valueText": "13 080 ₽",
+      "deltaText": "+80 ₽",
+      "deltaPositive": true
+    }
+  ]
+}

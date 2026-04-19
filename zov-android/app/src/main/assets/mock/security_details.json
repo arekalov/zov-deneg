@@ -1,0 +1,232 @@
+{
+  "SBER": {
+    "ticker": "SBER",
+    "subtitle": "Сбербанк · финансы",
+    "priceLine": "298,12 ₽",
+    "changeLine": "+1,2% · +3,52 ₽ за день",
+    "changePositive": true,
+    "securityId": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    "lotSize": 10,
+    "orderBookText": "Покупка 298,10 · 298,12 · Продажа 298,14"
+  },
+  "LKOH": {
+    "ticker": "LKOH",
+    "subtitle": "ЛУКОЙЛ · энергетика",
+    "priceLine": "6 542,00 ₽",
+    "changeLine": "−0,4% · −26 ₽ за день",
+    "changePositive": false,
+    "securityId": "b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12",
+    "lotSize": 10,
+    "orderBookText": "Стакан (мок): лучший bid 6 540, ask 6 545"
+  },
+  "GAZP": {
+    "ticker": "GAZP",
+    "subtitle": "Газпром · энергетика",
+    "priceLine": "167,40 ₽",
+    "changeLine": "+0,8% · +1,32 ₽ за день",
+    "changePositive": true,
+    "securityId": "c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13",
+    "lotSize": 10,
+    "orderBookText": "Стакан (мок): bid 167,38 · ask 167,42"
+  },
+  "ROSN": {
+    "ticker": "ROSN",
+    "subtitle": "Роснефть · энергетика",
+    "priceLine": "512,30 ₽",
+    "changeLine": "+0,5% · +2,55 ₽ за день",
+    "changePositive": true,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01",
+    "lotSize": 10,
+    "orderBookText": "512,28 / 512,35 · объём дня 1,2 млн шт"
+  },
+  "NVTK": {
+    "ticker": "NVTK",
+    "subtitle": "Новатэк · энергетика",
+    "priceLine": "1 284,50 ₽",
+    "changeLine": "−0,2% · −2,60 ₽ за день",
+    "changePositive": false,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02",
+    "lotSize": 1,
+    "orderBookText": "1 284,0 — 1 285,0 · спред 1 ₽"
+  },
+  "GMKN": {
+    "ticker": "GMKN",
+    "subtitle": "Норникель · металлы",
+    "priceLine": "15 890 ₽",
+    "changeLine": "+1,1% · +173 ₽ за день",
+    "changePositive": true,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03",
+    "lotSize": 1,
+    "orderBookText": "15 885 / 15 895 · глубина 120 / 85 лотов"
+  },
+  "PLZL": {
+    "ticker": "PLZL",
+    "subtitle": "Полюс · золото",
+    "priceLine": "11 234 ₽",
+    "changeLine": "+0,3% · +34 ₽ за день",
+    "changePositive": true,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a04",
+    "lotSize": 1,
+    "orderBookText": "11 230 — 11 240"
+  },
+  "TATN": {
+    "ticker": "TATN",
+    "subtitle": "Татнефть · энергетика",
+    "priceLine": "642,10 ₽",
+    "changeLine": "+0,6% · +3,83 ₽ за день",
+    "changePositive": true,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a05",
+    "lotSize": 1,
+    "orderBookText": "641,90 / 642,30"
+  },
+  "MGNT": {
+    "ticker": "MGNT",
+    "subtitle": "Магнит · ритейл",
+    "priceLine": "7 015 ₽",
+    "changeLine": "−0,9% · −64 ₽ за день",
+    "changePositive": false,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a06",
+    "lotSize": 1,
+    "orderBookText": "7 010 — 7 020 · после дивидендного отсечения"
+  },
+  "YDEX": {
+    "ticker": "YDEX",
+    "subtitle": "Яндекс · IT",
+    "priceLine": "4 128 ₽",
+    "changeLine": "+2,1% · +85 ₽ за день",
+    "changePositive": true,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a07",
+    "lotSize": 1,
+    "orderBookText": "4 125 / 4 130 · ликвидность высокая"
+  },
+  "VTBR": {
+    "ticker": "VTBR",
+    "subtitle": "ВТБ · финансы",
+    "priceLine": "0,0284 ₽",
+    "changeLine": "+3,2% · +0,0009 ₽ за день",
+    "changePositive": true,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a08",
+    "lotSize": 10000,
+    "orderBookText": "0,02835 / 0,02845 · пачка 10 000"
+  },
+  "MOEX": {
+    "ticker": "MOEX",
+    "subtitle": "МосБиржа · финансы",
+    "priceLine": "214,80 ₽",
+    "changeLine": "+0,4% · +0,86 ₽ за день",
+    "changePositive": true,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a09",
+    "lotSize": 10,
+    "orderBookText": "214,75 / 214,85"
+  },
+  "CHMF": {
+    "ticker": "CHMF",
+    "subtitle": "Северсталь · металлы",
+    "priceLine": "1 098 ₽",
+    "changeLine": "−0,3% · −3,30 ₽ за день",
+    "changePositive": false,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a0a",
+    "lotSize": 10,
+    "orderBookText": "1 097,5 — 1 098,5"
+  },
+  "PHOR": {
+    "ticker": "PHOR",
+    "subtitle": "ФосАгро · химия",
+    "priceLine": "7 456 ₽",
+    "changeLine": "+0,7% · +51,90 ₽ за день",
+    "changePositive": true,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a0b",
+    "lotSize": 1,
+    "orderBookText": "7 450 / 7 460"
+  },
+  "ALRS": {
+    "ticker": "ALRS",
+    "subtitle": "Алроса · добыча",
+    "priceLine": "76,42 ₽",
+    "changeLine": "+1,5% · +1,13 ₽ за день",
+    "changePositive": true,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a0c",
+    "lotSize": 10,
+    "orderBookText": "76,40 / 76,45"
+  },
+  "SNGS": {
+    "ticker": "SNGS",
+    "subtitle": "Сургутнефтегаз · энергетика",
+    "priceLine": "28,15 ₽",
+    "changeLine": "0,0% · 0,00 ₽ за день",
+    "changePositive": true,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a0d",
+    "lotSize": 100,
+    "orderBookText": "28,14 / 28,16"
+  },
+  "FEES": {
+    "ticker": "FEES",
+    "subtitle": "Россети · электроэнергетика",
+    "priceLine": "0,1042 ₽",
+    "changeLine": "−0,5% · −0,0005 ₽ за день",
+    "changePositive": false,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a0e",
+    "lotSize": 10000,
+    "orderBookText": "0,1040 / 0,1044"
+  },
+  "OZON": {
+    "ticker": "OZON",
+    "subtitle": "Ozon · e-commerce",
+    "priceLine": "4 890 ₽",
+    "changeLine": "+4,2% · +197 ₽ за день",
+    "changePositive": true,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a0f",
+    "lotSize": 1,
+    "orderBookText": "4 885 / 4 895"
+  },
+  "TCSG": {
+    "ticker": "TCSG",
+    "subtitle": "Т-Технологии · финансы",
+    "priceLine": "3 012 ₽",
+    "changeLine": "+0,9% · +26,90 ₽ за день",
+    "changePositive": true,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380b01",
+    "lotSize": 1,
+    "orderBookText": "3 010 / 3 015"
+  },
+  "X5": {
+    "ticker": "X5",
+    "subtitle": "X5 Group · ритейл",
+    "priceLine": "3 156 ₽",
+    "changeLine": "−0,6% · −19 ₽ за день",
+    "changePositive": false,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380b02",
+    "lotSize": 1,
+    "orderBookText": "3 152 — 3 160"
+  },
+  "LQDT": {
+    "ticker": "LQDT",
+    "subtitle": "Видео · IT (мок ETF)",
+    "priceLine": "6 540 ₽",
+    "changeLine": "+0,3% · +19,60 ₽ за день",
+    "changePositive": true,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380b03",
+    "lotSize": 1,
+    "orderBookText": "ETF: NAV 6 538 · рыночная 6 540"
+  },
+  "SU26238RMFS5": {
+    "ticker": "SU26238RMFS5",
+    "subtitle": "ОФЗ 26238 · гособлигация",
+    "priceLine": "98,20 ₽",
+    "changeLine": "−0,1% · −0,10 ₽ за день",
+    "changePositive": false,
+    "securityId": "a1eebc99-9c0b-4ef8-bb6d-6bb9bd380b04",
+    "lotSize": 1,
+    "orderBookText": "Дюрация ~6 лет · доходность к погашению (мок) 12,4%"
+  },
+  "__DEFAULT__": {
+    "ticker": "__TICKER__",
+    "subtitle": "__TICKER__ · бумага (расширенный мок)",
+    "priceLine": "—",
+    "changeLine": "—",
+    "changePositive": true,
+    "securityId": "d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14",
+    "lotSize": 10,
+    "orderBookText": "Стакан заявок (заглушка) · bid — · ask — · глубина рынка (мок)"
+  }
+}
