@@ -159,11 +159,9 @@ const txRow = buildTransactionRow();
 dropRow(txRow);
 const setNotif = buildSettingRow("Уведомления");
 const setTheme = buildSettingRow("Тема");
-const setCurr = buildSettingRow("Валюта отображения");
 const setBio = buildSettingRow("Вход по отпечатку");
 dropRow(setNotif);
 dropRow(setTheme);
-dropRow(setCurr);
 dropRow(setBio);
 
 // ─── Ввод ──────────────────────────────────────────────────────────────────

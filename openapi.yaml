@@ -15,6 +15,9 @@ info:
     | user  | Аутентифицированный инвестор |
     | admin | Администратор системы        |
 
+    ## Валюта
+    Все денежные суммы, баланс и котировки в API — **в российских рублях**; отдельное поле валюты в ответах не передаётся.
+
   version: 1.0.0
   contact:
     name: ЗОВ Денег Team
@@ -219,9 +222,26 @@ components:
 
     Security:
       type: object
+      required:
+        - id
+        - ticker
+        - name
+        - type
+        - exchange
+        - sector
+        - lotSize
+        - lastPrice
+        - priceChange
+        - priceChangePct
       properties:
+        id:
+          type: string
+          format: uuid
+          description: Уникальный идентификатор бумаги в системе (первичный ключ)
+          example: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
         ticker:
           type: string
+          description: Торговый тикер (может совпадать у разных выпусков облигаций)
           example: SBER
         name:
           type: string
@@ -241,9 +261,6 @@ components:
           type: integer
           description: Размер лота в штуках
           example: 10
-        currency:
-          type: string
-          example: RUB
         lastPrice:
           type: number
           format: double
@@ -286,9 +303,16 @@ components:
 
     OrderBook:
       type: object
+      required: [securityId, ticker, timestamp, asks, bids, spread]
       properties:
+        securityId:
+          type: string
+          format: uuid
+          description: Идентификатор бумаги
+          example: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
         ticker:
           type: string
+          description: Торговый тикер (для отображения)
           example: SBER
         timestamp:
           type: integer
@@ -313,10 +337,13 @@ components:
     # ── Портфель ───────────────────────────────────────────────────────────
     PortfolioItem:
       type: object
+      required: [securityId, security, quantity, averagePrice, currentPrice, currentValue, profitLoss, profitLossPct]
       properties:
-        ticker:
+        securityId:
           type: string
-          example: SBER
+          format: uuid
+          description: Идентификатор бумаги (совпадает с `security.id`)
+          example: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
         security:
           $ref: '#/components/schemas/Security'
         quantity:
@@ -410,12 +437,27 @@ components:
 
     Order:
       type: object
+      required:
+        - id
+        - securityId
+        - type
+        - side
+        - status
+        - quantity
+        - createdAt
+        - updatedAt
       properties:
         id:
           type: string
           format: uuid
+        securityId:
+          type: string
+          format: uuid
+          description: Идентификатор бумаги
+          example: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
         ticker:
           type: string
+          description: Торговый тикер (для отображения)
           example: SBER
         type:
           $ref: '#/components/schemas/OrderType'
@@ -467,11 +509,13 @@ components:
 
     CreateOrderRequest:
       type: object
-      required: [ticker, type, side, quantity]
+      required: [securityId, type, side, quantity]
       properties:
-        ticker:
+        securityId:
           type: string
-          example: SBER
+          format: uuid
+          description: Идентификатор бумаги (из `GET /securities` или карточки бумаги)
+          example: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
         type:
           $ref: '#/components/schemas/OrderType'
         side:
@@ -506,9 +550,16 @@ components:
           format: uuid
         type:
           $ref: '#/components/schemas/TransactionType'
+        securityId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Идентификатор бумаги; null для операций без инструмента (пополнение, вывод и т.д.)
+          example: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
         ticker:
           type: string
           nullable: true
+          description: Торговый тикер (для отображения; null если неприменимо)
           example: SBER
         securityName:
           type: string
@@ -561,9 +612,6 @@ components:
           format: double
           description: Заблокировано в активных лимитных заявках
           example: 2480.00
-        currency:
-          type: string
-          example: RUB
 
   # ── Reusable responses ─────────────────────────────────────────────────────
   responses:
@@ -655,14 +703,15 @@ components:
         minimum: 1
         maximum: 100
 
-    TickerPath:
-      name: ticker
+    SecurityIdPath:
+      name: securityId
       in: path
       required: true
-      description: Тикер ценной бумаги
+      description: Уникальный идентификатор ценной бумаги (UUID)
       schema:
         type: string
-        example: SBER
+        format: uuid
+        example: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
 
     UserIdPath:
       name: userId
@@ -1116,6 +1165,7 @@ paths:
       description: |
         Возвращает постраничный список бумаг с последними котировками.
         Поддерживает поиск по тикеру и названию, фильтрацию по типу, бирже и сектору.
+        В каждой записи возвращается `id` (UUID) — его нужно использовать в путях `/securities/{securityId}` и в заявках.
       parameters:
         - name: q
           in: query
@@ -1155,13 +1205,13 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /securities/{ticker}:
+  /securities/{securityId}:
     parameters:
-      - $ref: '#/components/parameters/TickerPath'
+      - $ref: '#/components/parameters/SecurityIdPath'
     get:
       tags: [securities]
       summary: Детальная информация по бумаге
-      description: Возвращает полные данные по одной бумаге, включая последнюю цену и изменение за день.
+      description: Возвращает полные данные по одной бумаге по её UUID, включая последнюю цену и изменение за день.
       responses:
         '200':
           description: OK
@@ -1172,9 +1222,9 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /securities/{ticker}/price/history:
+  /securities/{securityId}/price/history:
     parameters:
-      - $ref: '#/components/parameters/TickerPath'
+      - $ref: '#/components/parameters/SecurityIdPath'
     get:
       tags: [securities]
       summary: История цен для построения графика
@@ -1194,9 +1244,15 @@ paths:
             application/json:
               schema:
                 type: object
+                required: [securityId, ticker, period, data]
                 properties:
+                  securityId:
+                    type: string
+                    format: uuid
+                    example: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
                   ticker:
                     type: string
+                    description: Торговый тикер (для подписей к графику)
                     example: SBER
                   period:
                     $ref: '#/components/schemas/ChartPeriod'
@@ -1205,6 +1261,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/PricePoint'
               example:
+                securityId: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
                 ticker: SBER
                 period: 1D
                 data:
@@ -1226,9 +1283,9 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /securities/{ticker}/orderbook:
+  /securities/{securityId}/orderbook:
     parameters:
-      - $ref: '#/components/parameters/TickerPath'
+      - $ref: '#/components/parameters/SecurityIdPath'
     get:
       tags: [securities]
       summary: Стакан заявок
@@ -1320,7 +1377,7 @@ paths:
       summary: Список заявок пользователя
       description: |
         Возвращает постраничную историю торговых заявок текущего пользователя.
-        Поддерживает фильтрацию по статусу, направлению (buy/sell), тикеру и диапазону дат.
+        Поддерживает фильтрацию по статусу, направлению (buy/sell), идентификатору бумаги (UUID) и диапазону дат.
       parameters:
         - name: status
           in: query
@@ -1330,10 +1387,12 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/OrderSide'
-        - name: ticker
+        - name: securityId
           in: query
+          description: Фильтр по идентификатору бумаги (UUID)
           schema:
             type: string
+            format: uuid
         - name: from
           in: query
           schema:
@@ -1381,14 +1440,14 @@ paths:
               market_buy:
                 summary: Рыночная покупка 10 акций SBER
                 value:
-                  ticker: SBER
+                  securityId: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
                   type: market
                   side: buy
                   quantity: 10
               limit_sell:
                 summary: Лимитная продажа по 305 ₽
                 value:
-                  ticker: SBER
+                  securityId: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
                   type: limit
                   side: sell
                   quantity: 10
@@ -1439,14 +1498,14 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
-          description: Бумага с таким тикером не найдена
+          description: Бумага с указанным идентификатором не найдена
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 code: SECURITY_NOT_FOUND
-                message: Бумага SBER не найдена
+                message: Ценная бумага с указанным идентификатором не найдена
         '422':
           description: Рынок закрыт или бумага приостановлена к торгам
           content:
@@ -1529,16 +1588,18 @@ paths:
       summary: История транзакций пользователя
       description: |
         Возвращает постраничную историю всех денежных операций: покупки, продажи,
-        пополнения, выводы и дивиденды. Поддерживает фильтрацию по типу, тикеру и диапазону дат.
+        пополнения, выводы и дивиденды. Поддерживает фильтрацию по типу, идентификатору бумаги (UUID) и диапазону дат.
       parameters:
         - name: type
           in: query
           schema:
             $ref: '#/components/schemas/TransactionType'
-        - name: ticker
+        - name: securityId
           in: query
+          description: Фильтр по идентификатору бумаги (UUID)
           schema:
             type: string
+            format: uuid
         - name: from
           in: query
           schema:

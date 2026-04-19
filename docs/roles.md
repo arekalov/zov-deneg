@@ -43,9 +43,9 @@
 | Действие                                    | Эндпоинт                              | anonymous | user | admin |
 |---------------------------------------------|---------------------------------------|:---------:|:----:|:-----:|
 | Поиск и список бумаг                        | GET /securities                       | ✅        | ✅   | ✅    |
-| Детали по бумаге                            | GET /securities/{ticker}              | ✅        | ✅   | ✅    |
-| История цен (для графика)                   | GET /securities/{ticker}/price/history| ✅        | ✅   | ✅    |
-| Стакан заявок                               | GET /securities/{ticker}/orderbook    | ❌        | ✅   | ✅    |
+| Детали по бумаге                            | GET /securities/{securityId}              | ✅        | ✅   | ✅    |
+| История цен (для графика)                   | GET /securities/{securityId}/price/history | ✅        | ✅   | ✅    |
+| Стакан заявок                               | GET /securities/{securityId}/orderbook    | ❌        | ✅   | ✅    |
 
 ---
 
@@ -88,7 +88,7 @@
 |---------------------------------------------|----------------------------|:---------:|:----:|:-----:|
 | Просмотреть список                          | GET /watchlist             | ❌        | ✅   | ❌    |
 | Добавить бумагу                             | POST /watchlist            | ❌        | ✅   | ❌    |
-| Удалить бумагу                              | DELETE /watchlist/{ticker} | ❌        | ✅   | ❌    |
+| Удалить бумагу                              | DELETE /watchlist/{securityId} | ❌        | ✅   | ❌    |
 
 ---
 
@@ -108,8 +108,8 @@
 | Заблокировать пользователя                  | POST /admin/users/{id}/block     | ❌        | ❌   | ✅    |
 | Разблокировать пользователя                 | POST /admin/users/{id}/unblock   | ❌        | ❌   | ✅    |
 | Добавить ценную бумагу                      | POST /admin/securities           | ❌        | ❌   | ✅    |
-| Обновить данные бумаги                      | PUT /admin/securities/{ticker}   | ❌        | ❌   | ✅    |
-| Удалить ценную бумагу                       | DELETE /admin/securities/{ticker}| ❌        | ❌   | ✅    |
+| Обновить данные бумаги                      | PUT /admin/securities/{securityId}   | ❌        | ❌   | ✅    |
+| Удалить ценную бумагу                       | DELETE /admin/securities/{securityId} | ❌        | ❌   | ✅    |
 
 ---
 

@@ -173,13 +173,6 @@ makeProfSection("Безопасность");
 makeProfToggleRow("Вход по отпечатку пальца", true);
 makeProfToggleRow("Двухфакторная аутентификация", false);
 
-// ─── Валюта отображения ───────────────────────────────────────────────────
-makeProfDivider();
-makeProfSection("Валюта отображения");
-makeProfRadioRow("₽  Российский рубль", null, true);
-makeProfRadioRow("$  Доллар США", null, false);
-makeProfRadioRow("€  Евро", null, false);
-
 // ─── Выход ───────────────────────────────────────────────────────────────
 makeProfDivider();
 

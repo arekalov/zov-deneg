@@ -286,7 +286,7 @@ function buildTypographyShowcase(parent) {
     { role: "Body Medium",     size: 14, weight: "reg",  sample: "Сбербанк · 10 шт. · ср. 285 ₽" },
     { role: "Body Small",      size: 12, weight: "reg",  sample: "28 марта 2026, 14:32" },
     { role: "Label Large",     size: 14, weight: "med",  sample: "Купить · Войти · Продать" },
-    { role: "Label Medium",    size: 12, weight: "med",  sample: "Уведомления · Тема · Валюта" },
+    { role: "Label Medium",    size: 12, weight: "med",  sample: "Уведомления · Тема" },
     { role: "Label Small",     size: 11, weight: "med",  sample: "SBER · LKOH · ВХОД" },
   ];
 
@@ -1418,11 +1418,9 @@ const txRow = buildTransactionRow();
 dropRow(txRow);
 const setNotif = buildSettingRow("Уведомления");
 const setTheme = buildSettingRow("Тема");
-const setCurr = buildSettingRow("Валюта отображения");
 const setBio = buildSettingRow("Вход по отпечатку");
 dropRow(setNotif);
 dropRow(setTheme);
-dropRow(setCurr);
 dropRow(setBio);
 
 // ─── Ввод ──────────────────────────────────────────────────────────────────
@@ -3277,13 +3275,6 @@ makeProfDivider();
 makeProfSection("Безопасность");
 makeProfToggleRow("Вход по отпечатку пальца", true);
 makeProfToggleRow("Двухфакторная аутентификация", false);
-
-// ─── Валюта отображения ───────────────────────────────────────────────────
-makeProfDivider();
-makeProfSection("Валюта отображения");
-makeProfRadioRow("₽  Российский рубль", null, true);
-makeProfRadioRow("$  Доллар США", null, false);
-makeProfRadioRow("€  Евро", null, false);
 
 // ─── Выход ───────────────────────────────────────────────────────────────
 makeProfDivider();
