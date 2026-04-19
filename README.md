@@ -17,7 +17,7 @@
 | **`openapi.yaml`** | Контракт **OpenAPI 3**: JWT, пользователи, ценные бумаги, портфель, заявки, транзакции, баланс (пополнение / вывод), денежные суммы и цены как **строки**, время — **Unix timestamp**. Публикуется в Swagger UI через GitHub Actions. |
 | **`docs/`** | Тексты: **`TZ.md`** — техническое задание; **`roles.md`** — роли и доступ к API. |
 | **`zov-figma/`** | **Dev-плагин Figma**: из `parts/` собирает страницы «Компоненты» и «Экраны» (макеты **360×800**, Android Compact). Подробности — [`zov-figma/README.md`](zov-figma/README.md). |
-| **`zov-android/`** | **Нативное Android-приложение** (Gradle, модуль `:app`, Jetpack Compose, тема Material). Точка входа — `app`, корневые `build.gradle.kts` / `settings.gradle.kts`. Документация клиента: [`zov-android/docs/`](zov-android/docs/) (`android-development-process.md`, `android-stack.md`). |
+| **`zov-android/`** | **Нативное Android-приложение** (Gradle, `:app`, Compose). Быстрый старт — [`zov-android/README.md`](zov-android/README.md); детали — [`zov-android/docs/`](zov-android/docs/). |
 | **`.github/workflows/`** | CI: например публикация **Swagger UI** на GitHub Pages при изменении `openapi.yaml`. |
 
 ### Каталог `zov-figma/` (кратко)

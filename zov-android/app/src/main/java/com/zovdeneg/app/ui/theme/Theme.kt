@@ -13,7 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
     secondary = PurpleGrey80,
-    tertiary = Pink80
+    tertiary = Pink80,
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -26,7 +26,7 @@ private val LightColorScheme = lightColorScheme(
 fun ZovdenegandroidappTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -41,6 +41,6 @@ fun ZovdenegandroidappTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
-        content = content
+        content = content,
     )
 }
