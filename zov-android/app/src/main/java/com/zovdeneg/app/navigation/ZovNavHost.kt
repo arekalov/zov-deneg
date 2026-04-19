@@ -6,6 +6,7 @@ import com.zovdeneg.app.ui.common.ZovTopBarContentHeight
 import com.zovdeneg.app.ui.common.ZovTouchMin
 import com.zovdeneg.app.ui.common.ZovUnit
 import com.zovdeneg.app.ui.components.LocalZovSnackbarHostState
+import com.zovdeneg.app.ui.components.LocalZovSnackbarScope
 import com.zovdeneg.app.ui.components.ZovSnackbarHost
 import com.zovdeneg.app.ui.theme.ZovTheme
 
@@ -39,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -230,6 +232,7 @@ private fun ZovNavBottomBar(
 fun ZovNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarScope = rememberCoroutineScope()
     val backStack by navController.currentBackStackEntryAsState()
     val current = backStack?.destination
     val route = current?.route
@@ -238,7 +241,10 @@ fun ZovNavHost(modifier: Modifier = Modifier) {
     val topTitle = zovTopBarTitle(route, backStack)
     val showBack = topTitle != null && route !in mainTabRoutes
 
-    CompositionLocalProvider(LocalZovSnackbarHostState provides snackbarHostState) {
+    CompositionLocalProvider(
+        LocalZovSnackbarHostState provides snackbarHostState,
+        LocalZovSnackbarScope provides snackbarScope,
+    ) {
         Scaffold(
             modifier = modifier.fillMaxSize(),
             containerColor = ZovTheme.colors.background,

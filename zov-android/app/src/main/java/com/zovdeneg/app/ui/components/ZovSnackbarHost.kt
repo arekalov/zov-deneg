@@ -31,12 +31,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+import kotlinx.coroutines.CoroutineScope
+
 /**
  * [SnackbarHostState] provided at the root [androidx.compose.material3.Scaffold] ([ZovNavHost]).
- * Use [androidx.compose.material3.SnackbarHostState.showSnackbar] for Material 3 snackbars.
+ *
+ * [androidx.compose.material3.SnackbarHostState.showSnackbar] — **suspend**: не возвращается, пока
+ * снекбар не скроется. Чтобы сразу после вызова делать навигацию с того же экрана, запускай
+ * `showSnackbar` в [LocalZovSnackbarScope] (`scope.launch { host.showSnackbar(...) }`), иначе
+ * `onBack()` выполнится только после таймаута.
  */
 val LocalZovSnackbarHostState = staticCompositionLocalOf<SnackbarHostState> {
     error("LocalZovSnackbarHostState: provide via ZovNavHost")
+}
+
+/** [CoroutineScope] корня навигации — не отменяется при `popBackStack` с дочернего экрана. */
+val LocalZovSnackbarScope = staticCompositionLocalOf<CoroutineScope> {
+    error("LocalZovSnackbarScope: provide via ZovNavHost")
 }
 
 private fun Modifier.zovSnackbarHostOuter(applyNavigationBarPadding: Boolean): Modifier =

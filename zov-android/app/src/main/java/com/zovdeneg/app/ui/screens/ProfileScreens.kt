@@ -25,7 +25,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +42,7 @@ import com.zovdeneg.app.ui.common.ZovSpace4
 import com.zovdeneg.app.ui.common.ZovTightGap
 import com.zovdeneg.app.ui.common.ZovUnit
 import com.zovdeneg.app.ui.components.LocalZovSnackbarHostState
+import com.zovdeneg.app.ui.components.LocalZovSnackbarScope
 import com.zovdeneg.app.ui.components.ZovOutlinedRow
 import com.zovdeneg.app.ui.components.ZovPinDots
 import com.zovdeneg.app.ui.components.ZovPinKeypad
@@ -247,10 +247,13 @@ fun EditProfileScreen(
     val t = ZovTheme.text
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = LocalZovSnackbarHostState.current
+    val snackbarScope = LocalZovSnackbarScope.current
     val savedMsg = stringResource(R.string.profile_save_success)
     LaunchedEffect(state.saveSucceeded) {
         if (!state.saveSucceeded) return@LaunchedEffect
-        snackbarHostState.showSnackbar(savedMsg)
+        snackbarScope.launch {
+            snackbarHostState.showSnackbar(savedMsg)
+        }
         viewModel.acknowledgeSave()
         onBack()
     }
@@ -418,14 +421,16 @@ fun ChangePinScreen(
     val c = ZovTheme.colors
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = LocalZovSnackbarHostState.current
-    val scope = rememberCoroutineScope()
+    val snackbarScope = LocalZovSnackbarScope.current
     val okMsg = stringResource(R.string.pin_change_success)
     val forgotMsg = stringResource(R.string.pin_change_forgot_snackbar)
     val pinLen = state.draft.length
     val header = changePinHeaderModel(state.step)
     LaunchedEffect(state.succeeded) {
         if (!state.succeeded) return@LaunchedEffect
-        snackbarHostState.showSnackbar(okMsg)
+        snackbarScope.launch {
+            snackbarHostState.showSnackbar(okMsg)
+        }
         viewModel.acknowledge()
         onBack()
     }
@@ -451,7 +456,7 @@ fun ChangePinScreen(
                     forgotMsg = forgotMsg,
                 ),
                 snackbarHostState = snackbarHostState,
-                scope = scope,
+                scope = snackbarScope,
             )
             ChangePinKeypadFooter(
                 pinLen = pinLen,

@@ -8,6 +8,7 @@ import com.zovdeneg.app.ui.common.ZovHorizontalPadding
 import com.zovdeneg.app.ui.common.ZovItemSpacing
 import com.zovdeneg.app.ui.common.ZovShapeMedium
 import com.zovdeneg.app.ui.components.LocalZovSnackbarHostState
+import com.zovdeneg.app.ui.components.LocalZovSnackbarScope
 import com.zovdeneg.app.ui.components.ZovFilterChip
 import com.zovdeneg.app.ui.components.ZovScrollScreen
 import com.zovdeneg.app.ui.deposit.DepositViewModel
@@ -45,6 +46,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
+import kotlinx.coroutines.launch
 
 private val previewSecurityDetail =
     SecurityDetail(
@@ -200,10 +203,13 @@ fun BuyScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = LocalZovSnackbarHostState.current
+    val snackbarScope = LocalZovSnackbarScope.current
     val successMsg = stringResource(R.string.order_submitted)
     LaunchedEffect(state.orderJustPlaced) {
         if (!state.orderJustPlaced) return@LaunchedEffect
-        snackbarHostState.showSnackbar(successMsg)
+        snackbarScope.launch {
+            snackbarHostState.showSnackbar(successMsg)
+        }
         viewModel.acknowledgeOrderPlaced()
         onBack()
     }
