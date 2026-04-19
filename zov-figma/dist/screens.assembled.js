@@ -927,7 +927,7 @@ function buildSparklineCard(ticker, name, price, delta, isPositive) {
   return comp;
 }
 
-// ─── Price Plot (линейный график с выбором периода) ──────────────────────
+// ─── Price Plot (линейный график; на макете — понятные периоды 1Д/1Н/…; в API клиент шлёт from/to) ─
 function buildPricePlot() {
   const comp = figma.createComponent();
   comp.name = "График · Динамика цены";
@@ -1073,7 +1073,7 @@ function buildPricePlot() {
   comp.appendChild(xAxis);
   xAxis.layoutSizingHorizontal = "FILL"; xAxis.layoutSizingVertical = "HUG";
 
-  // ─── Чипсы периода (под осью X) ──────────────────────────────────────────
+  // ─── Чипсы периода (под осью X; для пользователя — кратко; клиент сам считает from/to для API) ─
   const periodRow = figma.createFrame();
   periodRow.name = "Периоды";
   periodRow.layoutMode = "HORIZONTAL";
@@ -1082,7 +1082,7 @@ function buildPricePlot() {
   periodRow.primaryAxisSizingMode = "AUTO";
   periodRow.counterAxisSizingMode = "AUTO";
   for (let i = 0; i < 4; i++) {
-    const label = ["1Д","1Н","1М","1Г"][i];
+    const label = ["1Д", "1Н", "1М", "1Г"][i];
     const pill = figma.createFrame();
     pill.name = `Период · ${label}`;
     pill.layoutMode = "HORIZONTAL";

@@ -144,7 +144,7 @@
 | `INSUFFICIENT_FUNDS`      | 400   | Недостаточно средств на счёте                         |
 | `INSUFFICIENT_SECURITIES` | 400   | Недостаточно бумаг в портфеле для продажи             |
 | `INVALID_AMOUNT`          | 400   | Некорректная сумма операции                           |
-| `INVALID_DATE_RANGE`      | 400   | Некорректный диапазон дат (from > to)                 |
+| `INVALID_DATE_RANGE`      | 400   | Некорректный интервал: `from` > `to` (Unix timestamp, сек), в т.ч. для истории цен |
 | `ORDER_NOT_CANCELLABLE`   | 400   | Заявку в текущем статусе нельзя отменить              |
 | `INVALID_CURRENT_PIN`     | 401   | Неверный текущий PIN-код при смене                    |
 | `INVALID_PIN`             | 401   | Неверный PIN-код при входе                            |

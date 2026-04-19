@@ -22,6 +22,12 @@ info:
     Цены, суммы в рублях, комиссии и десятичные проценты передаются **строками** с десятичной точкой
     (например `"298.45"`, `"-1284.50"`), без JSON-типа `number`, чтобы исключить потери точности на стороне бэкенда.
 
+    ## Даты и время
+    Все **моменты времени** в API — это **Unix timestamp в секундах** (целое `integer` / `int64`, UTC от эпохи 1970-01-01).
+    Строки вида ISO 8601, отдельные поля «дата без времени» и локальные часовые пояса в контракте **не используются**.
+    История цен бумаги: в HTTP-запросе интервал задаётся только **`from`** и **`to`** (секунды с эпохи, включительно).
+    В клиентском UI допускаются понятные пользователю пресеты (день, неделя и т.д.); **клиент** сам переводит выбор в пару timestamp для сервера.
+
   version: 1.0.0
   contact:
     name: ЗОВ Денег Team
@@ -127,6 +133,14 @@ components:
         Используется для цен, сумм в рублях, комиссий и дробных процентов.
       example: "298.45"
 
+    UnixTimestamp:
+      type: integer
+      format: int64
+      description: |
+        Момент времени в **секундах** с эпохи Unix (1970-01-01T00:00:00Z), целое число, UTC.
+        Используется в телах ответов и в query **`from` / `to`** для истории цен (`GET .../price/history`).
+      example: 1731571200
+
     # ── Пользователи ───────────────────────────────────────────────────────
     UserRole:
       type: string
@@ -159,13 +173,11 @@ components:
           type: boolean
           example: false
         createdAt:
-          type: integer
-          description: Unix timestamp (секунды с 01.01.1970 UTC)
-          example: 1731571200
+          $ref: '#/components/schemas/UnixTimestamp'
+          description: Момент создания записи
         updatedAt:
-          type: integer
-          description: Unix timestamp (секунды с 01.01.1970 UTC)
-          example: 1731571200
+          $ref: '#/components/schemas/UnixTimestamp'
+          description: Момент последнего обновления записи
 
     # ── Токены ─────────────────────────────────────────────────────────────
     Tokens:
@@ -183,7 +195,9 @@ components:
           description: Refresh token (TTL 30 дней)
         expiresIn:
           type: integer
-          description: Время жизни access token в секундах
+          description: |
+            Срок жизни выданного access token в **секундах** (длительность, не календарный момент).
+            Сравните с `UnixTimestamp`: там секунды от эпохи, здесь — только длительность интервала.
           example: 900
 
     # ── Ценные бумаги ──────────────────────────────────────────────────────
@@ -195,16 +209,6 @@ components:
         - `stock` — акция
         - `bond` — облигация
         - `etf` — ETF (биржевой фонд)
-
-    ChartPeriod:
-      type: string
-      enum: [1D, 1W, 1M, 1Y]
-      description: |
-        Период отображения графика:
-        - `1D` — 1 день (свечи по 5 минут)
-        - `1W` — 1 неделя (свечи по 1 часу)
-        - `1M` — 1 месяц (свечи по 1 дню)
-        - `1Y` — 1 год (свечи по 1 дню)
 
     Exchange:
       type: string
@@ -291,9 +295,8 @@ components:
       description: Точка на линейном графике цены
       properties:
         timestamp:
-          type: integer
-          description: Unix timestamp (секунды с 01.01.1970 UTC)
-          example: 1731571200
+          $ref: '#/components/schemas/UnixTimestamp'
+          description: Момент времени точки на графике
         price:
           allOf:
             - $ref: '#/components/schemas/DecimalString'
@@ -326,9 +329,8 @@ components:
           description: Торговый тикер (для отображения)
           example: SBER
         timestamp:
-          type: integer
-          description: Unix timestamp (секунды с 01.01.1970 UTC)
-          example: 1731571200
+          $ref: '#/components/schemas/UnixTimestamp'
+          description: Момент снимка стакана на сервере
         asks:
           type: array
           description: Заявки на продажу — от наименьшей цены к наибольшей
@@ -500,13 +502,11 @@ components:
           description: Комиссия брокера, десятичная строка
           example: "8.95"
         createdAt:
-          type: integer
-          description: Unix timestamp (секунды с 01.01.1970 UTC)
-          example: 1731571200
+          $ref: '#/components/schemas/UnixTimestamp'
+          description: Момент создания заявки
         updatedAt:
-          type: integer
-          description: Unix timestamp (секунды с 01.01.1970 UTC)
-          example: 1731571200
+          $ref: '#/components/schemas/UnixTimestamp'
+          description: Момент последнего изменения заявки
 
     CreateOrderRequest:
       type: object
@@ -583,9 +583,8 @@ components:
           format: uuid
           nullable: true
         createdAt:
-          type: integer
-          description: Unix timestamp (секунды с 01.01.1970 UTC)
-          example: 1731571200
+          $ref: '#/components/schemas/UnixTimestamp'
+          description: Момент проведения операции
 
     # ── Баланс ─────────────────────────────────────────────────────────────
     Balance:
@@ -730,6 +729,26 @@ components:
       schema:
         type: string
         format: uuid
+
+    PriceHistoryFromQuery:
+      name: from
+      in: query
+      required: true
+      description: |
+        Начало интервала выборки (включительно): **Unix timestamp в секундах**.
+        Вместе с `to` задаёт произвольный промежуток на оси времени.
+      schema:
+        $ref: '#/components/schemas/UnixTimestamp'
+
+    PriceHistoryToQuery:
+      name: to
+      in: query
+      required: true
+      description: |
+        Конец интервала выборки (включительно): **Unix timestamp в секундах**.
+        Должно выполняться `from` ≤ `to`.
+      schema:
+        $ref: '#/components/schemas/UnixTimestamp'
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PATHS
@@ -1219,18 +1238,18 @@ paths:
   /securities/{securityId}/price/history:
     parameters:
       - $ref: '#/components/parameters/SecurityIdPath'
+      - $ref: '#/components/parameters/PriceHistoryFromQuery'
+      - $ref: '#/components/parameters/PriceHistoryToQuery'
     get:
       tags: [securities]
       summary: История цен для построения графика
       description: |
-        Возвращает массив точек (timestamp, price) за выбранный период для построения линейного графика.
-        Частота точек определяется сервером автоматически: 1D → каждые 5 мин, 1W → каждый час, 1M / 1Y → каждый день.
-      parameters:
-        - name: period
-          in: query
-          required: true
-          schema:
-            $ref: '#/components/schemas/ChartPeriod'
+        Возвращает массив точек (`timestamp` — `UnixTimestamp`, `price` — `DecimalString`) за интервал **[from, to]**
+        (оба query-параметра — секунды с эпохи, границы включительно).
+        Клиентское приложение может показывать пользователю удобный выбор периода (например «день / неделя») и **само** вычислять `from` и `to` для этого запроса.
+        Шаг агрегации / плотность точек на временной оси выбирается сервером по **длительности** интервала
+        (короткий промежуток — более детальная сетка, длинный — более крупные шаги).
+        В ответе поля **`from`** и **`to`** повторяют фактический интервал выборки (как в запросе или нормализованный сервером).
       responses:
         '200':
           description: OK
@@ -1238,7 +1257,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [securityId, ticker, period, data]
+                required: [securityId, ticker, from, to, data]
                 properties:
                   securityId:
                     type: string
@@ -1248,8 +1267,12 @@ paths:
                     type: string
                     description: Торговый тикер (для подписей к графику)
                     example: SBER
-                  period:
-                    $ref: '#/components/schemas/ChartPeriod'
+                  from:
+                    $ref: '#/components/schemas/UnixTimestamp'
+                    description: Начало интервала данных (включительно)
+                  to:
+                    $ref: '#/components/schemas/UnixTimestamp'
+                    description: Конец интервала данных (включительно)
                   data:
                     type: array
                     items:
@@ -1257,7 +1280,8 @@ paths:
               example:
                 securityId: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
                 ticker: SBER
-                period: 1D
+                from: 1731484800
+                to: 1731571200
                 data:
                   - timestamp: 1731571200
                     price: "286.30"
@@ -1266,14 +1290,14 @@ paths:
                   - timestamp: 1731571800
                     price: "298.45"
         '400':
-          description: Некорректный период
+          description: Некорректный интервал (`from` > `to`) или иные параметры
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
-                code: INVALID_PERIOD
-                message: Недопустимое значение period
+                code: INVALID_DATE_RANGE
+                message: Параметр from не может быть больше to
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -1371,7 +1395,7 @@ paths:
       summary: Список заявок пользователя
       description: |
         Возвращает постраничную историю торговых заявок текущего пользователя.
-        Поддерживает фильтрацию по статусу, направлению (buy/sell), идентификатору бумаги (UUID) и диапазону дат.
+        Поддерживает фильтрацию по статусу, направлению (buy/sell) и идентификатору бумаги (UUID).
       parameters:
         - name: status
           in: query
@@ -1387,16 +1411,6 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: from
-          in: query
-          schema:
-            type: integer
-            description: Unix timestamp (секунды)
-        - name: to
-          in: query
-          schema:
-            type: integer
-            description: Unix timestamp (секунды)
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PageSizeParam'
       responses:
@@ -1573,7 +1587,7 @@ paths:
       summary: История транзакций пользователя
       description: |
         Возвращает постраничную историю всех денежных операций: покупки, продажи,
-        пополнения, выводы и дивиденды. Поддерживает фильтрацию по типу, идентификатору бумаги (UUID) и диапазону дат.
+        пополнения, выводы и дивиденды. Поддерживает фильтрацию по типу и идентификатору бумаги (UUID).
       parameters:
         - name: type
           in: query
@@ -1585,16 +1599,6 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: from
-          in: query
-          schema:
-            type: integer
-            description: Unix timestamp (секунды)
-        - name: to
-          in: query
-          schema:
-            type: integer
-            description: Unix timestamp (секунды)
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PageSizeParam'
       responses:
