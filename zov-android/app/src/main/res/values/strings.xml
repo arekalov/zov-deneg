@@ -46,6 +46,7 @@
     <string name="register_step_2_of_4">Шаг 2 из 4 · запомните код</string>
     <string name="register_confirm_pin">Подтвердите PIN</string>
     <string name="register_step_3_of_4">Шаг 3 из 4</string>
+    <string name="register_pin_mismatch">PIN не совпал. Введите тот же код ещё раз</string>
 
     <string name="register_biometric_title">Вход по биометрии</string>
     <string name="register_biometric_body">Используйте отпечаток пальца для быстрого и безопасного доступа к приложению</string>
@@ -133,4 +134,23 @@
     <string name="withdraw_amount_label">Сумма вывода</string>
     <string name="withdraw_amount_mock">0</string>
     <string name="withdraw_action">Вывести</string>
+
+    <string name="error_load">Не удалось загрузить данные</string>
+    <string name="action_retry">Повторить</string>
+    <string name="action_back">Назад</string>
+    <string name="order_submitted">Заявка отправлена</string>
+    <string name="buy_order_hint">К заявке · %1$d шт. · цена лота %2$s</string>
+    <string name="error_submit_order">Не удалось разместить заявку</string>
+    <string name="error_submit_deposit">Не удалось пополнить счёт</string>
+    <string name="error_submit_withdraw">Не удалось вывести средства</string>
+    <string name="balance_available">Доступно: %1$s</string>
+    <string name="balance_blocked">В резерве: %1$s</string>
+    <string name="balance_total">Всего: %1$s</string>
+    <string name="login_failed_network">Не удалось войти. Проверьте соединение</string>
+    <string name="register_validation_error">Проверьте поля: телефон +7XXXXXXXXXX, пароль не короче 8 символов</string>
+    <string name="register_network_error">Не удалось зарегистрироваться</string>
+    <string name="field_password">Пароль</string>
+    <string name="hint_password_min">Не менее 8 символов</string>
+    <string name="pin_change_success">PIN обновлён</string>
+    <string name="profile_save_success">Профиль сохранён</string>
 </resources>

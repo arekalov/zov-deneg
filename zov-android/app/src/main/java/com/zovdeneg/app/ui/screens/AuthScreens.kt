@@ -20,20 +20,23 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zovdeneg.app.R
+import com.zovdeneg.app.ui.auth.ZovLoginViewModel
+import com.zovdeneg.app.ui.auth.ZovRegisterFlowViewModel
+import com.zovdeneg.app.ui.auth.ZovRegisterStep1ViewModel
 import com.zovdeneg.app.ui.common.ZovAuthBiometricIcon
 import com.zovdeneg.app.ui.common.ZovAuthBiometricRing
 import com.zovdeneg.app.ui.common.ZovAuthTopInset
@@ -55,59 +58,87 @@ import com.zovdeneg.app.ui.theme.ZovAppTheme
 import com.zovdeneg.app.ui.theme.ZovTheme
 
 @Composable
-fun LoginScreen(
+internal fun LoginScreen(
+    viewModel: ZovLoginViewModel,
     onLoggedIn: () -> Unit,
     onRegister: () -> Unit,
 ) {
     val c = ZovTheme.colors
-    val t = ZovTheme.text
-    var pinLen by remember { mutableIntStateOf(0) }
+    val draftPin by viewModel.draftPin.collectAsStateWithLifecycle()
+    val loginFailed by viewModel.loginFailed.collectAsStateWithLifecycle()
     Box(
         Modifier
             .fillMaxSize()
             .background(c.background),
         contentAlignment = Alignment.TopCenter,
     ) {
+        LoginScreenColumn(
+            pinLen = draftPin.length,
+            loginFailed = loginFailed,
+            viewModel = viewModel,
+            onLoggedIn = onLoggedIn,
+            onRegister = onRegister,
+        )
+    }
+}
+
+@Composable
+private fun LoginScreenColumn(
+    pinLen: Int,
+    loginFailed: Boolean,
+    viewModel: ZovLoginViewModel,
+    onLoggedIn: () -> Unit,
+    onRegister: () -> Unit,
+) {
+    val c = ZovTheme.colors
+    val t = ZovTheme.text
+    Column(
+        Modifier
+            .widthIn(max = ZovContentMaxWidth)
+            .padding(ZovHorizontalPadding)
+            .padding(top = ZovAuthTopInset),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(ZovSpace6),
+    ) {
         Column(
-            Modifier
-                .widthIn(max = ZovContentMaxWidth)
-                .padding(ZovHorizontalPadding)
-                .padding(top = ZovAuthTopInset),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(ZovSpace6),
+            verticalArrangement = Arrangement.spacedBy(ZovTightGap),
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(ZovTightGap),
-            ) {
-                Text(stringResource(R.string.auth_welcome), style = t.titleSemi22, color = c.onSurface)
-                Text(
-                    stringResource(R.string.auth_enter_pin),
-                    style = t.subtitleReg14,
-                    color = c.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-            }
-            ZovPinDots(filledCount = pinLen, total = 4)
-            ZovPinKeypad(
-                modifier = Modifier.fillMaxWidth(),
-                onDigit = { if (pinLen < 4) pinLen++ },
-                onDelete = { if (pinLen > 0) pinLen-- },
-                onConfirm = {
-                    if (pinLen == 4) onLoggedIn()
-                },
+            Text(stringResource(R.string.auth_welcome), style = t.titleSemi22, color = c.onSurface)
+            Text(
+                stringResource(R.string.auth_enter_pin),
+                style = t.subtitleReg14,
+                color = c.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
-            ZovBiometricFilledButton(onClick = onLoggedIn) {
-                Icon(
-                    Icons.Filled.Fingerprint,
-                    contentDescription = stringResource(R.string.cd_fingerprint),
-                    modifier = Modifier.padding(end = ZovItemSpacing),
-                )
-                Text(stringResource(R.string.auth_sign_in_biometrics), style = t.bodyMed14, color = c.primary)
-            }
-            TextButton(onClick = onRegister) {
-                Text(stringResource(R.string.auth_create_account), style = t.bodyMed14, color = c.primary)
-            }
+        }
+        ZovPinDots(filledCount = pinLen, total = 4)
+        if (loginFailed) {
+            Text(
+                stringResource(R.string.login_failed_network),
+                style = t.bodyReg14,
+                color = c.negative,
+                textAlign = TextAlign.Center,
+            )
+        }
+        ZovPinKeypad(
+            modifier = Modifier.fillMaxWidth(),
+            onDigit = viewModel::appendDigit,
+            onDelete = viewModel::deleteLast,
+            onConfirm = { viewModel.tryCompleteLogin(onLoggedIn) },
+        )
+        ZovBiometricFilledButton(
+            onClick = { viewModel.loginWithBiometric(onLoggedIn) },
+        ) {
+            Icon(
+                Icons.Filled.Fingerprint,
+                contentDescription = stringResource(R.string.cd_fingerprint),
+                modifier = Modifier.padding(end = ZovItemSpacing),
+            )
+            Text(stringResource(R.string.auth_sign_in_biometrics), style = t.bodyMed14, color = c.primary)
+        }
+        TextButton(onClick = onRegister) {
+            Text(stringResource(R.string.auth_create_account), style = t.bodyMed14, color = c.primary)
         }
     }
 }
@@ -139,36 +170,63 @@ private fun RegisterProgress(activeStep: Int) {
 
 @Composable
 fun RegisterDataScreen(
+    viewModel: ZovRegisterStep1ViewModel,
     onNext: () -> Unit,
     onLogin: () -> Unit,
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
-    val fields =
-        listOf(
-            stringResource(R.string.field_first_name) to stringResource(R.string.sample_first_name),
-            stringResource(R.string.field_last_name) to stringResource(R.string.sample_last_name),
-            stringResource(R.string.field_phone) to stringResource(R.string.sample_phone_masked),
-            stringResource(R.string.field_email) to stringResource(R.string.sample_email),
-        )
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     ZovScrollScreen {
         RegisterProgress(0)
         Spacer(Modifier.height(ZovItemSpacing))
         Text(stringResource(R.string.register_personal_details), style = t.titleSemi20, color = c.onSurface)
         Text(stringResource(R.string.register_step_1_of_4), style = t.subtitleReg13, color = c.onSurfaceVariant)
-        fields.forEach { pair ->
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(ZovUnit)) {
-                Text(pair.first, style = t.labelMed12, color = c.onSurfaceVariant)
-                Text(
-                    pair.second,
-                    style = t.bodyReg14,
-                    color = c.onSurface,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(c.surfaceContainer, RoundedCornerShape(ZovShapeMedium))
-                        .padding(ZovFieldInnerPadding),
-                )
-            }
+        OutlinedTextField(
+            value = state.firstName,
+            onValueChange = viewModel::setFirstName,
+            label = { Text(stringResource(R.string.field_first_name)) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = state.lastName,
+            onValueChange = viewModel::setLastName,
+            label = { Text(stringResource(R.string.field_last_name)) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = state.phone,
+            onValueChange = viewModel::setPhone,
+            label = { Text(stringResource(R.string.field_phone)) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = state.email,
+            onValueChange = viewModel::setEmail,
+            label = { Text(stringResource(R.string.field_email)) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = state.password,
+            onValueChange = viewModel::setPassword,
+            label = { Text(stringResource(R.string.field_password)) },
+            supportingText = { Text(stringResource(R.string.hint_password_min)) },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        if (state.validationError) {
+            Text(
+                stringResource(R.string.register_validation_error),
+                style = t.bodyReg14,
+                color = c.negative,
+            )
+        }
+        if (state.networkError) {
+            Text(
+                stringResource(R.string.register_network_error),
+                style = t.bodyReg14,
+                color = c.negative,
+            )
         }
         Text(
             stringResource(R.string.register_verify_hint),
@@ -176,7 +234,8 @@ fun RegisterDataScreen(
             color = c.onSurfaceVariant,
         )
         Button(
-            onClick = onNext,
+            onClick = { viewModel.submit(onNext) },
+            enabled = !state.isSubmitting,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = c.onPrimary),
         ) { Text(stringResource(R.string.action_continue), style = t.bodyMed14) }
@@ -201,10 +260,14 @@ fun RegisterDataScreen(
 }
 
 @Composable
-fun RegisterPinScreen(onNext: () -> Unit) {
+internal fun RegisterPinScreen(
+    viewModel: ZovRegisterFlowViewModel,
+    onContinue: () -> Unit,
+) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
-    var pinLen by remember { mutableIntStateOf(0) }
+    val draftPin by viewModel.draftPin.collectAsStateWithLifecycle()
+    val pinLen = draftPin.length
     ZovScrollScreen {
         RegisterProgress(1)
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -219,13 +282,13 @@ fun RegisterPinScreen(onNext: () -> Unit) {
             ZovPinDots(filledCount = pinLen, total = 4)
             ZovPinKeypad(
                 modifier = Modifier.fillMaxWidth(),
-                onDigit = { if (pinLen < 4) pinLen++ },
-                onDelete = { if (pinLen > 0) pinLen-- },
-                onConfirm = { if (pinLen == 4) onNext() },
+                onDigit = viewModel::appendDigit,
+                onDelete = viewModel::deleteLast,
+                onConfirm = { if (pinLen == 4) onContinue() },
             )
             Spacer(Modifier.height(ZovSpace4))
             Button(
-                onClick = onNext,
+                onClick = onContinue,
                 colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = c.onPrimary),
             ) { Text(stringResource(R.string.action_continue), style = t.bodyMed14) }
         }
@@ -233,17 +296,46 @@ fun RegisterPinScreen(onNext: () -> Unit) {
 }
 
 @Composable
-fun RegisterPinConfirmScreen(onNext: () -> Unit) {
+internal fun RegisterPinConfirmScreen(
+    viewModel: ZovRegisterFlowViewModel,
+    onContinue: () -> Unit,
+) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
+    val draftPin by viewModel.draftPin.collectAsStateWithLifecycle()
+    val pinMismatch by viewModel.confirmPinMismatch.collectAsStateWithLifecycle()
+    val pinLen = draftPin.length
     ZovScrollScreen {
         RegisterProgress(2)
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(stringResource(R.string.register_confirm_pin), style = t.titleSemi20, color = c.onSurface)
-            Text(stringResource(R.string.register_step_3_of_4), style = t.subtitleReg13, color = c.onSurfaceVariant)
-            Spacer(Modifier.height(ZovSpace6))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(ZovTightGap),
+            ) {
+                Text(stringResource(R.string.register_confirm_pin), style = t.titleSemi20, color = c.onSurface)
+                Text(stringResource(R.string.register_step_3_of_4), style = t.subtitleReg13, color = c.onSurfaceVariant)
+            }
+            Spacer(Modifier.height(ZovSpace4))
+            ZovPinDots(filledCount = pinLen, total = 4)
+            if (pinMismatch) {
+                Spacer(Modifier.height(ZovUnit))
+                Text(
+                    stringResource(R.string.register_pin_mismatch),
+                    modifier = Modifier.fillMaxWidth(),
+                    style = t.bodyReg14,
+                    color = c.negative,
+                    textAlign = TextAlign.Center,
+                )
+            }
+            ZovPinKeypad(
+                modifier = Modifier.fillMaxWidth(),
+                onDigit = viewModel::appendDigit,
+                onDelete = viewModel::deleteLast,
+                onConfirm = { if (pinLen == 4) onContinue() },
+            )
+            Spacer(Modifier.height(ZovSpace4))
             Button(
-                onClick = onNext,
+                onClick = onContinue,
                 colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = c.onPrimary),
             ) { Text(stringResource(R.string.action_continue), style = t.bodyMed14) }
         }
@@ -303,11 +395,15 @@ fun RegisterBiometricScreen(onDone: () -> Unit) {
 @Preview(name = "Светлая", showBackground = true, locale = "ru")
 @Composable
 private fun LoginPreviewLight() {
-    ZovAppTheme(darkTheme = false) { LoginScreen({}, {}) }
+    ZovAppTheme(darkTheme = false) {
+        Text(stringResource(R.string.auth_welcome))
+    }
 }
 
 @Preview(name = "Тёмная", showBackground = true, locale = "ru")
 @Composable
 private fun LoginPreviewDark() {
-    ZovAppTheme(darkTheme = true) { LoginScreen({}, {}) }
+    ZovAppTheme(darkTheme = true) {
+        Text(stringResource(R.string.auth_welcome))
+    }
 }

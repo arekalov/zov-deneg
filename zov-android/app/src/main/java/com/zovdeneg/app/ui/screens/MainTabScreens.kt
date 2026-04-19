@@ -3,9 +3,7 @@ package com.zovdeneg.app.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -15,66 +13,126 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zovdeneg.app.R
+import com.zovdeneg.app.domain.portfolio.Holding
 import com.zovdeneg.app.ui.common.ZovHalfUnit
 import com.zovdeneg.app.ui.common.ZovItemSpacing
 import com.zovdeneg.app.ui.common.ZovShapeExtraSmall
-import com.zovdeneg.app.ui.common.ZovUnit
 import com.zovdeneg.app.ui.components.ZovBalanceStrip
-import com.zovdeneg.app.ui.components.ZovElevatedListCard
 import com.zovdeneg.app.ui.components.ZovFilterChip
 import com.zovdeneg.app.ui.components.ZovOutlinedRow
 import com.zovdeneg.app.ui.components.ZovScrollScreen
 import com.zovdeneg.app.ui.components.ZovSummaryCard
+import com.zovdeneg.app.ui.home.MainHomeViewModel
+import com.zovdeneg.app.ui.tabs.ZovHistoryTabViewModel
+import com.zovdeneg.app.ui.tabs.ZovSearchTabViewModel
 import com.zovdeneg.app.ui.theme.ZovAppTheme
 import com.zovdeneg.app.ui.theme.ZovTheme
 
 @Composable
-fun MainHomeScreen(
+internal fun MainHomeScreen(
+    viewModel: MainHomeViewModel,
     onOpenBrokerAccount: () -> Unit,
+    onOpenSecurity: (String) -> Unit,
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val amountText =
+        uiState.portfolioAmountRub ?: stringResource(R.string.home_portfolio_amount_mock)
+    val gainText =
+        uiState.totalGainText ?: stringResource(R.string.home_total_gain_mock)
+    MainHomeScrollContent(
+        holdings = uiState.holdings,
+        amountText = amountText,
+        gainText = gainText,
+        onOpenBrokerAccount = onOpenBrokerAccount,
+        onOpenSecurity = onOpenSecurity,
+    )
+}
+
+@Composable
+private fun MainHomeScrollContent(
+    holdings: List<Holding>,
+    amountText: String,
+    gainText: String,
+    onOpenBrokerAccount: () -> Unit,
+    onOpenSecurity: (String) -> Unit,
+) {
+    ZovScrollScreen {
+        MainHomePortfolioSummaryCard(amountText = amountText, gainText = gainText)
+        MainHomeBrokerBalanceRow(onOpenBrokerAccount = onOpenBrokerAccount)
+        MainHomeHoldingsSection(holdings = holdings, onOpenSecurity = onOpenSecurity)
+    }
+}
+
+@Composable
+private fun MainHomePortfolioSummaryCard(amountText: String, gainText: String) {
+    val c = ZovTheme.colors
+    val t = ZovTheme.text
+    ZovSummaryCard {
+        Text(stringResource(R.string.home_portfolio_value), style = t.subtitleReg13, color = c.onSurfaceVariant)
+        Text(amountText, style = t.titleSemi22, color = c.onSurface)
+        Text(stringResource(R.string.home_total_gain), style = t.subtitleReg13, color = c.onSurfaceVariant)
+        Text(gainText, style = t.sectionSemi16, color = c.positive)
+        Text(stringResource(R.string.home_loss_label), style = t.subtitleReg13, color = c.onSurfaceVariant)
+        Text(stringResource(R.string.home_em_dash), style = t.sectionSemi16, color = c.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun MainHomeBrokerBalanceRow(onOpenBrokerAccount: () -> Unit) {
+    val c = ZovTheme.colors
+    val t = ZovTheme.text
+    ZovBalanceStrip(onClick = onOpenBrokerAccount) {
+        Column(
+            Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(ZovHalfUnit),
+        ) {
+            Text(
+                stringResource(R.string.home_brokerage_account),
+                style = t.subtitleReg13,
+                color = c.onSurfaceVariant,
+            )
+            Text(
+                stringResource(R.string.home_brokerage_balance_mock),
+                style = t.titleSemi20,
+                color = c.onSurface,
+            )
+        }
+        Icon(
+            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = stringResource(R.string.cd_chevron),
+            tint = c.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun MainHomeHoldingsSection(
+    holdings: List<Holding>,
     onOpenSecurity: (String) -> Unit,
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
-    ZovScrollScreen {
-        ZovSummaryCard {
-            Text(stringResource(R.string.home_portfolio_value), style = t.subtitleReg13, color = c.onSurfaceVariant)
-            Text(stringResource(R.string.home_portfolio_amount_mock), style = t.titleSemi22, color = c.onSurface)
-            Text(stringResource(R.string.home_total_gain), style = t.subtitleReg13, color = c.onSurfaceVariant)
-            Text(stringResource(R.string.home_total_gain_mock), style = t.sectionSemi16, color = c.positive)
-            Text(stringResource(R.string.home_loss_label), style = t.subtitleReg13, color = c.onSurfaceVariant)
-            Text(stringResource(R.string.home_em_dash), style = t.sectionSemi16, color = c.onSurfaceVariant)
+    Text(stringResource(R.string.home_holdings), style = t.titleSemi20, color = c.onSurface)
+    if (holdings.isNotEmpty()) {
+        holdings.forEach { h ->
+            AssetRow(
+                AssetRowData(
+                    subtitle = h.subtitle,
+                    value = h.valueText,
+                    delta = h.deltaText,
+                    deltaPositive = h.deltaPositive,
+                    ticker = h.ticker,
+                ),
+            ) { onOpenSecurity(h.ticker) }
         }
-        ZovBalanceStrip(onClick = onOpenBrokerAccount) {
-            Column(
-                Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(ZovHalfUnit),
-            ) {
-                Text(
-                    stringResource(R.string.home_brokerage_account),
-                    style = t.subtitleReg13,
-                    color = c.onSurfaceVariant,
-                )
-                Text(
-                    stringResource(R.string.home_brokerage_balance_mock),
-                    style = t.titleSemi20,
-                    color = c.onSurface,
-                )
-            }
-            Icon(
-                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.cd_chevron),
-                tint = c.onSurfaceVariant,
-            )
-        }
-        Text(stringResource(R.string.home_holdings), style = t.titleSemi20, color = c.onSurface)
+    } else {
         AssetRow(
             AssetRowData(
                 stringResource(R.string.asset_sber_subtitle),
@@ -96,7 +154,7 @@ fun MainHomeScreen(
     }
 }
 
-private data class AssetRowData(
+internal data class AssetRowData(
     val subtitle: String,
     val value: String,
     val delta: String,
@@ -105,7 +163,7 @@ private data class AssetRowData(
 )
 
 @Composable
-private fun AssetRow(
+internal fun AssetRow(
     data: AssetRowData,
     onClick: () -> Unit,
 ) {
@@ -131,12 +189,15 @@ private fun AssetRow(
 }
 
 @Composable
-private fun SearchTabSearchField() {
+private fun SearchTabSearchField(
+    value: String,
+    onValueChange: (String) -> Unit,
+) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
     OutlinedTextField(
-        value = "",
-        onValueChange = {},
+        value = value,
+        onValueChange = onValueChange,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(ZovShapeExtraSmall),
         colors = OutlinedTextFieldDefaults.colors(
@@ -158,10 +219,12 @@ private fun SearchTabSearchField() {
 }
 
 @Composable
-fun SearchTabScreen(onOpenSecurity: (String) -> Unit) {
-    val c = ZovTheme.colors
-    val t = ZovTheme.text
-    var filter by remember { mutableIntStateOf(0) }
+internal fun SearchTabScreen(
+    viewModel: ZovSearchTabViewModel,
+    onOpenSecurity: (String) -> Unit,
+) {
+    val searchUi by viewModel.uiState.collectAsStateWithLifecycle()
+    val visibleSecurities = remember(searchUi) { searchUi.visibleSecurities() }
     val chipResIds =
         listOf(
             R.string.filter_all,
@@ -170,56 +233,28 @@ fun SearchTabScreen(onOpenSecurity: (String) -> Unit) {
             R.string.filter_etf,
         )
     ZovScrollScreen {
-        SearchTabSearchField()
+        SearchTabSearchField(value = searchUi.query, onValueChange = viewModel::setQuery)
         Row(horizontalArrangement = Arrangement.spacedBy(ZovItemSpacing)) {
             chipResIds.forEachIndexed { i, resId ->
                 ZovFilterChip(
                     label = stringResource(resId),
-                    selected = filter == i,
-                    onClick = { filter = i },
+                    selected = searchUi.filterIndex == i,
+                    onClick = { viewModel.setFilterIndex(i) },
                 )
             }
         }
-        Text(stringResource(R.string.search_popular), style = t.sectionSemi16, color = c.onSurface)
-        AssetRow(
-            AssetRowData(
-                stringResource(R.string.asset_gazp_subtitle),
-                stringResource(R.string.asset_gazp_value),
-                stringResource(R.string.asset_gazp_delta),
-                true,
-                "GAZP",
-            ),
-        ) { onOpenSecurity("GAZP") }
-        AssetRow(
-            AssetRowData(
-                stringResource(R.string.asset_sber_search_subtitle),
-                stringResource(R.string.asset_sber_search_value),
-                stringResource(R.string.asset_sber_search_delta),
-                true,
-                "SBER",
-            ),
-        ) { onOpenSecurity("SBER") }
+        SearchTabPopularSection(
+            visibleSecurities = visibleSecurities,
+            searchUi = searchUi,
+            onOpenSecurity = onOpenSecurity,
+        )
     }
 }
 
 @Composable
-fun HistoryTabScreen() {
-    val c = ZovTheme.colors
-    val t = ZovTheme.text
-    var filter by remember { mutableIntStateOf(0) }
-    val txs =
-        listOf(
-            Triple(
-                R.string.history_row1_title,
-                R.string.history_row1_date,
-                R.string.history_row1_amount,
-            ),
-            Triple(
-                R.string.history_row2_title,
-                R.string.history_row2_date,
-                R.string.history_row2_amount,
-            ),
-        )
+internal fun HistoryTabScreen(viewModel: ZovHistoryTabViewModel) {
+    val historyUi by viewModel.uiState.collectAsStateWithLifecycle()
+    val visibleTxs = remember(historyUi) { historyUi.visibleTransactions() }
     val filterResIds =
         listOf(
             R.string.history_filter_all,
@@ -227,32 +262,12 @@ fun HistoryTabScreen() {
             R.string.history_filter_sells,
         )
     ZovScrollScreen {
-        Row(horizontalArrangement = Arrangement.spacedBy(ZovItemSpacing)) {
-            filterResIds.forEachIndexed { i, resId ->
-                ZovFilterChip(
-                    label = stringResource(resId),
-                    selected = filter == i,
-                    onClick = { filter = i },
-                )
-            }
-        }
-        txs.forEach { triple ->
-            val title = stringResource(triple.first)
-            val date = stringResource(triple.second)
-            val amount = stringResource(triple.third)
-            val amountColor =
-                when {
-                    amount.contains('-') -> c.negative
-                    amount.contains('+') -> c.positive
-                    else -> c.onSurface
-                }
-            ZovElevatedListCard {
-                Text(title, style = t.bodyMed14, color = c.onSurface)
-                Text(date, style = t.labelReg12, color = c.onSurfaceVariant)
-                Spacer(Modifier.height(ZovUnit))
-                Text(amount, style = t.sectionSemi16, color = amountColor)
-            }
-        }
+        HistoryFilterChipsRow(
+            filterResIds = filterResIds,
+            historyUi = historyUi,
+            onSelectFilter = viewModel::setFilterIndex,
+        )
+        HistoryTabTransactionsSection(visibleTxs = visibleTxs, historyUi = historyUi)
     }
 }
 
@@ -260,7 +275,13 @@ fun HistoryTabScreen() {
 @Composable
 private fun MainHomePreviewLight() {
     ZovAppTheme(darkTheme = false) {
-        MainHomeScreen({}, {})
+        MainHomeScrollContent(
+            holdings = emptyList(),
+            amountText = "1 234 567,89 ₽",
+            gainText = "+12 345,67 ₽ (+2,3%)",
+            onOpenBrokerAccount = {},
+            onOpenSecurity = {},
+        )
     }
 }
 
@@ -268,6 +289,12 @@ private fun MainHomePreviewLight() {
 @Composable
 private fun MainHomePreviewDark() {
     ZovAppTheme(darkTheme = true) {
-        MainHomeScreen({}, {})
+        MainHomeScrollContent(
+            holdings = emptyList(),
+            amountText = "1 234 567,89 ₽",
+            gainText = "+12 345,67 ₽ (+2,3%)",
+            onOpenBrokerAccount = {},
+            onOpenSecurity = {},
+        )
     }
 }
