@@ -157,10 +157,8 @@ dropRow(assetSber);
 dropRow(assetLkoh);
 const txRow = buildTransactionRow();
 dropRow(txRow);
-const setNotif = buildSettingRow("Уведомления");
 const setTheme = buildSettingRow("Тема");
 const setBio = buildSettingRow("Вход по отпечатку");
-dropRow(setNotif);
 dropRow(setTheme);
 dropRow(setBio);
 
@@ -199,7 +197,7 @@ const hdrBuyComp = buildHeaderSimple("Купить SBER");
 const hdrEditProfile = buildHeaderSimple("Редактирование профиля");
 const hdrChangePin = buildHeaderSimple("Смена PIN-кода");
 const hdrRegister = buildHeaderSimple("Регистрация");
-const hdrDepositComp = buildHeaderSimple("Пополнение счёта");
+const hdrBrokerAccountComp = buildHeaderSimple("Брокерский счёт");
 dropHdr(hdrMain);
 dropHdr(hdrSearch);
 dropHdr(hdrHistory);
@@ -209,7 +207,7 @@ dropHdr(hdrBuyComp);
 dropHdr(hdrEditProfile);
 dropHdr(hdrChangePin);
 dropHdr(hdrRegister);
-dropHdr(hdrDepositComp);
+dropHdr(hdrBrokerAccountComp);
 
 // ─── Действия ──────────────────────────────────────────────────────────────
 const { dropComp: dropAction } = makeSection("Действия");

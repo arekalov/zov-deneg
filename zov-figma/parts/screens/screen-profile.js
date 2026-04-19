@@ -160,18 +160,10 @@ makeProfRadioRow("Светлая", "Белый фон, тёмный текст",
 makeProfRadioRow("Тёмная", "Тёмный фон, светлый текст", false);
 makeProfRadioRow("Системная", "Как в настройках Android", false);
 
-// ─── Уведомления ─────────────────────────────────────────────────────────
-makeProfDivider();
-makeProfSection("Уведомления");
-makeProfToggleRow("Уведомления о сделках", true);
-makeProfToggleRow("Курсовые уведомления", true);
-makeProfToggleRow("Новости по портфелю", false);
-
 // ─── Безопасность ────────────────────────────────────────────────────────
 makeProfDivider();
 makeProfSection("Безопасность");
 makeProfToggleRow("Вход по отпечатку пальца", true);
-makeProfToggleRow("Двухфакторная аутентификация", false);
 
 // ─── Выход ───────────────────────────────────────────────────────────────
 makeProfDivider();
