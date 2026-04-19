@@ -32,4 +32,4 @@
 ## CI (монорепа)
 
 - **`master`** + изменения `zov-android/**` → Detekt ([`../.github/workflows/android-master-detekt.yml`](../.github/workflows/android-master-detekt.yml)).
-- Ветка **`android-release`** → debug APK в артефактах ([`../.github/workflows/android-release-apk.yml`](../.github/workflows/android-release-apk.yml)).
+- Ветка **`android-release`** + изменения `zov-android/**` → debug APK в артефактах ([`../.github/workflows/android-release-apk.yml`](../.github/workflows/android-release-apk.yml)).

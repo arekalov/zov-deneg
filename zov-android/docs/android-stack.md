@@ -72,7 +72,7 @@ GitHub Actions в корне монорепы [`.github/workflows/`](../../.gith
 | **`android-master-detekt.yml`** | **`master`** | `./gradlew detekt` в `zov-android/`; при падении загружаются отчёты Detekt. **APK не собирается.** |
 | **`android-release-apk.yml`** | **`android-release`** | `./gradlew :app:assembleDebug` — **debug APK** (стандартная debug-подпись Gradle, **секреты не нужны**). Артефакт **`app-debug-apk`** (`app/build/outputs/apk/debug/*.apk`). |
 
-**Ветка `android-release`:** создай при необходимости; workflow запустится на первый `push` в неё. Для публикации в стор позже настроишь отдельно **`assembleRelease`** и свой keystore вне этого упрощённого сценария.
+**Ветка `android-release`:** создай при необходимости; workflow запустится на `push`, где в коммите есть изменения под **`zov-android/**`**. Для публикации в стор позже настроишь отдельно **`assembleRelease`** и свой keystore вне этого упрощённого сценария.
 
 ---
 
