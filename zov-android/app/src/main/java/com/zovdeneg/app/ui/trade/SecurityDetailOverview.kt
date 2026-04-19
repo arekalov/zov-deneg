@@ -154,10 +154,6 @@ internal fun SecurityDetailPriceChartBlock(
             modifier = Modifier.padding(top = ZovItemSpacing),
         )
         when {
-            chartLoading -> {
-                Spacer(Modifier.height(ZovTightGap))
-                CircularProgressIndicator(color = c.primary)
-            }
             chartFailed ->
                 Text(
                     stringResource(R.string.security_chart_load_failed),
@@ -169,6 +165,10 @@ internal fun SecurityDetailPriceChartBlock(
                     points = priceHistory,
                     chartRange = chartRange,
                 )
+            }
+            chartLoading -> {
+                Spacer(Modifier.height(ZovTightGap))
+                CircularProgressIndicator(color = c.primary)
             }
             else ->
                 Text(
