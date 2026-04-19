@@ -12,4 +12,10 @@ internal data class SecurityDetailDto(
     val securityId: String = "",
     val lotSize: Int = 10,
     val orderBookText: String? = null,
+    val sectorName: String = "",
+    val exchangeCode: String = "",
+    val companyDescription: String? = null,
+    val portfolioQuantity: Int? = null,
+    val portfolioAvgPriceLine: String? = null,
+    val orderBook: SecurityOrderBookDto? = null,
 )

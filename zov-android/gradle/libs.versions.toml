@@ -20,6 +20,7 @@ ksp = "2.2.10-2.0.2"
 biometric = "1.1.0"
 fragment = "1.8.2"
 securityCrypto = "1.0.0"
+charty = "3.0.0-rc01"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -53,6 +54,7 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 androidx-fragment = { group = "androidx.fragment", name = "fragment", version.ref = "fragment" }
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
+charty = { group = "com.himanshoe", name = "charty", version.ref = "charty" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -7,7 +7,30 @@
     "changePositive": true,
     "securityId": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
     "lotSize": 10,
-    "orderBookText": "Покупка 298,10 · 298,12 · Продажа 298,14"
+    "orderBookText": "Покупка 298,10 · 298,12 · Продажа 298,14",
+    "sectorName": "Финансы",
+    "exchangeCode": "MOEX",
+    "companyDescription": "Сбербанк — крупнейший банк России и Восточной Европы. Предоставляет полный спектр банковских услуг физическим и юридическим лицам.",
+    "portfolioQuantity": 10,
+    "portfolioAvgPriceLine": "285 ₽",
+    "orderBook": {
+      "askLevels": [
+        { "quantity": 1200, "price": "305.00", "mirrorQuantity": 1200 },
+        { "quantity": 900, "price": "303.50", "mirrorQuantity": 900 },
+        { "quantity": 1500, "price": "302.10", "mirrorQuantity": 1500 },
+        { "quantity": 600, "price": "301.00", "mirrorQuantity": 600 },
+        { "quantity": 2100, "price": "300.40", "mirrorQuantity": 2100 }
+      ],
+      "bestAskPrice": "299.20",
+      "bestBidPrice": "298.00",
+      "bidLevels": [
+        { "quantity": 4200, "price": "298.00", "mirrorQuantity": null },
+        { "quantity": 1800, "price": "297.50", "mirrorQuantity": null },
+        { "quantity": 950, "price": "297.00", "mirrorQuantity": null },
+        { "quantity": 3200, "price": "296.40", "mirrorQuantity": null },
+        { "quantity": 700, "price": "295.80", "mirrorQuantity": null }
+      ]
+    }
   },
   "LKOH": {
     "ticker": "LKOH",
@@ -227,6 +250,23 @@
     "changePositive": true,
     "securityId": "d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14",
     "lotSize": 10,
-    "orderBookText": "Стакан заявок (заглушка) · bid — · ask — · глубина рынка (мок)"
+    "orderBookText": "Стакан заявок (заглушка) · bid — · ask — · глубина рынка (мок)",
+    "sectorName": "",
+    "exchangeCode": "MOEX",
+    "companyDescription": "Описание эмитента в мок-режиме. Данные носят демонстрационный характер.",
+    "portfolioQuantity": null,
+    "portfolioAvgPriceLine": null,
+    "orderBook": {
+      "askLevels": [
+        { "quantity": 100, "price": "101.00", "mirrorQuantity": 100 },
+        { "quantity": 200, "price": "100.50", "mirrorQuantity": 200 }
+      ],
+      "bestAskPrice": "100.10",
+      "bestBidPrice": "99.90",
+      "bidLevels": [
+        { "quantity": 150, "price": "99.90", "mirrorQuantity": null },
+        { "quantity": 250, "price": "99.50", "mirrorQuantity": null }
+      ]
+    }
   }
 }

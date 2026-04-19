@@ -3,6 +3,8 @@ package com.zovdeneg.app.ui.screens
 import com.zovdeneg.app.R
 import com.zovdeneg.app.domain.balance.BrokerageBalance
 import com.zovdeneg.app.domain.market.SecurityDetail
+import com.zovdeneg.app.domain.market.SecurityOrderBook
+import com.zovdeneg.app.domain.market.SecurityOrderBookRow
 import com.zovdeneg.app.ui.common.ZovFieldInnerPadding
 import com.zovdeneg.app.ui.common.ZovHorizontalPadding
 import com.zovdeneg.app.ui.common.ZovItemSpacing
@@ -16,6 +18,11 @@ import com.zovdeneg.app.ui.theme.ZovAppTheme
 import com.zovdeneg.app.ui.theme.ZovTheme
 import com.zovdeneg.app.ui.trade.BuyUiState
 import com.zovdeneg.app.ui.trade.BuyViewModel
+import com.zovdeneg.app.ui.trade.SecurityChartRange
+import com.zovdeneg.app.ui.trade.SecurityDetailAboutCompanyCard
+import com.zovdeneg.app.ui.trade.SecurityDetailOrderBookTab
+import com.zovdeneg.app.ui.trade.SecurityDetailPortfolioBanner
+import com.zovdeneg.app.ui.trade.SecurityDetailPriceChartBlock
 import com.zovdeneg.app.ui.trade.SecurityDetailUiState
 import com.zovdeneg.app.ui.trade.SecurityDetailViewModel
 
@@ -30,6 +37,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
@@ -49,6 +57,26 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import kotlinx.coroutines.launch
 
+private val previewSecurityOrderBook =
+    SecurityOrderBook(
+        askLevels = listOf(
+            SecurityOrderBookRow(1200, "305.00", 1200),
+            SecurityOrderBookRow(900, "303.50", 900),
+            SecurityOrderBookRow(1500, "302.10", 1500),
+            SecurityOrderBookRow(600, "301.00", 600),
+            SecurityOrderBookRow(2100, "300.40", 2100),
+        ),
+        bestAskPriceDecimal = "299.20",
+        bestBidPriceDecimal = "298.00",
+        bidLevels = listOf(
+            SecurityOrderBookRow(4200, "298.00", null),
+            SecurityOrderBookRow(1800, "297.50", null),
+            SecurityOrderBookRow(950, "297.00", null),
+            SecurityOrderBookRow(3200, "296.40", null),
+            SecurityOrderBookRow(700, "295.80", null),
+        ),
+    )
+
 private val previewSecurityDetail =
     SecurityDetail(
         ticker = "SBER",
@@ -59,6 +87,13 @@ private val previewSecurityDetail =
         securityId = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         lotSize = 10,
         orderBookText = null,
+        sectorName = "Финансы",
+        exchangeCode = "MOEX",
+        companyDescription = "Сбербанк — крупнейший банк России и Восточной Европы. " +
+            "Предоставляет полный спектр банковских услуг физическим и юридическим лицам.",
+        portfolioQuantity = 10,
+        portfolioAvgPriceLine = "285 ₽",
+        orderBook = previewSecurityOrderBook,
     )
 
 @Composable
@@ -71,13 +106,29 @@ fun SecurityDetailScreen(
         uiState = state,
         onRetry = viewModel::retry,
         onBuy = onBuy,
+        onSelectChartRange = viewModel::selectChartRange,
+    )
+}
+
+@Composable
+private fun ZovScrollBackgroundPrimaryTabRow(
+    selectedTabIndex: Int,
+    tabContents: @Composable () -> Unit,
+) {
+    val c = ZovTheme.colors
+    PrimaryTabRow(
+        selectedTabIndex = selectedTabIndex,
+        containerColor = c.background,
+        contentColor = c.primary,
+        divider = { HorizontalDivider(color = c.outline) },
+        tabs = tabContents,
     )
 }
 
 @Composable
 private fun SecurityDetailTabs(selectedTab: Int, onSelectTab: (Int) -> Unit) {
     val t = ZovTheme.text
-    PrimaryTabRow(selectedTabIndex = selectedTab) {
+    ZovScrollBackgroundPrimaryTabRow(selectedTabIndex = selectedTab) {
         Tab(
             selected = selectedTab == 0,
             onClick = { onSelectTab(0) },
@@ -94,9 +145,11 @@ private fun SecurityDetailTabs(selectedTab: Int, onSelectTab: (Int) -> Unit) {
 @Composable
 private fun SecurityDetailLoadedSection(
     tab: Int,
-    detail: SecurityDetail,
+    uiState: SecurityDetailUiState,
     onBuy: () -> Unit,
+    onSelectChartRange: (SecurityChartRange) -> Unit,
 ) {
+    val detail = requireNotNull(uiState.detail)
     val c = ZovTheme.colors
     val t = ZovTheme.text
     if (tab == 0) {
@@ -107,17 +160,17 @@ private fun SecurityDetailLoadedSection(
             style = t.bodyMed14,
             color = if (detail.changePositive) c.positive else c.negative,
         )
-        Text(
-            stringResource(R.string.security_chart_placeholder),
-            style = t.subtitleReg13,
-            color = c.onSurfaceVariant,
+        SecurityDetailPriceChartBlock(
+            chartLoading = uiState.chartLoading,
+            chartFailed = uiState.chartFailed,
+            priceHistory = uiState.priceHistory,
+            chartRange = uiState.chartRange,
+            onSelectChartRange = onSelectChartRange,
         )
+        SecurityDetailPortfolioBanner(detail)
+        SecurityDetailAboutCompanyCard(detail)
     } else {
-        Text(
-            detail.orderBookText ?: stringResource(R.string.security_order_book_placeholder),
-            style = t.subtitleReg14,
-            color = c.onSurfaceVariant,
-        )
+        SecurityDetailOrderBookTab(detail = detail)
     }
     Button(
         onClick = onBuy,
@@ -134,6 +187,7 @@ private fun SecurityDetailScreenContent(
     uiState: SecurityDetailUiState,
     onRetry: () -> Unit,
     onBuy: () -> Unit,
+    onSelectChartRange: (SecurityChartRange) -> Unit,
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
@@ -153,8 +207,12 @@ private fun SecurityDetailScreenContent(
                 }
             }
             uiState.detail != null -> {
-                val d = requireNotNull(uiState.detail)
-                SecurityDetailLoadedSection(tab = tab, detail = d, onBuy = onBuy)
+                SecurityDetailLoadedSection(
+                    tab = tab,
+                    uiState = uiState,
+                    onBuy = onBuy,
+                    onSelectChartRange = onSelectChartRange,
+                )
             }
         }
     }
@@ -400,7 +458,7 @@ fun DepositScreen(
             R.string.deposit_chip_50000,
         )
     ZovScrollScreen {
-        PrimaryTabRow(selectedTabIndex = tab) {
+        ZovScrollBackgroundPrimaryTabRow(selectedTabIndex = tab) {
             Tab(
                 selected = tab == 0,
                 onClick = { tab = 0 },
@@ -459,6 +517,7 @@ private fun DetailPreviewLight() {
             ),
             onRetry = {},
             onBuy = {},
+            onSelectChartRange = {},
         )
     }
 }
@@ -475,6 +534,7 @@ private fun DetailPreviewDark() {
             ),
             onRetry = {},
             onBuy = {},
+            onSelectChartRange = {},
         )
     }
 }

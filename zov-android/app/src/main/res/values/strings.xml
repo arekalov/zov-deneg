@@ -129,8 +129,24 @@
     <string name="security_subtitle_format">%1$s · бумага</string>
     <string name="security_price_mock">298,45 ₽</string>
     <string name="security_change_mock">+4,6% · +13,12 ₽ за день</string>
-    <string name="security_chart_placeholder">График цены (заглушка)</string>
+    <string name="security_price_chart_section_title">Динамика цены</string>
+    <string name="security_chart_period_1d">1Д</string>
+    <string name="security_chart_period_1w">1Н</string>
+    <string name="security_chart_period_1m">1М</string>
+    <string name="security_chart_period_1y">1Г</string>
+    <string name="security_chart_load_failed">Не удалось загрузить график</string>
+    <string name="security_chart_empty">Нет данных для графика</string>
     <string name="security_order_book_placeholder">Стакан заявок (заглушка)</string>
+    <string name="security_order_book_col_volume">Объём</string>
+    <string name="security_order_book_col_price">Цена</string>
+    <string name="security_order_book_best_ask">Лучший Ask</string>
+    <string name="security_order_book_best_bid">Лучший Bid</string>
+    <string name="security_about_company_title">О компании</string>
+    <string name="security_sector_label">Сектор</string>
+    <string name="security_exchange_label">Биржа</string>
+    <string name="security_lot_label">Лот</string>
+    <string name="security_lot_value_format">%1$d шт.</string>
+    <string name="security_portfolio_badge">В портфеле: %1$d шт. · ср. %2$s</string>
     <string name="action_buy">Купить</string>
 
     <string name="buy_title_format">Купить %1$s</string>

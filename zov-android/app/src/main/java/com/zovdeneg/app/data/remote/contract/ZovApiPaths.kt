@@ -15,4 +15,7 @@ object ZovApiPaths {
     const val AUTH_REGISTER = "/v1/auth/register"
 
     fun securityDetail(ticker: String): String = "/v1/securities/${ticker.trim('/')}"
+
+    fun securityPriceHistory(ticker: String): String =
+        "/v1/securities/${ticker.trim('/')}/price/history"
 }
