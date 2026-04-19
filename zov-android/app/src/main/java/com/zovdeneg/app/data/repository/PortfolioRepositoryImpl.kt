@@ -6,6 +6,7 @@ import com.zovdeneg.app.data.remote.dto.PortfolioSummaryDto
 import com.zovdeneg.app.domain.portfolio.Holding
 import com.zovdeneg.app.domain.portfolio.PortfolioRepository
 import com.zovdeneg.app.domain.portfolio.PortfolioSummary
+
 import javax.inject.Inject
 import javax.inject.Singleton
 

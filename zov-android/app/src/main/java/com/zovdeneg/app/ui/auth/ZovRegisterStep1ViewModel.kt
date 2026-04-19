@@ -1,8 +1,5 @@
 package com.zovdeneg.app.ui.auth
 
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.zovdeneg.app.domain.usecase.RegisterNewAccountUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,6 +7,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+
 import javax.inject.Inject
 
 private const val KEY_FIRST = "reg_first"
@@ -48,7 +50,13 @@ class ZovRegisterStep1ViewModel @Inject constructor(
 
     fun setFirstName(value: String) {
         savedStateHandle[KEY_FIRST] = value
-        _uiState.update { it.copy(firstName = value, validationError = false, networkError = false) }
+        _uiState.update {
+            it.copy(
+                firstName = value,
+                validationError = false,
+                networkError = false,
+            )
+        }
     }
 
     fun setLastName(value: String) {
@@ -73,7 +81,7 @@ class ZovRegisterStep1ViewModel @Inject constructor(
 
     fun submit(onSuccess: () -> Unit) {
         val s = _uiState.value
-        if (s.firstName.isBlank() || s.lastName.isBlank() || s.email.isBlank() || s.phone.isBlank() || s.password.length < 8) {
+        if (s.hasStep1ValidationErrors()) {
             _uiState.update { it.copy(validationError = true) }
             return
         }
@@ -83,8 +91,20 @@ class ZovRegisterStep1ViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, validationError = false, networkError = false) }
-            registerNewAccount(s.firstName.trim(), s.lastName.trim(), s.email.trim(), normalizedPhone, s.password)
+            _uiState.update {
+                it.copy(
+                    isSubmitting = true,
+                    validationError = false,
+                    networkError = false,
+                )
+            }
+            registerNewAccount(
+                s.firstName.trim(),
+                s.lastName.trim(),
+                s.email.trim(),
+                normalizedPhone,
+                s.password,
+            )
                 .fold(
                     onSuccess = {
                         _uiState.update { it.copy(isSubmitting = false) }
@@ -97,12 +117,15 @@ class ZovRegisterStep1ViewModel @Inject constructor(
         }
     }
 
+    private fun RegisterStep1UiState.hasStep1ValidationErrors(): Boolean =
+        listOf(firstName, lastName, email, phone).any(String::isBlank) || password.length < 8
+
     private fun normalizePhone(raw: String): String {
         val digits = raw.filter { it.isDigit() || it == '+' }
         return when {
             digits.startsWith("+7") && digits.length == 12 -> digits
             digits.startsWith("8") && digits.length == 11 -> "+7" + digits.drop(1)
-            digits.startsWith("7") && digits.length == 11 -> "+${digits}"
+            digits.startsWith("7") && digits.length == 11 -> "+" + digits
             digits.length == 10 -> "+7$digits"
             else -> raw.trim()
         }

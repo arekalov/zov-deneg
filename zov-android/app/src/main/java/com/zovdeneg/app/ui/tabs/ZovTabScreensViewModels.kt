@@ -1,7 +1,5 @@
 package com.zovdeneg.app.ui.tabs
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.zovdeneg.app.domain.market.SecurityKind
 import com.zovdeneg.app.domain.market.SecurityListItem
 import com.zovdeneg.app.domain.transactions.Transaction
@@ -14,6 +12,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+
 import javax.inject.Inject
 
 data class SearchTabUiState(

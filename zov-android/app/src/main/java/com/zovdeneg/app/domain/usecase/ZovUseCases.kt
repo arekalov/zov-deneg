@@ -15,26 +15,30 @@ import com.zovdeneg.app.domain.profile.UserProfile
 import com.zovdeneg.app.domain.profile.UserProfileRepository
 import com.zovdeneg.app.domain.transactions.Transaction
 import com.zovdeneg.app.domain.transactions.TransactionsRepository
-import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+
+import javax.inject.Inject
 
 class LoadSecurityDetailUseCase @Inject constructor(
     private val securitiesRepository: SecuritiesRepository,
 ) {
-    suspend operator fun invoke(ticker: String): Result<SecurityDetail> = securitiesRepository.getSecurityDetail(ticker)
+    suspend operator fun invoke(ticker: String): Result<SecurityDetail> =
+        securitiesRepository.getSecurityDetail(ticker)
 }
 
 class LoadPopularSecuritiesUseCase @Inject constructor(
     private val securitiesRepository: SecuritiesRepository,
 ) {
-    suspend operator fun invoke(): Result<List<SecurityListItem>> = securitiesRepository.getPopularSecurities()
+    suspend operator fun invoke(): Result<List<SecurityListItem>> =
+        securitiesRepository.getPopularSecurities()
 }
 
 class LoadTransactionsUseCase @Inject constructor(
     private val transactionsRepository: TransactionsRepository,
 ) {
-    suspend operator fun invoke(): Result<List<Transaction>> = transactionsRepository.getTransactions()
+    suspend operator fun invoke(): Result<List<Transaction>> =
+        transactionsRepository.getTransactions()
 }
 
 data class HomePortfolioSnapshot(
@@ -69,13 +73,15 @@ class LoadBrokerageBalanceUseCase @Inject constructor(
 class SubmitBrokerageDepositUseCase @Inject constructor(
     private val balanceRepository: BalanceRepository,
 ) {
-    suspend operator fun invoke(amount: String): Result<BrokerageBalance> = balanceRepository.depositDecimalString(amount)
+    suspend operator fun invoke(amount: String): Result<BrokerageBalance> =
+        balanceRepository.depositDecimalString(amount)
 }
 
 class SubmitBrokerageWithdrawUseCase @Inject constructor(
     private val balanceRepository: BalanceRepository,
 ) {
-    suspend operator fun invoke(amount: String): Result<BrokerageBalance> = balanceRepository.withdrawDecimalString(amount)
+    suspend operator fun invoke(amount: String): Result<BrokerageBalance> =
+        balanceRepository.withdrawDecimalString(amount)
 }
 
 class LoadUserProfileUseCase @Inject constructor(

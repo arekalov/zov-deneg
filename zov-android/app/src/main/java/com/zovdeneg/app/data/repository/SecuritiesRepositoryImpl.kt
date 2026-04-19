@@ -7,6 +7,7 @@ import com.zovdeneg.app.domain.market.SecuritiesRepository
 import com.zovdeneg.app.domain.market.SecurityDetail
 import com.zovdeneg.app.domain.market.SecurityKind
 import com.zovdeneg.app.domain.market.SecurityListItem
+
 import javax.inject.Inject
 import javax.inject.Singleton
 

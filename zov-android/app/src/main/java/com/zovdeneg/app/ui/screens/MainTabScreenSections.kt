@@ -1,13 +1,5 @@
 package com.zovdeneg.app.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import com.zovdeneg.app.R
 import com.zovdeneg.app.domain.market.SecurityListItem
 import com.zovdeneg.app.domain.transactions.Transaction
@@ -18,6 +10,15 @@ import com.zovdeneg.app.ui.components.ZovFilterChip
 import com.zovdeneg.app.ui.tabs.HistoryTabUiState
 import com.zovdeneg.app.ui.tabs.SearchTabUiState
 import com.zovdeneg.app.ui.theme.ZovTheme
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 
 @Composable
 internal fun SearchTabPopularSection(
@@ -41,6 +42,7 @@ internal fun SearchTabPopularSection(
                     ),
                 ) { onOpenSecurity(item.ticker) }
             }
+
         searchUi.loadFailed || (!searchUi.isLoading && searchUi.allSecurities.isEmpty()) -> {
             AssetRow(
                 AssetRowData(
@@ -89,6 +91,7 @@ internal fun HistoryTabTransactionsSection(
     when {
         visibleTxs.isNotEmpty() ->
             visibleTxs.forEach { tx -> HistoryTransactionCard(tx = tx) }
+
         historyUi.loadFailed || (!historyUi.isLoading && historyUi.transactions.isEmpty()) ->
             HistoryTransactionFallbackRows()
     }

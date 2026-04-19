@@ -1,12 +1,16 @@
 package com.zovdeneg.app.data.local
 
-import android.content.Context
-import android.content.SharedPreferences
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKeys
 import com.zovdeneg.app.domain.auth.LocalAuthStorage
 import dagger.hilt.android.qualifiers.ApplicationContext
+
+import android.content.Context
+import android.content.SharedPreferences
+
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
+
 import java.security.MessageDigest
+
 import javax.inject.Inject
 import javax.inject.Singleton
 

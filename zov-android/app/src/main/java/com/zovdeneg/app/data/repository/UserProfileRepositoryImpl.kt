@@ -5,6 +5,7 @@ import com.zovdeneg.app.data.remote.dto.UserProfileDto
 import com.zovdeneg.app.data.remote.dto.UserProfileUpdateDto
 import com.zovdeneg.app.domain.profile.UserProfile
 import com.zovdeneg.app.domain.profile.UserProfileRepository
+
 import javax.inject.Inject
 import javax.inject.Singleton
 

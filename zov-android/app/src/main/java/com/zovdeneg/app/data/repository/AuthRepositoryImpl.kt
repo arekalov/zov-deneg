@@ -4,6 +4,7 @@ import com.zovdeneg.app.data.remote.api.ZovAuthApi
 import com.zovdeneg.app.data.remote.dto.LoginRequestDto
 import com.zovdeneg.app.data.remote.dto.RegisterRequestDto
 import com.zovdeneg.app.domain.auth.AuthRepository
+
 import javax.inject.Inject
 import javax.inject.Singleton
 

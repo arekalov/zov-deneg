@@ -1,7 +1,5 @@
 package com.zovdeneg.app.ui.profile
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.zovdeneg.app.domain.auth.LocalAuthStorage
 import com.zovdeneg.app.domain.profile.UserProfile
 import com.zovdeneg.app.domain.usecase.LoadUserProfileUseCase
@@ -11,6 +9,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+
 import javax.inject.Inject
 
 data class ProfileUiState(
@@ -38,7 +40,11 @@ class ProfileViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _uiState.update {
-                it.copy(isLoading = true, loadFailed = false, biometricUnlockEnabled = localAuthStorage.isBiometricUnlockEnabled())
+                it.copy(
+                    isLoading = true,
+                    loadFailed = false,
+                    biometricUnlockEnabled = localAuthStorage.isBiometricUnlockEnabled(),
+                )
             }
             loadUserProfile().fold(
                 onSuccess = { p ->

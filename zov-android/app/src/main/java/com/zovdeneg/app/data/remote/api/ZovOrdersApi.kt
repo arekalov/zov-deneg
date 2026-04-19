@@ -7,6 +7,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+
 import javax.inject.Inject
 
 internal class ZovOrdersApi @Inject constructor(
@@ -14,6 +15,12 @@ internal class ZovOrdersApi @Inject constructor(
 ) {
     suspend fun createMarketBuy(securityId: String, quantity: Int): OrderResponseDto =
         client.post(ZovApiPaths.ORDERS) {
-            setBody(CreateOrderRequestDto(securityId = securityId, side = "buy", quantity = quantity))
+            setBody(
+                CreateOrderRequestDto(
+                    securityId = securityId,
+                    side = "buy",
+                    quantity = quantity,
+                ),
+            )
         }.body()
 }

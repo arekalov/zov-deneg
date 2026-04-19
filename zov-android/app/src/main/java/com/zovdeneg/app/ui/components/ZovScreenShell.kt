@@ -1,5 +1,11 @@
 package com.zovdeneg.app.ui.components
 
+import com.zovdeneg.app.ui.common.ZovHorizontalPadding
+import com.zovdeneg.app.ui.common.ZovScrollBodySpacing
+import com.zovdeneg.app.ui.common.ZovSpace4
+import com.zovdeneg.app.ui.theme.ZovAppTheme
+import com.zovdeneg.app.ui.theme.ZovTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,11 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.zovdeneg.app.ui.common.ZovHorizontalPadding
-import com.zovdeneg.app.ui.common.ZovScrollBodySpacing
-import com.zovdeneg.app.ui.common.ZovSpace4
-import com.zovdeneg.app.ui.theme.ZovAppTheme
-import com.zovdeneg.app.ui.theme.ZovTheme
 
 @Composable
 fun ZovScrollScreen(

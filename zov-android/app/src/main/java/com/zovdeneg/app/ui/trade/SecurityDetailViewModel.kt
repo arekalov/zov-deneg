@@ -1,8 +1,5 @@
 package com.zovdeneg.app.ui.trade
 
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.zovdeneg.app.domain.market.SecurityDetail
 import com.zovdeneg.app.domain.usecase.LoadSecurityDetailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,6 +8,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+
 import javax.inject.Inject
 
 data class SecurityDetailUiState(
@@ -43,11 +45,21 @@ class SecurityDetailViewModel @Inject constructor(
             loadSecurityDetail(ticker).fold(
                 onSuccess = { detail ->
                     _uiState.update {
-                        SecurityDetailUiState(detail = detail, isLoading = false, loadFailed = false)
+                        SecurityDetailUiState(
+                            detail = detail,
+                            isLoading = false,
+                            loadFailed = false,
+                        )
                     }
                 },
                 onFailure = {
-                    _uiState.update { SecurityDetailUiState(detail = null, isLoading = false, loadFailed = true) }
+                    _uiState.update {
+                        SecurityDetailUiState(
+                            detail = null,
+                            isLoading = false,
+                            loadFailed = true,
+                        )
+                    }
                 },
             )
         }

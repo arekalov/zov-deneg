@@ -1,7 +1,5 @@
 package com.zovdeneg.app.ui.profile
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.zovdeneg.app.domain.auth.LocalAuthStorage
 import com.zovdeneg.app.domain.usecase.ChangeAppPinUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -10,16 +8,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+
 import javax.inject.Inject
 
 enum class ChangePinFlowStep {
-    EnterCurrent,
-    EnterNew,
-    ConfirmNew,
+    ENTER_CURRENT,
+    ENTER_NEW,
+    CONFIRM_NEW,
 }
 
 data class ChangePinUiState(
-    val step: ChangePinFlowStep = ChangePinFlowStep.EnterCurrent,
+    val step: ChangePinFlowStep = ChangePinFlowStep.ENTER_CURRENT,
     val draft: String = "",
     val newPin: String = "",
     val wrongCurrentPin: Boolean = false,
@@ -66,26 +68,28 @@ class ChangePinViewModel @Inject constructor(
         val s = _uiState.value
         if (s.isSubmitting || s.draft.length != PIN_LEN) return
         when (s.step) {
-            ChangePinFlowStep.EnterCurrent -> {
+            ChangePinFlowStep.ENTER_CURRENT -> {
                 if (!localAuth.verifyPin(s.draft)) {
                     _uiState.update { it.copy(wrongCurrentPin = true) }
                     return
                 }
                 _uiState.update {
-                    ChangePinUiState(step = ChangePinFlowStep.EnterNew, draft = "")
+                    ChangePinUiState(step = ChangePinFlowStep.ENTER_NEW, draft = "")
                 }
             }
-            ChangePinFlowStep.EnterNew -> {
+
+            ChangePinFlowStep.ENTER_NEW -> {
                 val newPlain = s.draft
                 _uiState.update {
                     ChangePinUiState(
-                        step = ChangePinFlowStep.ConfirmNew,
+                        step = ChangePinFlowStep.CONFIRM_NEW,
                         newPin = newPlain,
                         draft = "",
                     )
                 }
             }
-            ChangePinFlowStep.ConfirmNew -> {
+
+            ChangePinFlowStep.CONFIRM_NEW -> {
                 if (s.draft != s.newPin) {
                     _uiState.update { it.copy(confirmMismatch = true, draft = "") }
                     return
@@ -98,7 +102,12 @@ class ChangePinViewModel @Inject constructor(
     private fun submitRemote(newPlain: String) {
         viewModelScope.launch {
             _uiState.update {
-                it.copy(isSubmitting = true, wrongCurrentPin = false, failed = false, confirmMismatch = false)
+                it.copy(
+                    isSubmitting = true,
+                    wrongCurrentPin = false,
+                    failed = false,
+                    confirmMismatch = false,
+                )
             }
             changeAppPin().fold(
                 onSuccess = {
@@ -108,7 +117,7 @@ class ChangePinViewModel @Inject constructor(
                 onFailure = {
                     _uiState.update {
                         ChangePinUiState(
-                            step = ChangePinFlowStep.ConfirmNew,
+                            step = ChangePinFlowStep.CONFIRM_NEW,
                             newPin = newPlain,
                             draft = "",
                             failed = true,

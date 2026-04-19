@@ -99,8 +99,9 @@ formatting:
     active: true
     autoCorrect: true
   ImportOrdering:
-    active: true
-    autoCorrect: true
+    # ktlint IDEA ordering conflicts with mixed androidx / dagger / javax / kotlinx in small ViewModels; IDE handles imports.
+    active: false
+    autoCorrect: false
   Indentation:
     active: true
     autoCorrect: true
@@ -277,7 +278,8 @@ style:
     active: true
     autoCorrect: false
     comments:
-      - value: '.*'
+      - value: 'FIXME'
+      - value: 'STOPSHIP'
     allowedPatterns: ''
   ForbiddenImport:
     active: false

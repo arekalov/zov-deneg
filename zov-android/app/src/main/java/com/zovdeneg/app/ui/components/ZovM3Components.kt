@@ -1,5 +1,28 @@
 package com.zovdeneg.app.ui.components
 
+import com.zovdeneg.app.R
+import com.zovdeneg.app.ui.common.ZovButtonHeight
+import com.zovdeneg.app.ui.common.ZovCardElevation
+import com.zovdeneg.app.ui.common.ZovChipHeight
+import com.zovdeneg.app.ui.common.ZovHalfUnit
+import com.zovdeneg.app.ui.common.ZovHorizontalPadding
+import com.zovdeneg.app.ui.common.ZovItemSpacing
+import com.zovdeneg.app.ui.common.ZovListRowMinHeight
+import com.zovdeneg.app.ui.common.ZovPinDotSize
+import com.zovdeneg.app.ui.common.ZovPinDotSpacing
+import com.zovdeneg.app.ui.common.ZovPinKeyRowHeight
+import com.zovdeneg.app.ui.common.ZovScrollBodySpacing
+import com.zovdeneg.app.ui.common.ZovShapeLarge
+import com.zovdeneg.app.ui.common.ZovShapeMedium
+import com.zovdeneg.app.ui.common.ZovShapeSmall
+import com.zovdeneg.app.ui.common.ZovSpace3
+import com.zovdeneg.app.ui.common.ZovSpace6
+import com.zovdeneg.app.ui.common.ZovSpace8
+import com.zovdeneg.app.ui.common.ZovTightGap
+import com.zovdeneg.app.ui.common.ZovUnit
+import com.zovdeneg.app.ui.theme.ZovAppTheme
+import com.zovdeneg.app.ui.theme.ZovTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -33,28 +56,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.zovdeneg.app.R
-import com.zovdeneg.app.ui.common.ZovButtonHeight
-import com.zovdeneg.app.ui.common.ZovCardElevation
-import com.zovdeneg.app.ui.common.ZovChipHeight
-import com.zovdeneg.app.ui.common.ZovHalfUnit
-import com.zovdeneg.app.ui.common.ZovHorizontalPadding
-import com.zovdeneg.app.ui.common.ZovItemSpacing
-import com.zovdeneg.app.ui.common.ZovListRowMinHeight
-import com.zovdeneg.app.ui.common.ZovPinDotSize
-import com.zovdeneg.app.ui.common.ZovPinDotSpacing
-import com.zovdeneg.app.ui.common.ZovPinKeyRowHeight
-import com.zovdeneg.app.ui.common.ZovScrollBodySpacing
-import com.zovdeneg.app.ui.common.ZovShapeLarge
-import com.zovdeneg.app.ui.common.ZovShapeMedium
-import com.zovdeneg.app.ui.common.ZovShapeSmall
-import com.zovdeneg.app.ui.common.ZovSpace3
-import com.zovdeneg.app.ui.common.ZovSpace6
-import com.zovdeneg.app.ui.common.ZovSpace8
-import com.zovdeneg.app.ui.common.ZovTightGap
-import com.zovdeneg.app.ui.common.ZovUnit
-import com.zovdeneg.app.ui.theme.ZovAppTheme
-import com.zovdeneg.app.ui.theme.ZovTheme
 
 @Composable
 fun ZovSummaryCard(
@@ -136,7 +137,12 @@ fun ZovBalanceStrip(
             .border(1.dp, c.outline, RoundedCornerShape(ZovShapeMedium))
             .background(c.surface)
             .clickable(onClick = onClick)
-            .padding(start = ZovHorizontalPadding, end = ZovSpace3, top = ZovSpace3, bottom = ZovSpace3),
+            .padding(
+                start = ZovHorizontalPadding,
+                end = ZovSpace3,
+                top = ZovSpace3,
+                bottom = ZovSpace3,
+            ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ZovItemSpacing),
         content = content,
@@ -190,7 +196,10 @@ fun ZovPinDots(
             .fillMaxWidth()
             .then(modifier)
             .padding(vertical = ZovItemSpacing),
-        horizontalArrangement = Arrangement.spacedBy(ZovPinDotSpacing, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(
+            ZovPinDotSpacing,
+            Alignment.CenterHorizontally,
+        ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         repeat(total) { i ->
@@ -345,8 +354,16 @@ private fun ZovM3PreviewCardsBlock() {
     val c = ZovTheme.colors
     val t = ZovTheme.text
     ZovSummaryCard {
-        Text(stringResource(R.string.home_portfolio_value), style = t.labelReg12, color = c.onSurfaceVariant)
-        Text(stringResource(R.string.home_portfolio_amount_mock), style = t.titleSemi22, color = c.onSurface)
+        Text(
+            stringResource(R.string.home_portfolio_value),
+            style = t.labelReg12,
+            color = c.onSurfaceVariant,
+        )
+        Text(
+            stringResource(R.string.home_portfolio_amount_mock),
+            style = t.titleSemi22,
+            color = c.onSurface,
+        )
     }
     ZovBalanceStrip(onClick = {}) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ZovHalfUnit)) {
@@ -375,13 +392,21 @@ private fun ZovM3PreviewCardsBlock() {
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(ZovHalfUnit),
         ) {
-            Text(stringResource(R.string.asset_sber_value), style = t.sectionSemi16, color = c.onSurface)
+            Text(
+                stringResource(R.string.asset_sber_value),
+                style = t.sectionSemi16,
+                color = c.onSurface,
+            )
             Text(stringResource(R.string.asset_sber_delta), style = t.bodyMed14, color = c.positive)
         }
     }
     ZovElevatedListCard {
         Text(stringResource(R.string.history_row1_title), style = t.bodyMed14, color = c.onSurface)
-        Text(stringResource(R.string.history_row1_date), style = t.labelReg12, color = c.onSurfaceVariant)
+        Text(
+            stringResource(R.string.history_row1_date),
+            style = t.labelReg12,
+            color = c.onSurfaceVariant,
+        )
     }
 }
 

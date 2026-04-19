@@ -2,6 +2,7 @@ package com.zovdeneg.app.ui.theme
 
 import android.content.res.Configuration
 import android.os.Build
+
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge

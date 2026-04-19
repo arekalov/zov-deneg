@@ -1,17 +1,19 @@
 package com.zovdeneg.app.data.remote.mock
 
-import android.content.Context
 import com.zovdeneg.app.data.remote.ZovJson
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
-import javax.inject.Singleton
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
+
+import android.content.Context
+
+import java.util.concurrent.ConcurrentHashMap
+
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Loads mock API JSON from [android.content.res.AssetManager] under `assets/mock/`.
@@ -73,6 +75,7 @@ internal class ZovMockAssetJson @Inject constructor(
                                 "changeLine",
                                 if (positive) "+0,0% · мок" else "−0,0% · мок",
                             )
+
                         "changePositive" -> put("changePositive", positive)
                         else -> put(k, v)
                     }

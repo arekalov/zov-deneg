@@ -1,7 +1,5 @@
 package com.zovdeneg.app.ui.deposit
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.zovdeneg.app.domain.balance.BrokerageBalance
 import com.zovdeneg.app.domain.usecase.LoadBrokerageBalanceUseCase
 import com.zovdeneg.app.domain.usecase.SubmitBrokerageDepositUseCase
@@ -12,6 +10,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+
 import javax.inject.Inject
 
 data class DepositUiState(
@@ -41,7 +43,13 @@ class DepositViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, loadFailed = false) }
             loadBrokerageBalance().fold(
                 onSuccess = { bal ->
-                    _uiState.update { it.copy(balance = bal, isLoading = false, loadFailed = false) }
+                    _uiState.update {
+                        it.copy(
+                            balance = bal,
+                            isLoading = false,
+                            loadFailed = false,
+                        )
+                    }
                 },
                 onFailure = {
                     _uiState.update { it.copy(isLoading = false, loadFailed = true) }
@@ -58,7 +66,14 @@ class DepositViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isWorking = true, actionFailed = false) }
             submitBrokerageDeposit(amountDecimal).fold(
-                onSuccess = { bal -> _uiState.update { it.copy(balance = bal, isWorking = false) } },
+                onSuccess = { bal ->
+                    _uiState.update {
+                        it.copy(
+                            balance = bal,
+                            isWorking = false,
+                        )
+                    }
+                },
                 onFailure = { _uiState.update { it.copy(isWorking = false, actionFailed = true) } },
             )
         }
@@ -68,7 +83,14 @@ class DepositViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isWorking = true, actionFailed = false) }
             submitBrokerageWithdraw("1000.00").fold(
-                onSuccess = { bal -> _uiState.update { it.copy(balance = bal, isWorking = false) } },
+                onSuccess = { bal ->
+                    _uiState.update {
+                        it.copy(
+                            balance = bal,
+                            isWorking = false,
+                        )
+                    }
+                },
                 onFailure = { _uiState.update { it.copy(isWorking = false, actionFailed = true) } },
             )
         }

@@ -11,42 +11,11 @@ import io.ktor.utils.io.ByteReadChannel
 
 internal fun zovMockEngine(json: ZovMockAssetJson): MockEngine =
     MockEngine { request ->
-        val path = request.url.encodedPath
-        val method = request.method
-        val body: String? =
-            when {
-                method == HttpMethod.Get && path == ZovApiPaths.PORTFOLIO_SUMMARY -> json.portfolioSummary()
-                method == HttpMethod.Get && path == ZovApiPaths.PORTFOLIO_HOLDINGS -> json.portfolioHoldings()
-                method == HttpMethod.Get && path == ZovApiPaths.SECURITIES_POPULAR -> json.popularSecurities()
-                method == HttpMethod.Get && path == ZovApiPaths.TRANSACTIONS -> json.transactions()
-                method == HttpMethod.Get && path.startsWith("/v1/securities/") -> {
-                    val slug = path.removePrefix("/v1/securities/").substringBefore("/")
-                    when {
-                        slug.isEmpty() || slug == "popular" -> null
-                        else -> json.securityDetail(slug)
-                    }
-                }
-                method == HttpMethod.Get && path == ZovApiPaths.BALANCE -> json.balance()
-                method == HttpMethod.Post && path == ZovApiPaths.BALANCE_DEPOSIT -> json.balance()
-                method == HttpMethod.Post && path == ZovApiPaths.BALANCE_WITHDRAW -> json.balanceAfterWithdraw()
-                method == HttpMethod.Get && path == ZovApiPaths.USERS_ME -> json.userProfile()
-                method == HttpMethod.Put && path == ZovApiPaths.USERS_ME -> json.userProfile()
-                method == HttpMethod.Post && path == ZovApiPaths.USERS_ME_PIN -> json.pinChangeOk()
-                method == HttpMethod.Post && path == ZovApiPaths.ORDERS -> json.orderCreated()
-                method == HttpMethod.Post && path == ZovApiPaths.AUTH_LOGIN -> json.authLoginResponse()
-                method == HttpMethod.Post && path == ZovApiPaths.AUTH_REGISTER -> json.authRegisterResponse()
-                else -> null
-            }
+        val body = mockJsonBody(request.method, request.url.encodedPath, json)
         if (body != null) {
-            val status =
-                when {
-                    method == HttpMethod.Post && path == ZovApiPaths.ORDERS -> HttpStatusCode.Created
-                    method == HttpMethod.Post && path == ZovApiPaths.AUTH_REGISTER -> HttpStatusCode.Created
-                    else -> HttpStatusCode.OK
-                }
             respond(
                 content = ByteReadChannel(body),
-                status = status,
+                status = mockHttpStatus(request.method, request.url.encodedPath),
                 headers = headersOf(HttpHeaders.ContentType, "application/json"),
             )
         } else {
@@ -57,3 +26,52 @@ internal fun zovMockEngine(json: ZovMockAssetJson): MockEngine =
             )
         }
     }
+
+private fun mockHttpStatus(method: HttpMethod, path: String): HttpStatusCode =
+    when {
+        method == HttpMethod.Post && path == ZovApiPaths.ORDERS -> HttpStatusCode.Created
+        method == HttpMethod.Post && path == ZovApiPaths.AUTH_REGISTER -> HttpStatusCode.Created
+        else -> HttpStatusCode.OK
+    }
+
+private fun mockJsonBody(method: HttpMethod, path: String, json: ZovMockAssetJson): String? =
+    mockGetJson(method, path, json)
+        ?: mockPostJson(method, path, json)
+        ?: mockPutJson(method, path, json)
+
+private fun mockGetJson(method: HttpMethod, path: String, json: ZovMockAssetJson): String? {
+    if (method != HttpMethod.Get) return null
+    return when (path) {
+        ZovApiPaths.PORTFOLIO_SUMMARY -> json.portfolioSummary()
+        ZovApiPaths.PORTFOLIO_HOLDINGS -> json.portfolioHoldings()
+        ZovApiPaths.SECURITIES_POPULAR -> json.popularSecurities()
+        ZovApiPaths.TRANSACTIONS -> json.transactions()
+        ZovApiPaths.BALANCE -> json.balance()
+        ZovApiPaths.USERS_ME -> json.userProfile()
+        else -> securityDetailSlugBody(path, json)
+    }
+}
+
+private fun securityDetailSlugBody(path: String, json: ZovMockAssetJson): String? {
+    if (!path.startsWith("/v1/securities/")) return null
+    val slug = path.removePrefix("/v1/securities/").substringBefore("/")
+    return if (slug.isEmpty() || slug == "popular") null else json.securityDetail(slug)
+}
+
+private fun mockPostJson(method: HttpMethod, path: String, json: ZovMockAssetJson): String? {
+    if (method != HttpMethod.Post) return null
+    return when (path) {
+        ZovApiPaths.BALANCE_DEPOSIT -> json.balance()
+        ZovApiPaths.BALANCE_WITHDRAW -> json.balanceAfterWithdraw()
+        ZovApiPaths.USERS_ME_PIN -> json.pinChangeOk()
+        ZovApiPaths.ORDERS -> json.orderCreated()
+        ZovApiPaths.AUTH_LOGIN -> json.authLoginResponse()
+        ZovApiPaths.AUTH_REGISTER -> json.authRegisterResponse()
+        else -> null
+    }
+}
+
+private fun mockPutJson(method: HttpMethod, path: String, json: ZovMockAssetJson): String? {
+    if (method == HttpMethod.Put && path == ZovApiPaths.USERS_ME) return json.userProfile()
+    return null
+}

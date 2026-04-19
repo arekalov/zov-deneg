@@ -1,5 +1,14 @@
 package com.zovdeneg.app.navigation
 
+import com.zovdeneg.app.R
+import com.zovdeneg.app.ui.common.ZovSpace6
+import com.zovdeneg.app.ui.common.ZovTopBarContentHeight
+import com.zovdeneg.app.ui.common.ZovTouchMin
+import com.zovdeneg.app.ui.common.ZovUnit
+import com.zovdeneg.app.ui.components.LocalZovSnackbarHostState
+import com.zovdeneg.app.ui.components.ZovSnackbarHost
+import com.zovdeneg.app.ui.theme.ZovTheme
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,17 +32,19 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.zovdeneg.app.R
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -41,11 +52,6 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.zovdeneg.app.ui.common.ZovSpace6
-import com.zovdeneg.app.ui.common.ZovTopBarContentHeight
-import com.zovdeneg.app.ui.common.ZovTouchMin
-import com.zovdeneg.app.ui.common.ZovUnit
-import com.zovdeneg.app.ui.theme.ZovTheme
 
 private data class BottomDestination(
     val route: String,
@@ -56,9 +62,21 @@ private data class BottomDestination(
 @Composable
 private fun bottomTabDestinations(): List<BottomDestination> =
     listOf(
-        BottomDestination(ZovRoutes.MAIN_HOME, stringResource(R.string.nav_bottom_home), Icons.Filled.Home),
-        BottomDestination(ZovRoutes.MAIN_SEARCH, stringResource(R.string.nav_bottom_search), Icons.Filled.Search),
-        BottomDestination(ZovRoutes.MAIN_HISTORY, stringResource(R.string.nav_bottom_history), Icons.Filled.History),
+        BottomDestination(
+            ZovRoutes.MAIN_HOME,
+            stringResource(R.string.nav_bottom_home),
+            Icons.Filled.Home,
+        ),
+        BottomDestination(
+            ZovRoutes.MAIN_SEARCH,
+            stringResource(R.string.nav_bottom_search),
+            Icons.Filled.Search,
+        ),
+        BottomDestination(
+            ZovRoutes.MAIN_HISTORY,
+            stringResource(R.string.nav_bottom_history),
+            Icons.Filled.History,
+        ),
     )
 
 private val registerRoutes =
@@ -211,6 +229,7 @@ private fun ZovNavBottomBar(
 @Composable
 fun ZovNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
+    val snackbarHostState = remember { SnackbarHostState() }
     val backStack by navController.currentBackStackEntryAsState()
     val current = backStack?.destination
     val route = current?.route
@@ -219,34 +238,42 @@ fun ZovNavHost(modifier: Modifier = Modifier) {
     val topTitle = zovTopBarTitle(route, backStack)
     val showBack = topTitle != null && route !in mainTabRoutes
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = ZovTheme.colors.background,
-        topBar = {
-            if (topTitle != null) {
-                ZovNavTopBar(
-                    topTitle = topTitle,
-                    showBack = showBack,
-                    showProfileAction = showProfileAction,
+    CompositionLocalProvider(LocalZovSnackbarHostState provides snackbarHostState) {
+        Scaffold(
+            modifier = modifier.fillMaxSize(),
+            containerColor = ZovTheme.colors.background,
+            snackbarHost = {
+                ZovSnackbarHost(
+                    hostState = snackbarHostState,
+                    applyNavigationBarPadding = !showBottomBar,
+                )
+            },
+            topBar = {
+                if (topTitle != null) {
+                    ZovNavTopBar(
+                        topTitle = topTitle,
+                        showBack = showBack,
+                        showProfileAction = showProfileAction,
+                        navController = navController,
+                    )
+                }
+            },
+            bottomBar = {
+                ZovNavBottomBar(
+                    visible = showBottomBar,
+                    current = current,
                     navController = navController,
                 )
+            },
+        ) { inner ->
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(inner),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                ZovNavGraphHost(navController = navController, modifier = Modifier.fillMaxSize())
             }
-        },
-        bottomBar = {
-            ZovNavBottomBar(
-                visible = showBottomBar,
-                current = current,
-                navController = navController,
-            )
-        },
-    ) { inner ->
-        Box(
-            Modifier
-                .fillMaxSize()
-                .padding(inner),
-            contentAlignment = Alignment.TopCenter,
-        ) {
-            ZovNavGraphHost(navController = navController, modifier = Modifier.fillMaxSize())
         }
     }
 }

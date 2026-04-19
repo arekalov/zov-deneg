@@ -4,6 +4,7 @@ import com.zovdeneg.app.data.remote.api.ZovBalanceApi
 import com.zovdeneg.app.data.remote.dto.BalanceDto
 import com.zovdeneg.app.domain.balance.BalanceRepository
 import com.zovdeneg.app.domain.balance.BrokerageBalance
+
 import javax.inject.Inject
 import javax.inject.Singleton
 

@@ -1,5 +1,21 @@
 package com.zovdeneg.app.ui.screens
 
+import com.zovdeneg.app.R
+import com.zovdeneg.app.domain.portfolio.Holding
+import com.zovdeneg.app.ui.common.ZovHalfUnit
+import com.zovdeneg.app.ui.common.ZovItemSpacing
+import com.zovdeneg.app.ui.common.ZovShapeMedium
+import com.zovdeneg.app.ui.components.ZovBalanceStrip
+import com.zovdeneg.app.ui.components.ZovFilterChip
+import com.zovdeneg.app.ui.components.ZovOutlinedRow
+import com.zovdeneg.app.ui.components.ZovScrollScreen
+import com.zovdeneg.app.ui.components.ZovSummaryCard
+import com.zovdeneg.app.ui.home.MainHomeViewModel
+import com.zovdeneg.app.ui.tabs.ZovHistoryTabViewModel
+import com.zovdeneg.app.ui.tabs.ZovSearchTabViewModel
+import com.zovdeneg.app.ui.theme.ZovAppTheme
+import com.zovdeneg.app.ui.theme.ZovTheme
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,21 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.zovdeneg.app.R
-import com.zovdeneg.app.domain.portfolio.Holding
-import com.zovdeneg.app.ui.common.ZovHalfUnit
-import com.zovdeneg.app.ui.common.ZovItemSpacing
-import com.zovdeneg.app.ui.common.ZovShapeExtraSmall
-import com.zovdeneg.app.ui.components.ZovBalanceStrip
-import com.zovdeneg.app.ui.components.ZovFilterChip
-import com.zovdeneg.app.ui.components.ZovOutlinedRow
-import com.zovdeneg.app.ui.components.ZovScrollScreen
-import com.zovdeneg.app.ui.components.ZovSummaryCard
-import com.zovdeneg.app.ui.home.MainHomeViewModel
-import com.zovdeneg.app.ui.tabs.ZovHistoryTabViewModel
-import com.zovdeneg.app.ui.tabs.ZovSearchTabViewModel
-import com.zovdeneg.app.ui.theme.ZovAppTheme
-import com.zovdeneg.app.ui.theme.ZovTheme
 
 @Composable
 internal fun MainHomeScreen(
@@ -75,12 +76,28 @@ private fun MainHomePortfolioSummaryCard(amountText: String, gainText: String) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
     ZovSummaryCard {
-        Text(stringResource(R.string.home_portfolio_value), style = t.subtitleReg13, color = c.onSurfaceVariant)
+        Text(
+            stringResource(R.string.home_portfolio_value),
+            style = t.subtitleReg13,
+            color = c.onSurfaceVariant,
+        )
         Text(amountText, style = t.titleSemi22, color = c.onSurface)
-        Text(stringResource(R.string.home_total_gain), style = t.subtitleReg13, color = c.onSurfaceVariant)
+        Text(
+            stringResource(R.string.home_total_gain),
+            style = t.subtitleReg13,
+            color = c.onSurfaceVariant,
+        )
         Text(gainText, style = t.sectionSemi16, color = c.positive)
-        Text(stringResource(R.string.home_loss_label), style = t.subtitleReg13, color = c.onSurfaceVariant)
-        Text(stringResource(R.string.home_em_dash), style = t.sectionSemi16, color = c.onSurfaceVariant)
+        Text(
+            stringResource(R.string.home_loss_label),
+            style = t.subtitleReg13,
+            color = c.onSurfaceVariant,
+        )
+        Text(
+            stringResource(R.string.home_em_dash),
+            style = t.sectionSemi16,
+            color = c.onSurfaceVariant,
+        )
     }
 }
 
@@ -199,7 +216,7 @@ private fun SearchTabSearchField(
         value = value,
         onValueChange = onValueChange,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(ZovShapeExtraSmall),
+        shape = RoundedCornerShape(ZovShapeMedium),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = c.outline,
             unfocusedBorderColor = c.outline,
@@ -212,7 +229,11 @@ private fun SearchTabSearchField(
             unfocusedTextColor = c.onSurface,
         ),
         placeholder = {
-            Text(stringResource(R.string.search_placeholder), style = t.bodyReg14, color = c.onSurfaceVariant)
+            Text(
+                stringResource(R.string.search_placeholder),
+                style = t.bodyReg14,
+                color = c.onSurfaceVariant,
+            )
         },
         singleLine = true,
     )

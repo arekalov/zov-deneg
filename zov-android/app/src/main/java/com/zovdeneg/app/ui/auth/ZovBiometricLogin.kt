@@ -1,10 +1,11 @@
 package com.zovdeneg.app.ui.auth
 
+import com.zovdeneg.app.R
+
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
-import com.zovdeneg.app.R
 
 internal fun canAuthenticateWithBiometric(activity: FragmentActivity): Boolean {
     val manager = BiometricManager.from(activity)

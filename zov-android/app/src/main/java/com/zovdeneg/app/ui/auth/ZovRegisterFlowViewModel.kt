@@ -1,11 +1,13 @@
 package com.zovdeneg.app.ui.auth
 
-import androidx.lifecycle.ViewModel
 import com.zovdeneg.app.domain.auth.LocalAuthStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+
+import androidx.lifecycle.ViewModel
+
 import javax.inject.Inject
 
 private const val REGISTER_PIN_LENGTH = 4
