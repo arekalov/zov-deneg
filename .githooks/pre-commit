@@ -1,0 +1,15 @@
+#!/bin/sh
+# Запускает Detekt перед коммитом, если в индекс попали файлы под zov-android/.
+# Включение: из корня репозитория — git config core.hooksPath .githooks
+
+set -e
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+if ! git diff --cached --name-only --diff-filter=ACM | grep -q '^zov-android/'; then
+  exit 0
+fi
+
+echo "pre-commit: Detekt (zov-android)..."
+(cd zov-android && ./gradlew detekt --no-daemon)

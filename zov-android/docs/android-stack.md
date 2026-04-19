@@ -57,7 +57,7 @@
 
 | Инструмент | Статус |
 |------------|--------|
-| **Detekt** | Линтер для Kotlin: плагин **`io.gitlab.arturbosch.detekt` 1.23.8**, конфиг **[`detekt.yml`](../detekt.yml)** (скопирован из учебного проекта lab1 и дополнен `ignoreAnnotated: Composable` для имён `@Composable`). Плагин и **`detekt-formatting`** подключены в **`:app`**; из корня Gradle доступна задача **`detekt`** (делегирует на `:app:detekt`). **`check`** в `:app` зависит от **`detekt`**. Отчёты: `app/build/reports/detekt/`. |
+| **Detekt** | Линтер для Kotlin: плагин **`io.gitlab.arturbosch.detekt` 1.23.8**, конфиг **[`detekt.yml`](../detekt.yml)** (скопирован из учебного проекта lab1 и дополнен `ignoreAnnotated: Composable` для имён `@Composable`). Плагин и **`detekt-formatting`** подключены в **`:app`**; из корня Gradle доступна задача **`detekt`** (делегирует на `:app:detekt`). **`check`** в `:app` зависит от **`detekt`**. Отчёты: `app/build/reports/detekt/`. Локально перед коммитом — **`pre-commit`** в [`.githooks/`](../../.githooks) монорепы (после `git config core.hooksPath .githooks`). |
 
 При необходимости позже можно явно зафиксировать **ktlint** или форматирование через IDE — пока в стеке основной линтер **Detekt**.
 
@@ -65,18 +65,14 @@
 
 ## CI / CD
 
-| Требование | Описание |
-|------------|----------|
-| **Сборка после коммита в ветку `release`** | Автоматическая сборка Android-проекта (как минимум `./gradlew assembleDebug` или `assembleRelease` — решение за командой). |
+GitHub Actions в корне монорепы [`.github/workflows/`](../../.github/workflows/), срабатывают только при изменениях в **`zov-android/**`** (`paths`).
 
-**Что ещё предстоит уточнить:**
+| Workflow | Ветка | Что делает |
+|----------|-------|------------|
+| **`android-master-detekt.yml`** | **`master`** | `./gradlew detekt` в `zov-android/`; при падении загружаются отчёты Detekt. **APK не собирается.** |
+| **`android-release-apk.yml`** | **`android-release`** | `./gradlew :app:assembleDebug` — **debug APK** (стандартная debug-подпись Gradle, **секреты не нужны**). Артефакт **`app-debug-apk`** (`app/build/outputs/apk/debug/*.apk`). |
 
-- Один общий workflow в корне [`.github/workflows/`](../../.github/workflows/) или отдельный под `zov-android/`.
-- Триггер: только `push` в `release`, или ещё `pull_request` в `release`.
-- Нужны ли на CI **unit-тесты** и **lint** (Detekt) на том же событии.
-- Для **`assembleRelease`**: хранение keystore и паролей в **GitHub Secrets** (или аналог), подпись артефакта, выкладка в Artifacts / внутренний стор.
-
-После настройки пайплайна в этот раздел стоит добавить **имя файла workflow** и краткое описание шагов.
+**Ветка `android-release`:** создай при необходимости; workflow запустится на первый `push` в неё. Для публикации в стор позже настроишь отдельно **`assembleRelease`** и свой keystore вне этого упрощённого сценария.
 
 ---
 

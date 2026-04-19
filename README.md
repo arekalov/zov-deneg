@@ -8,14 +8,16 @@
 
 Сюда по мере разработки добавляются другие части стека из ТЗ (например **Ktor-бэкенд**, **React Native**, сервисы на **Go** и т.д.) — каждый в своей папке в корне репозитория.
 
+**Git hooks:** в **`.githooks/`** лежит `pre-commit` с **Detekt** для `zov-android/` (см. [`zov-android/docs/android-development-process.md`](zov-android/docs/android-development-process.md)). Один раз из корня репозитория: **`git config core.hooksPath .githooks`**.
+
 ## Подпроекты и что в них лежит
 
 | Путь | Назначение |
 |------|------------|
 | **`openapi.yaml`** | Контракт **OpenAPI 3**: JWT, пользователи, ценные бумаги, портфель, заявки, транзакции, баланс (пополнение / вывод), денежные суммы и цены как **строки**, время — **Unix timestamp**. Публикуется в Swagger UI через GitHub Actions. |
-| **`docs/`** | Тексты: **`TZ.md`** — техническое задание (архитектура, стек команды); **`roles.md`** — роли и матрица доступа к эндпоинтам. |
+| **`docs/`** | Тексты: **`TZ.md`** — техническое задание; **`roles.md`** — роли и доступ к API. |
 | **`zov-figma/`** | **Dev-плагин Figma**: из `parts/` собирает страницы «Компоненты» и «Экраны» (макеты **360×800**, Android Compact). Подробности — [`zov-figma/README.md`](zov-figma/README.md). |
-| **`zov-android/`** | **Нативное Android-приложение** (Gradle, модуль `:app`, Jetpack Compose, тема Material). Точка входа — `app`, корневые `build.gradle.kts` / `settings.gradle.kts`. |
+| **`zov-android/`** | **Нативное Android-приложение** (Gradle, модуль `:app`, Jetpack Compose, тема Material). Точка входа — `app`, корневые `build.gradle.kts` / `settings.gradle.kts`. Документация клиента: [`zov-android/docs/`](zov-android/docs/) (`android-development-process.md`, `android-stack.md`). |
 | **`.github/workflows/`** | CI: например публикация **Swagger UI** на GitHub Pages при изменении `openapi.yaml`. |
 
 ### Каталог `zov-figma/` (кратко)
