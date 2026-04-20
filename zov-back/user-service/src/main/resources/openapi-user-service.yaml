@@ -1,0 +1,674 @@
+openapi: 3.0.3
+
+info:
+  title: ЗОВ Денег — User Service API
+  description: |
+    REST API для управления пользователями и аутентификации.
+    
+    ## База данных
+    PostgreSQL - данные о пользователях, профилях, сессиях.
+
+    ## Аутентификация
+    Используется JWT (Bearer). Access token передаётся в заголовке `Authorization: Bearer <token>`.
+    Access token живёт **15 минут**, refresh token — **30 дней**.
+
+    ## Роли
+    | Роль  | Описание                    |
+    |-------|-----------------------------|
+    | user  | Аутентифицированный инвестор |
+    | admin | Администратор системы        |
+
+  version: 1.0.0
+  contact:
+    name: ЗОВ Денег Team
+    email: api@zovdengi.ru
+
+servers:
+  - url: https://api.zovdengi.ru/v1
+    description: Production
+
+tags:
+  - name: auth
+    description: Аутентификация и управление сессией
+  - name: users
+    description: Профиль пользователя
+
+security:
+  - BearerAuth: []
+
+components:
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token, получается через /auth/login или /auth/token/refresh
+
+  schemas:
+
+    # ── Общие ──────────────────────────────────────────────────────────────
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Машиночитаемый код ошибки
+          example: INVALID_PIN
+        message:
+          type: string
+          description: Человекочитаемое описание
+          example: Неверный PIN-код
+        details:
+          type: object
+          additionalProperties: true
+          description: Дополнительные данные (необязательно)
+
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            fields:
+              type: array
+              description: Список полей с ошибками валидации
+              items:
+                type: object
+                required: [field, message]
+                properties:
+                  field:
+                    type: string
+                    example: email
+                  message:
+                    type: string
+                    example: Некорректный формат email
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 20
+        totalItems:
+          type: integer
+          example: 142
+        totalPages:
+          type: integer
+          example: 8
+
+    UnixTimestamp:
+      type: integer
+      format: int64
+      description: |
+        Момент времени в **секундах** с эпохи Unix (1970-01-01T00:00:00Z), целое число, UTC.
+      example: 1731571200
+
+    # ── Пользователи ───────────────────────────────────────────────────────
+    UserRole:
+      type: string
+      enum: [user, admin]
+      description: Роль пользователя в системе
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        firstName:
+          type: string
+          example: Иван
+        lastName:
+          type: string
+          example: Иванов
+        email:
+          type: string
+          format: email
+          example: ivan@example.com
+        phone:
+          type: string
+          example: "+79001234567"
+        role:
+          $ref: '#/components/schemas/UserRole'
+        isBlocked:
+          type: boolean
+          example: false
+        createdAt:
+          $ref: '#/components/schemas/UnixTimestamp'
+          description: Момент создания записи
+        updatedAt:
+          $ref: '#/components/schemas/UnixTimestamp'
+          description: Момент последнего обновления записи
+
+    # ── Токены ─────────────────────────────────────────────────────────────
+    Tokens:
+      type: object
+      description: |
+        Access и refresh токены. На Android клиенте должны храниться
+        исключительно через CredentialManager (android.security.keystore),
+        НЕ в SharedPreferences или файловой системе.
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token (TTL 15 мин)
+        refreshToken:
+          type: string
+          description: Refresh token (TTL 30 дней)
+        expiresIn:
+          type: integer
+          description: |
+            Срок жизни выданного access token в **секундах** (длительность, не календарный момент).
+          example: 900
+
+  # ── Reusable responses ─────────────────────────────────────────────────────
+  responses:
+    BadRequest:
+      description: Некорректный запрос / ошибка валидации
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            code: VALIDATION_ERROR
+            message: Ошибка валидации входных данных
+            fields:
+              - field: email
+                message: Некорректный формат email
+
+    Unauthorized:
+      description: Не аутентифицирован — отсутствует или недействителен access token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: UNAUTHORIZED
+            message: Требуется аутентификация
+
+    Forbidden:
+      description: Нет прав доступа к ресурсу
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: FORBIDDEN
+            message: Недостаточно прав для выполнения операции
+
+    NotFound:
+      description: Ресурс не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: NOT_FOUND
+            message: Ресурс не найден
+
+    Conflict:
+      description: Конфликт — ресурс уже существует
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalServerError:
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: INTERNAL_ERROR
+            message: Внутренняя ошибка сервера
+
+  # ── Reusable parameters ────────────────────────────────────────────────────
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Номер страницы (начиная с 1)
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+
+    PageSizeParam:
+      name: pageSize
+      in: query
+      description: Количество элементов на странице
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+
+    UserIdPath:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PATHS
+# ─────────────────────────────────────────────────────────────────────────────
+paths:
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # AUTH
+  # ══════════════════════════════════════════════════════════════════════════
+
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Регистрация нового пользователя
+      description: |
+        Создаёт аккаунт и возвращает токены для немедленного входа.
+        Клиент сохраняет токены в Android CredentialManager.
+        PIN и биометрия настраиваются локально на устройстве — на сервер не передаются.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, email, phone, password]
+              properties:
+                firstName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                  example: Иван
+                lastName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                  example: Иванов
+                email:
+                  type: string
+                  format: email
+                  example: ivan@example.com
+                phone:
+                  type: string
+                  pattern: '^\+7\d{10}$'
+                  example: "+79001234567"
+                password:
+                  type: string
+                  minLength: 8
+                  description: Пароль для восстановления доступа при переустановке приложения
+      responses:
+        '201':
+          description: Пользователь успешно зарегистрирован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+                  tokens:
+                    $ref: '#/components/schemas/Tokens'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+              examples:
+                validation:
+                  summary: Ошибка валидации
+                  value:
+                    code: VALIDATION_ERROR
+                    message: Ошибка валидации входных данных
+                    fields:
+                      - field: phone
+                        message: Некорректный формат номера телефона
+        '409':
+          description: Пользователь с таким email или телефоном уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                email_taken:
+                  value:
+                    code: EMAIL_ALREADY_EXISTS
+                    message: Пользователь с таким email уже зарегистрирован
+                phone_taken:
+                  value:
+                    code: PHONE_ALREADY_EXISTS
+                    message: Пользователь с таким номером телефона уже зарегистрирован
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Повторный вход (восстановление сессии)
+      description: |
+        Используется при переустановке приложения или смене устройства,
+        когда локально сохранённые токены недоступны.
+        PIN и биометрия — локальные механизмы блокировки приложения,
+        на сервер не передаются и на сервере не хранятся.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, password]
+              properties:
+                phone:
+                  type: string
+                  pattern: '^\+7\d{10}$'
+                  example: "+79001234567"
+                password:
+                  type: string
+                  description: Пароль, установленный при регистрации
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+                  tokens:
+                    $ref: '#/components/schemas/Tokens'
+        '401':
+          description: Неверный пароль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_CREDENTIALS
+                message: Неверный логин или пароль
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: USER_NOT_FOUND
+                message: Пользователь не найден
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/token/refresh:
+    post:
+      tags: [auth]
+      summary: Обновление access token
+      description: |
+        Выдаёт новую пару access + refresh токенов.
+        Использованный refresh token сразу инвалидируется (rotation) —
+        повторное использование того же токена вернёт 401.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Токены обновлены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tokens'
+        '401':
+          description: Refresh token недействителен, истёк или уже использован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                expired:
+                  value:
+                    code: REFRESH_TOKEN_EXPIRED
+                    message: Refresh token истёк, необходима повторная авторизация
+                invalid:
+                  value:
+                    code: INVALID_REFRESH_TOKEN
+                    message: Refresh token недействителен
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # USERS
+  # ══════════════════════════════════════════════════════════════════════════
+
+  /users/me:
+    get:
+      tags: [users]
+      summary: Профиль текущего пользователя
+      description: Возвращает профиль пользователя, чей access token передан в запросе.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags: [users]
+      summary: Обновить профиль
+      description: Обновляет личные данные текущего пользователя.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                lastName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                  pattern: '^\+7\d{10}$'
+      responses:
+        '200':
+          description: Профиль обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Email или телефон уже занят другим пользователем
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: EMAIL_ALREADY_EXISTS
+                message: Этот email уже используется другим аккаунтом
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users:
+    get:
+      tags: [users, admin]
+      summary: Список пользователей (только admin)
+      description: |
+        Возвращает постраничный список всех пользователей системы.
+        Доступен только пользователям с ролью admin.
+        Поддерживает фильтрацию по роли, статусу блокировки и текстовый поиск.
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: search
+          in: query
+          description: Поиск по имени, фамилии, email или телефону
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserRole'
+        - name: isBlocked
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserProfile'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserIdPath'
+    get:
+      tags: [users, admin]
+      summary: Пользователь по ID (только admin)
+      description: Возвращает полный профиль любого пользователя по его UUID. Доступен только admin.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [users, admin]
+      summary: Редактировать пользователя
+      description: |
+        Обычный пользователь может редактировать только себя.
+        Admin может редактировать любого пользователя, включая смену роли и статуса блокировки.
+        Права проверяются на сервере.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                lastName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                  pattern: '^\+7\d{10}$'
+                role:
+                  $ref: '#/components/schemas/UserRole'
+                  description: Только admin может менять роль
+                isBlocked:
+                  type: boolean
+                  description: Только admin может блокировать / разблокировать
+      responses:
+        '200':
+          description: Данные обновлены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Email или телефон уже занят другим пользователем
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: EMAIL_ALREADY_EXISTS
+                message: Пользователь с таким email уже зарегистрирован
+
+    delete:
+      tags: [users, admin]
+      summary: Удалить пользователя (только admin)
+      description: |
+        Удаляет аккаунт пользователя из системы. Доступен только admin.
+        Нельзя удалить собственный аккаунт и пользователя с открытыми позициями или активными заявками.
+      responses:
+        '204':
+          description: Пользователь удалён
+        '400':
+          description: Нельзя удалить самого себя или пользователя с активными позициями
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                self_delete:
+                  value:
+                    code: CANNOT_DELETE_SELF
+                    message: Нельзя удалить собственный аккаунт
+                has_positions:
+                  value:
+                    code: USER_HAS_ACTIVE_POSITIONS
+                    message: Нельзя удалить пользователя с открытыми позициями
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
