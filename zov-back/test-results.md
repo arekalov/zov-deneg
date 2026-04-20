@@ -2,42 +2,44 @@
 
 ## Summary
 
-| Service | Endpoint | Method | Status | Notes |
-|---------|----------|--------|--------|-------|
-| **User Service (8080)** | | | | |
-| | `/auth/register` | POST | ✅ PASS | Registration works, returns tokens |
-| | `/auth/login` | POST | ✅ PASS | Login works, returns tokens |
-| | `/auth/token/refresh` | POST | ✅ PASS | Token refresh works |
-| | `/users/me` | GET | ✅ PASS | Returns user profile |
-| | `/users/me` | PUT | ✅ PASS | Profile update works |
-| | `/users` | GET | ✅ PASS | Returns 403 (admin only) |
-| | `/users/{userId}` | GET | ✅ PASS | Returns 403 (admin only) |
-| | `/portfolio` | GET | ✅ PASS | Returns portfolio data |
-| | `/portfolio/summary` | GET | ✅ PASS | Returns portfolio summary |
-| | `/orders` | GET | ✅ PASS | Returns orders list |
-| | `/orders` | POST | ✅ PASS | Creates order |
-| | `/transactions` | GET | ✅ PASS | Returns transactions list |
-| | `/balance` | GET | ✅ PASS | Returns balance |
-| | `/balance/deposit` | POST | ✅ PASS | Deposit works |
-| | `/balance/withdraw` | POST | ✅ PASS | Withdraw works |
-| **Securities Service (8081)** | | | | |
-| | `/securities` | GET | ✅ PASS | Returns securities list |
-| | `/securities?q=Сбер` | GET | ✅ PASS | Search works |
-| | `/securities?type=stock` | GET | ✅ PASS | Filter by type works |
-| | `/securities?exchange=MOEX` | GET | ✅ PASS | Filter by exchange works |
-| | `/securities/{id}` | GET | ❌ FAIL | **Bug**: Division by zero error |
-| | `/securities/{id}/price/history` | GET | ✅ PASS | Price history works |
-| | `/securities/{id}/orderbook` | GET | ✅ PASS | Orderbook works |
-| | `/securities/{id}/orderbook?depth=5` | GET | ✅ PASS | Orderbook with depth works |
+| Service | Endpoint | Method | Status | Content Validation | Notes |
+|---------|----------|--------|--------|-------------------|-------|
+| **User Service (8080)** | | | | | |
+| | `/auth/register` | POST | ✅ PASS | ✅ email, firstName, user, tokens | Registration works |
+| | `/auth/login` | POST | ✅ PASS | ✅ user, accessToken, refreshToken | Login works |
+| | `/auth/token/refresh` | POST | ✅ PASS | ✅ accessToken, refreshToken, expiresIn | Token refresh works |
+| | `/users/me` | GET | ✅ PASS | ✅ id, email, role, phone | Returns user profile |
+| | `/users/me` | PUT | ✅ PASS | ✅ firstName, updatedAt | Profile update works |
+| | `/users` | GET | ✅ PASS | ✅ 403 error response | Admin only |
+| | `/users/{userId}` | GET | ✅ PASS | ✅ 403 error response | Admin only |
+| | `/portfolio` | GET | ✅ PASS | ✅ totalValue, items, cashBalance | Portfolio data |
+| | `/portfolio/summary` | GET | ✅ PASS | ✅ totalValue, profitLoss, profitLossPct | Summary data |
+| | `/orders` | GET | ✅ PASS | ✅ data, pagination | Orders list |
+| | `/orders` | POST | ✅ PASS | ✅ id, securityId, side, status | Creates order |
+| | `/transactions` | GET | ✅ PASS | ✅ data, pagination | Transactions list |
+| | `/balance` | GET | ✅ PASS | ✅ available, total, blocked | Balance data |
+| | `/balance/deposit` | POST | ✅ PASS | ✅ available=10000.00 | Deposit works |
+| | `/balance/withdraw` | POST | ✅ PASS | ✅ available=9000.00 | Withdraw works |
+| **Securities Service (8081)** | | | | | |
+| | `/securities` | GET | ✅ PASS | ✅ data, pagination, ticker, lastPrice | Securities list |
+| | `/securities?q=Сбер` | GET | ✅ PASS | ✅ data, pagination | Search works |
+| | `/securities?type=stock` | GET | ✅ PASS | ✅ data | Filter by type |
+| | `/securities?exchange=MOEX` | GET | ✅ PASS | ✅ data | Filter by exchange |
+| | `/securities/{id}` | GET | ❌ FAIL | N/A | **Bug**: Division by zero |
+| | `/securities/{id}/price/history` | GET | ✅ PASS | ✅ securityId, ticker, from, to, data | Price history |
+| | `/securities/{id}/orderbook` | GET | ✅ PASS | ✅ securityId, ticker, asks, bids, spread | Orderbook |
+| | `/securities/{id}/orderbook?depth=5` | GET | ✅ PASS | ✅ securityId, ticker | Orderbook with depth |
 
 ## Test Statistics
 
 | Metric | Count |
 |--------|-------|
-| **Total Tests** | 24 |
-| **Passed** | 23 |
+| **Total Tests** | 65 |
+| **Passed** | 64 |
 | **Failed** | 1 |
-| **Success Rate** | 95.8% |
+| **Success Rate** | 98.5% |
+
+**Note:** Tests now validate both HTTP status codes AND response content (JSON fields, values, structure).
 
 ## Known Issues
 

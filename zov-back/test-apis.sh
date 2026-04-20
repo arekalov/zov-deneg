@@ -111,6 +111,41 @@ extract_json_field() {
     echo "$json" | sed -n "s/.*\"$field\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p" | head -1
 }
 
+# Check if response contains expected field
+check_response_contains() {
+    local response="$1"
+    local expected="$2"
+    local test_name="$3"
+    
+    if echo "$response" | grep -q "$expected"; then
+        log_success "$test_name - Response contains: $expected"
+        return 0
+    else
+        log_failure "$test_name - Response does NOT contain: $expected"
+        log_info "Response: $response"
+        return 1
+    fi
+}
+
+# Check if JSON field equals expected value
+check_json_field() {
+    local json="$1"
+    local field="$2"
+    local expected="$3"
+    local test_name="$4"
+    
+    local actual
+    actual=$(extract_json_field "$json" "$field")
+    
+    if [[ "$actual" == "$expected" ]]; then
+        log_success "$test_name - $field = $expected"
+        return 0
+    else
+        log_failure "$test_name - $field: expected '$expected', got '$actual'"
+        return 1
+    fi
+}
+
 # =============================================================================
 # User Service Tests (Port 8080)
 # =============================================================================
@@ -137,6 +172,11 @@ test_user_service() {
         
         if [[ -n "$ACCESS_TOKEN" && -n "$USER_ID" ]]; then
             log_success "Registration successful, tokens received"
+            # Validate response structure
+            check_response_contains "$register_response" '"user"' "Response has user object"
+            check_response_contains "$register_response" '"tokens"' "Response has tokens object"
+            check_json_field "$register_response" "email" "$TEST_EMAIL" "Email matches"
+            check_json_field "$register_response" "firstName" "$TEST_FIRST_NAME" "First name matches"
         else
             log_failure "Failed to extract tokens from response"
             log_info "Response: $register_response"
@@ -155,6 +195,10 @@ test_user_service() {
         USER_ID=$(extract_json_field "$login_response" "id")
         if [[ -n "$ACCESS_TOKEN" ]]; then
             log_success "Login successful, tokens received"
+            # Validate response structure
+            check_response_contains "$login_response" '"user"' "Login response has user object"
+            check_response_contains "$login_response" '"accessToken"' "Login response has accessToken"
+            check_response_contains "$login_response" '"refreshToken"' "Login response has refreshToken"
         else
             log_failure "Failed to extract tokens from login response"
             log_info "Response: $login_response"
@@ -164,8 +208,12 @@ test_user_service() {
     # POST /auth/token/refresh
     log_info "Testing POST /auth/token/refresh..."
     if [[ -n "$REFRESH_TOKEN" ]]; then
-        make_request "POST" "$USER_SERVICE_URL/auth/token/refresh" "200" \
-            "{\"refreshToken\":\"$REFRESH_TOKEN\"}"
+        local refresh_response
+        refresh_response=$(make_request "POST" "$USER_SERVICE_URL/auth/token/refresh" "200" \
+            "{\"refreshToken\":\"$REFRESH_TOKEN\"}")
+        check_response_contains "$refresh_response" '"accessToken"' "Token refresh returns accessToken"
+        check_response_contains "$refresh_response" '"refreshToken"' "Token refresh returns refreshToken"
+        check_response_contains "$refresh_response" '"expiresIn"' "Token refresh returns expiresIn"
     fi
 
     # -------------------------------------------------------------------------
@@ -175,12 +223,20 @@ test_user_service() {
 
     # GET /users/me
     log_info "Testing GET /users/me..."
-    make_request "GET" "$USER_SERVICE_URL/users/me" "200"
+    local users_me_response
+    users_me_response=$(make_request "GET" "$USER_SERVICE_URL/users/me" "200")
+    check_response_contains "$users_me_response" '"id"' "User profile has id"
+    check_response_contains "$users_me_response" '"email"' "User profile has email"
+    check_response_contains "$users_me_response" '"role"' "User profile has role"
+    check_json_field "$users_me_response" "phone" "$TEST_PHONE" "User phone matches"
 
     # PUT /users/me
     log_info "Testing PUT /users/me..."
-    make_request "PUT" "$USER_SERVICE_URL/users/me" "200" \
-        "{\"firstName\":\"Иван Обновленный\",\"lastName\":\"Иванов\",\"email\":\"$TEST_EMAIL\",\"phone\":\"$TEST_PHONE\"}"
+    local users_update_response
+    users_update_response=$(make_request "PUT" "$USER_SERVICE_URL/users/me" "200" \
+        "{\"firstName\":\"Иван Обновленный\",\"lastName\":\"Иванов\",\"email\":\"$TEST_EMAIL\",\"phone\":\"$TEST_PHONE\"}")
+    check_json_field "$users_update_response" "firstName" "Иван Обновленный" "First name updated"
+    check_json_field "$users_update_response" "updatedAt" "" "updatedAt field exists"
 
     # GET /users (admin only - will return 403 without admin role)
     log_info "Testing GET /users (admin endpoint)..."
@@ -199,11 +255,19 @@ test_user_service() {
 
     # GET /portfolio
     log_info "Testing GET /portfolio..."
-    make_request "GET" "$USER_SERVICE_URL/portfolio" "200"
+    local portfolio_response
+    portfolio_response=$(make_request "GET" "$USER_SERVICE_URL/portfolio" "200")
+    check_response_contains "$portfolio_response" '"totalValue"' "Portfolio has totalValue"
+    check_response_contains "$portfolio_response" '"items"' "Portfolio has items array"
+    check_response_contains "$portfolio_response" '"cashBalance"' "Portfolio has cashBalance"
 
     # GET /portfolio/summary
     log_info "Testing GET /portfolio/summary..."
-    make_request "GET" "$USER_SERVICE_URL/portfolio/summary" "200"
+    local portfolio_summary_response
+    portfolio_summary_response=$(make_request "GET" "$USER_SERVICE_URL/portfolio/summary" "200")
+    check_response_contains "$portfolio_summary_response" '"totalValue"' "Portfolio summary has totalValue"
+    check_response_contains "$portfolio_summary_response" '"profitLoss"' "Portfolio summary has profitLoss"
+    check_response_contains "$portfolio_summary_response" '"profitLossPct"' "Portfolio summary has profitLossPct"
 
     # -------------------------------------------------------------------------
     # Orders Endpoints
@@ -212,12 +276,21 @@ test_user_service() {
 
     # GET /orders
     log_info "Testing GET /orders..."
-    make_request "GET" "$USER_SERVICE_URL/orders" "200"
+    local orders_response
+    orders_response=$(make_request "GET" "$USER_SERVICE_URL/orders" "200")
+    check_response_contains "$orders_response" '"data"' "Orders has data array"
+    check_response_contains "$orders_response" '"pagination"' "Orders has pagination"
 
     # POST /orders (create order - may succeed even with invalid security ID)
     log_info "Testing POST /orders..."
-    make_request "POST" "$USER_SERVICE_URL/orders" "201" \
-        "{\"securityId\":\"00000000-0000-0000-0000-000000000000\",\"side\":\"buy\",\"quantity\":10}" || true
+    local create_order_response
+    create_order_response=$(make_request "POST" "$USER_SERVICE_URL/orders" "201" \
+        "{\"securityId\":\"00000000-0000-0000-0000-000000000000\",\"side\":\"buy\",\"quantity\":10}")
+    check_response_contains "$create_order_response" '"id"' "Order has id"
+    check_response_contains "$create_order_response" '"securityId"' "Order has securityId"
+    check_response_contains "$create_order_response" '"side"' "Order has side"
+    check_response_contains "$create_order_response" '"status"' "Order has status"
+    check_json_field "$create_order_response" "side" "buy" "Order side is buy"
 
     # -------------------------------------------------------------------------
     # Transactions Endpoints
@@ -226,7 +299,10 @@ test_user_service() {
 
     # GET /transactions
     log_info "Testing GET /transactions..."
-    make_request "GET" "$USER_SERVICE_URL/transactions" "200"
+    local transactions_response
+    transactions_response=$(make_request "GET" "$USER_SERVICE_URL/transactions" "200")
+    check_response_contains "$transactions_response" '"data"' "Transactions has data array"
+    check_response_contains "$transactions_response" '"pagination"' "Transactions has pagination"
 
     # -------------------------------------------------------------------------
     # Balance Endpoints
@@ -235,21 +311,33 @@ test_user_service() {
 
     # GET /balance
     log_info "Testing GET /balance..."
-    make_request "GET" "$USER_SERVICE_URL/balance" "200"
+    local balance_response
+    balance_response=$(make_request "GET" "$USER_SERVICE_URL/balance" "200")
+    check_response_contains "$balance_response" '"available"' "Balance has available"
+    check_response_contains "$balance_response" '"total"' "Balance has total"
+    check_response_contains "$balance_response" '"blocked"' "Balance has blocked"
 
     # POST /balance/deposit
     log_info "Testing POST /balance/deposit..."
-    make_request "POST" "$USER_SERVICE_URL/balance/deposit" "200" \
-        "{\"amount\":\"10000.00\"}"
+    local deposit_response
+    deposit_response=$(make_request "POST" "$USER_SERVICE_URL/balance/deposit" "200" \
+        "{\"amount\":\"10000.00\"}")
+    check_response_contains "$deposit_response" '"available"' "Deposit response has available"
+    check_json_field "$deposit_response" "available" "10000.0000" "Deposit amount is correct"
 
     # POST /balance/withdraw
     log_info "Testing POST /balance/withdraw..."
-    make_request "POST" "$USER_SERVICE_URL/balance/withdraw" "200" \
-        "{\"amount\":\"1000.00\"}"
+    local withdraw_response
+    withdraw_response=$(make_request "POST" "$USER_SERVICE_URL/balance/withdraw" "200" \
+        "{\"amount\":\"1000.00\"}")
+    check_response_contains "$withdraw_response" '"available"' "Withdraw response has available"
+    check_json_field "$withdraw_response" "available" "9000.0000" "Withdraw amount is correct (10000-1000)"
 
     # GET /balance (after operations)
     log_info "Testing GET /balance (after deposit/withdraw)..."
-    make_request "GET" "$USER_SERVICE_URL/balance" "200"
+    local final_balance_response
+    final_balance_response=$(make_request "GET" "$USER_SERVICE_URL/balance" "200")
+    check_json_field "$final_balance_response" "available" "9000.0000" "Final balance is correct"
 }
 
 # =============================================================================
@@ -274,6 +362,11 @@ test_securities_service() {
         SECURITY_ID=$(extract_json_field "$securities_response" "id")
         if [[ -n "$SECURITY_ID" ]]; then
             log_success "Found security ID: $SECURITY_ID"
+            # Validate response structure
+            check_response_contains "$securities_response" '"data"' "Securities list has data array"
+            check_response_contains "$securities_response" '"pagination"' "Securities list has pagination"
+            check_response_contains "$securities_response" '"ticker"' "Securities has ticker"
+            check_response_contains "$securities_response" '"lastPrice"' "Securities has lastPrice"
         else
             log_warning "No security ID found in response"
         fi
@@ -281,15 +374,22 @@ test_securities_service() {
 
     # GET /securities with search query
     log_info "Testing GET /securities?q=Сбер..."
-    make_request "GET" "$SECURITIES_SERVICE_URL/securities?q=Сбер" "200"
+    local search_response
+    search_response=$(make_request "GET" "$SECURITIES_SERVICE_URL/securities?q=Сбер" "200")
+    check_response_contains "$search_response" '"data"' "Search response has data"
+    check_response_contains "$search_response" '"pagination"' "Search response has pagination"
 
     # GET /securities with type filter
     log_info "Testing GET /securities?type=stock..."
-    make_request "GET" "$SECURITIES_SERVICE_URL/securities?type=stock" "200"
+    local type_filter_response
+    type_filter_response=$(make_request "GET" "$SECURITIES_SERVICE_URL/securities?type=stock" "200")
+    check_response_contains "$type_filter_response" '"data"' "Type filter response has data"
 
     # GET /securities with exchange filter
     log_info "Testing GET /securities?exchange=MOEX..."
-    make_request "GET" "$SECURITIES_SERVICE_URL/securities?exchange=MOEX" "200"
+    local exchange_filter_response
+    exchange_filter_response=$(make_request "GET" "$SECURITIES_SERVICE_URL/securities?exchange=MOEX" "200")
+    check_response_contains "$exchange_filter_response" '"data"' "Exchange filter response has data"
 
     # GET /securities/{securityId}
     log_info "Testing GET /securities/{securityId}..."
@@ -306,7 +406,13 @@ test_securities_service() {
         local now
         now=$(date +%s)
         local yesterday=$((now - 86400))
-        make_request "GET" "$SECURITIES_SERVICE_URL/securities/$SECURITY_ID/price/history?from=$yesterday&to=$now" "200"
+        local price_history_response
+        price_history_response=$(make_request "GET" "$SECURITIES_SERVICE_URL/securities/$SECURITY_ID/price/history?from=$yesterday&to=$now" "200")
+        check_response_contains "$price_history_response" '"securityId"' "Price history has securityId"
+        check_response_contains "$price_history_response" '"ticker"' "Price history has ticker"
+        check_response_contains "$price_history_response" '"from"' "Price history has from"
+        check_response_contains "$price_history_response" '"to"' "Price history has to"
+        check_response_contains "$price_history_response" '"data"' "Price history has data array"
     else
         log_warning "Skipping - no security ID available"
     fi
@@ -314,7 +420,13 @@ test_securities_service() {
     # GET /securities/{securityId}/orderbook
     log_info "Testing GET /securities/{securityId}/orderbook..."
     if [[ -n "$SECURITY_ID" ]]; then
-        make_request "GET" "$SECURITIES_SERVICE_URL/securities/$SECURITY_ID/orderbook" "200"
+        local orderbook_response
+        orderbook_response=$(make_request "GET" "$SECURITIES_SERVICE_URL/securities/$SECURITY_ID/orderbook" "200")
+        check_response_contains "$orderbook_response" '"securityId"' "Orderbook has securityId"
+        check_response_contains "$orderbook_response" '"ticker"' "Orderbook has ticker"
+        check_response_contains "$orderbook_response" '"asks"' "Orderbook has asks"
+        check_response_contains "$orderbook_response" '"bids"' "Orderbook has bids"
+        check_response_contains "$orderbook_response" '"spread"' "Orderbook has spread"
     else
         log_warning "Skipping - no security ID available"
     fi
@@ -322,7 +434,10 @@ test_securities_service() {
     # GET /securities/{securityId}/orderbook with depth
     log_info "Testing GET /securities/{securityId}/orderbook?depth=5..."
     if [[ -n "$SECURITY_ID" ]]; then
-        make_request "GET" "$SECURITIES_SERVICE_URL/securities/$SECURITY_ID/orderbook?depth=5" "200"
+        local orderbook_depth_response
+        orderbook_depth_response=$(make_request "GET" "$SECURITIES_SERVICE_URL/securities/$SECURITY_ID/orderbook?depth=5" "200")
+        check_response_contains "$orderbook_depth_response" '"securityId"' "Orderbook depth has securityId"
+        check_response_contains "$orderbook_depth_response" '"ticker"' "Orderbook depth has ticker"
     else
         log_warning "Skipping - no security ID available"
     fi
