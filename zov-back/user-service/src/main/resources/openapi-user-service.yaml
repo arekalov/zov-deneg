@@ -1,12 +1,11 @@
 openapi: 3.0.3
-
 info:
   title: ЗОВ Денег — User Service API
   description: |
-    REST API для управления пользователями и аутентификации.
-    
-    ## База данных
-    PostgreSQL - данные о пользователях, профилях, сессиях.
+    Микросервис управления пользователями, аутентификацией, портфелем,
+    заявками, транзакциями и балансом.
+
+    **База данных:** PostgreSQL
 
     ## Аутентификация
     Используется JWT (Bearer). Access token передаётся в заголовке `Authorization: Bearer <token>`.
@@ -18,6 +17,18 @@ info:
     | user  | Аутентифицированный инвестор |
     | admin | Администратор системы        |
 
+    ## Валюта
+    Все денежные суммы, баланс и котировки — **в российских рублях**.
+
+    ## Цены и суммы
+    Цены, суммы передаются **строками** с десятичной точкой (`"298.45"`).
+
+    ## Даты и время
+    Все моменты времени — **Unix timestamp в секундах** (integer/int64, UTC).
+
+    ## Межсервисное взаимодействие
+    Для получения данных о ценных бумагах (котировки, информация о бумаге, стакан)
+    сервис обращается к Securities Service по внутреннему API.
   version: 1.0.0
   contact:
     name: ЗОВ Денег Team
@@ -32,12 +43,21 @@ tags:
     description: Аутентификация и управление сессией
   - name: users
     description: Профиль пользователя
+  - name: portfolio
+    description: Портфель пользователя
+  - name: orders
+    description: Торговые заявки (покупка / продажа)
+  - name: transactions
+    description: История операций
+  - name: balance
+    description: Брокерский счёт и баланс
+  - name: admin
+    description: Операции, доступные только пользователям с ролью admin
 
 security:
   - BearerAuth: []
 
 components:
-
   securitySchemes:
     BearerAuth:
       type: http
@@ -46,7 +66,6 @@ components:
       description: JWT access token, получается через /auth/login или /auth/token/refresh
 
   schemas:
-
     # ── Общие ──────────────────────────────────────────────────────────────
     Error:
       type: object
@@ -100,11 +119,15 @@ components:
           type: integer
           example: 8
 
+    DecimalString:
+      type: string
+      description: Десятичная строка без экспоненциальной записи.
+      example: "298.45"
+
     UnixTimestamp:
       type: integer
       format: int64
-      description: |
-        Момент времени в **секундах** с эпохи Unix (1970-01-01T00:00:00Z), целое число, UTC.
+      description: Момент времени в секундах с эпохи Unix (UTC).
       example: 1731571200
 
     # ── Пользователи ───────────────────────────────────────────────────────
@@ -119,7 +142,6 @@ components:
         id:
           type: string
           format: uuid
-          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
         firstName:
           type: string
           example: Иван
@@ -129,10 +151,8 @@ components:
         email:
           type: string
           format: email
-          example: ivan@example.com
         phone:
           type: string
-          example: "+79001234567"
         role:
           $ref: '#/components/schemas/UserRole'
         isBlocked:
@@ -140,18 +160,12 @@ components:
           example: false
         createdAt:
           $ref: '#/components/schemas/UnixTimestamp'
-          description: Момент создания записи
         updatedAt:
           $ref: '#/components/schemas/UnixTimestamp'
-          description: Момент последнего обновления записи
 
     # ── Токены ─────────────────────────────────────────────────────────────
     Tokens:
       type: object
-      description: |
-        Access и refresh токены. На Android клиенте должны храниться
-        исключительно через CredentialManager (android.security.keystore),
-        НЕ в SharedPreferences или файловой системе.
       properties:
         accessToken:
           type: string
@@ -161,11 +175,290 @@ components:
           description: Refresh token (TTL 30 дней)
         expiresIn:
           type: integer
-          description: |
-            Срок жизни выданного access token в **секундах** (длительность, не календарный момент).
+          description: Срок жизни access token в секундах
           example: 900
 
-  # ── Reusable responses ─────────────────────────────────────────────────────
+    # ── Ценные бумаги (встроенная ссылка для portfolio/orders) ─────────────
+    SecurityType:
+      type: string
+      enum: [stock, bond, etf]
+
+    Exchange:
+      type: string
+      enum: [MOEX, SPB]
+
+    SecuritySector:
+      type: string
+      enum:
+        - Финансы
+        - Энергетика
+        - Металлургия
+        - Телекоммуникации
+        - Потребительский сектор
+        - Информационные технологии
+        - Транспорт
+        - Химическая промышленность
+        - Строительство
+        - Другое
+
+    Security:
+      type: object
+      description: |
+        Краткая информация о бумаге, получаемая из Securities Service
+        и встраиваемая в ответы portfolio/orders.
+      required:
+        - id
+        - ticker
+        - name
+        - type
+        - exchange
+        - sector
+        - lotSize
+        - lastPrice
+        - priceChange
+        - priceChangePct
+      properties:
+        id:
+          type: string
+          format: uuid
+        ticker:
+          type: string
+          example: SBER
+        name:
+          type: string
+          example: Сбербанк
+        description:
+          type: string
+          nullable: true
+        type:
+          $ref: '#/components/schemas/SecurityType'
+        exchange:
+          $ref: '#/components/schemas/Exchange'
+        sector:
+          $ref: '#/components/schemas/SecuritySector'
+        lotSize:
+          type: integer
+          example: 10
+        lastPrice:
+          $ref: '#/components/schemas/DecimalString'
+        priceChange:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "13.12"
+        priceChangePct:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "4.6"
+
+    # ── Портфель ───────────────────────────────────────────────────────────
+    PortfolioItem:
+      type: object
+      required: [securityId, security, quantity, averagePrice, currentPrice, currentValue, profitLoss, profitLossPct]
+      properties:
+        securityId:
+          type: string
+          format: uuid
+        security:
+          $ref: '#/components/schemas/Security'
+        quantity:
+          type: integer
+          example: 10
+        averagePrice:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "285.00"
+        currentPrice:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "298.45"
+        currentValue:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "2984.50"
+        profitLoss:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "134.50"
+        profitLossPct:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "4.72"
+
+    Portfolio:
+      type: object
+      properties:
+        totalValue:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "128450.00"
+        securitiesValue:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "83130.00"
+        cashBalance:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "45320.00"
+        dailyChange:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "1342.00"
+        dailyChangePct:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "1.06"
+        totalProfitLoss:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "4210.50"
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PortfolioItem'
+
+    # ── Заявки ─────────────────────────────────────────────────────────────
+    OrderType:
+      type: string
+      enum: [market]
+
+    OrderSide:
+      type: string
+      enum: [buy, sell]
+
+    OrderStatus:
+      type: string
+      enum: [pending, executed, partial, cancelled, rejected]
+
+    Order:
+      type: object
+      required:
+        - id
+        - securityId
+        - type
+        - side
+        - status
+        - quantity
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        securityId:
+          type: string
+          format: uuid
+        ticker:
+          type: string
+          example: SBER
+        type:
+          $ref: '#/components/schemas/OrderType'
+        side:
+          $ref: '#/components/schemas/OrderSide'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        quantity:
+          type: integer
+          example: 10
+        executedPrice:
+          type: string
+          nullable: true
+          example: "298.45"
+        executedQuantity:
+          type: integer
+          nullable: true
+          example: 10
+        totalAmount:
+          type: string
+          nullable: true
+          example: "2984.50"
+        commission:
+          type: string
+          nullable: true
+          example: "8.95"
+        createdAt:
+          $ref: '#/components/schemas/UnixTimestamp'
+        updatedAt:
+          $ref: '#/components/schemas/UnixTimestamp'
+
+    CreateOrderRequest:
+      type: object
+      required: [securityId, side, quantity]
+      properties:
+        securityId:
+          type: string
+          format: uuid
+        side:
+          $ref: '#/components/schemas/OrderSide'
+        quantity:
+          type: integer
+          minimum: 1
+          example: 10
+
+    # ── Транзакции ─────────────────────────────────────────────────────────
+    TransactionType:
+      type: string
+      enum: [buy, sell, deposit, withdrawal, dividend]
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        securityId:
+          type: string
+          format: uuid
+          nullable: true
+        ticker:
+          type: string
+          nullable: true
+          example: SBER
+        securityName:
+          type: string
+          nullable: true
+          example: Сбербанк
+        quantity:
+          type: integer
+          nullable: true
+          example: 10
+        price:
+          type: string
+          nullable: true
+          example: "298.45"
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "-2984.50"
+        commission:
+          type: string
+          nullable: true
+          example: "8.95"
+        orderId:
+          type: string
+          format: uuid
+          nullable: true
+        createdAt:
+          $ref: '#/components/schemas/UnixTimestamp'
+
+    # ── Баланс ─────────────────────────────────────────────────────────────
+    Balance:
+      type: object
+      properties:
+        available:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "45320.00"
+        total:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "47800.00"
+        blocked:
+          allOf:
+            - $ref: '#/components/schemas/DecimalString'
+          example: "2480.00"
+
   responses:
     BadRequest:
       description: Некорректный запрос / ошибка валидации
@@ -173,83 +466,75 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ValidationError'
-          example:
-            code: VALIDATION_ERROR
-            message: Ошибка валидации входных данных
-            fields:
-              - field: email
-                message: Некорректный формат email
-
     Unauthorized:
-      description: Не аутентифицирован — отсутствует или недействителен access token
+      description: Не аутентифицирован
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            code: UNAUTHORIZED
-            message: Требуется аутентификация
-
     Forbidden:
-      description: Нет прав доступа к ресурсу
+      description: Нет прав доступа
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            code: FORBIDDEN
-            message: Недостаточно прав для выполнения операции
-
     NotFound:
       description: Ресурс не найден
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            code: NOT_FOUND
-            message: Ресурс не найден
-
     Conflict:
       description: Конфликт — ресурс уже существует
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-
+    UnprocessableEntity:
+      description: Бизнес-логика не позволяет выполнить операцию
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     InternalServerError:
       description: Внутренняя ошибка сервера
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            code: INTERNAL_ERROR
-            message: Внутренняя ошибка сервера
 
-  # ── Reusable parameters ────────────────────────────────────────────────────
   parameters:
     PageParam:
       name: page
       in: query
-      description: Номер страницы (начиная с 1)
       schema:
         type: integer
         default: 1
         minimum: 1
-
     PageSizeParam:
       name: pageSize
       in: query
-      description: Количество элементов на странице
       schema:
         type: integer
         default: 20
         minimum: 1
         maximum: 100
-
     UserIdPath:
       name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    OrderIdPath:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TransactionIdPath:
+      name: transactionId
       in: path
       required: true
       schema:
@@ -260,19 +545,15 @@ components:
 # PATHS
 # ─────────────────────────────────────────────────────────────────────────────
 paths:
-
-  # ══════════════════════════════════════════════════════════════════════════
+  # ════════════════════════════════════════════════════════════════════════
   # AUTH
-  # ══════════════════════════════════════════════════════════════════════════
-
+  # ════════════════════════════════════════════════════════════════════════
   /auth/register:
     post:
       tags: [auth]
       summary: Регистрация нового пользователя
       description: |
         Создаёт аккаунт и возвращает токены для немедленного входа.
-        Клиент сохраняет токены в Android CredentialManager.
-        PIN и биометрия настраиваются локально на устройстве — на сервер не передаются.
       security: []
       requestBody:
         required: true
@@ -295,18 +576,15 @@ paths:
                 email:
                   type: string
                   format: email
-                  example: ivan@example.com
                 phone:
                   type: string
                   pattern: '^\+7\d{10}$'
-                  example: "+79001234567"
                 password:
                   type: string
                   minLength: 8
-                  description: Пароль для восстановления доступа при переустановке приложения
       responses:
         '201':
-          description: Пользователь успешно зарегистрирован
+          description: Пользователь зарегистрирован
           content:
             application/json:
               schema:
@@ -322,15 +600,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationError'
-              examples:
-                validation:
-                  summary: Ошибка валидации
-                  value:
-                    code: VALIDATION_ERROR
-                    message: Ошибка валидации входных данных
-                    fields:
-                      - field: phone
-                        message: Некорректный формат номера телефона
         '409':
           description: Пользователь с таким email или телефоном уже существует
           content:
@@ -353,11 +622,6 @@ paths:
     post:
       tags: [auth]
       summary: Повторный вход (восстановление сессии)
-      description: |
-        Используется при переустановке приложения или смене устройства,
-        когда локально сохранённые токены недоступны.
-        PIN и биометрия — локальные механизмы блокировки приложения,
-        на сервер не передаются и на сервере не хранятся.
       security: []
       requestBody:
         required: true
@@ -370,10 +634,8 @@ paths:
                 phone:
                   type: string
                   pattern: '^\+7\d{10}$'
-                  example: "+79001234567"
                 password:
                   type: string
-                  description: Пароль, установленный при регистрации
       responses:
         '200':
           description: Успешный вход
@@ -392,18 +654,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_CREDENTIALS
-                message: Неверный логин или пароль
         '404':
           description: Пользователь не найден
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: USER_NOT_FOUND
-                message: Пользователь не найден
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -411,10 +667,6 @@ paths:
     post:
       tags: [auth]
       summary: Обновление access token
-      description: |
-        Выдаёт новую пару access + refresh токенов.
-        Использованный refresh token сразу инвалидируется (rotation) —
-        повторное использование того же токена вернёт 401.
       security: []
       requestBody:
         required: true
@@ -434,33 +686,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/Tokens'
         '401':
-          description: Refresh token недействителен, истёк или уже использован
+          description: Refresh token недействителен
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              examples:
-                expired:
-                  value:
-                    code: REFRESH_TOKEN_EXPIRED
-                    message: Refresh token истёк, необходима повторная авторизация
-                invalid:
-                  value:
-                    code: INVALID_REFRESH_TOKEN
-                    message: Refresh token недействителен
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-
-  # ══════════════════════════════════════════════════════════════════════════
+  # ════════════════════════════════════════════════════════════════════════
   # USERS
-  # ══════════════════════════════════════════════════════════════════════════
-
+  # ════════════════════════════════════════════════════════════════════════
   /users/me:
     get:
       tags: [users]
       summary: Профиль текущего пользователя
-      description: Возвращает профиль пользователя, чей access token передан в запросе.
       responses:
         '200':
           description: OK
@@ -470,11 +710,9 @@ paths:
                 $ref: '#/components/schemas/UserProfile'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
     put:
       tags: [users]
       summary: Обновить профиль
-      description: Обновляет личные данные текущего пользователя.
       requestBody:
         required: true
         content:
@@ -508,14 +746,11 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '409':
-          description: Email или телефон уже занят другим пользователем
+          description: Email или телефон уже занят
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: EMAIL_ALREADY_EXISTS
-                message: Этот email уже используется другим аккаунтом
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -523,16 +758,11 @@ paths:
     get:
       tags: [users, admin]
       summary: Список пользователей (только admin)
-      description: |
-        Возвращает постраничный список всех пользователей системы.
-        Доступен только пользователям с ролью admin.
-        Поддерживает фильтрацию по роли, статусу блокировки и текстовый поиск.
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PageSizeParam'
         - name: search
           in: query
-          description: Поиск по имени, фамилии, email или телефону
           schema:
             type: string
         - name: role
@@ -568,7 +798,6 @@ paths:
     get:
       tags: [users, admin]
       summary: Пользователь по ID (только admin)
-      description: Возвращает полный профиль любого пользователя по его UUID. Доступен только admin.
       responses:
         '200':
           description: OK
@@ -582,14 +811,9 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-
     put:
       tags: [users, admin]
       summary: Редактировать пользователя
-      description: |
-        Обычный пользователь может редактировать только себя.
-        Admin может редактировать любого пользователя, включая смену роли и статуса блокировки.
-        Права проверяются на сервере.
       requestBody:
         required: true
         content:
@@ -613,10 +837,8 @@ paths:
                   pattern: '^\+7\d{10}$'
                 role:
                   $ref: '#/components/schemas/UserRole'
-                  description: Только admin может менять роль
                 isBlocked:
                   type: boolean
-                  description: Только admin может блокировать / разблокировать
       responses:
         '200':
           description: Данные обновлены
@@ -633,26 +855,19 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: Email или телефон уже занят другим пользователем
+          description: Email или телефон уже занят
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: EMAIL_ALREADY_EXISTS
-                message: Пользователь с таким email уже зарегистрирован
-
     delete:
       tags: [users, admin]
       summary: Удалить пользователя (только admin)
-      description: |
-        Удаляет аккаунт пользователя из системы. Доступен только admin.
-        Нельзя удалить собственный аккаунт и пользователя с открытыми позициями или активными заявками.
       responses:
         '204':
           description: Пользователь удалён
         '400':
-          description: Нельзя удалить самого себя или пользователя с активными позициями
+          description: Нельзя удалить
           content:
             application/json:
               schema:
@@ -672,3 +887,328 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  # ════════════════════════════════════════════════════════════════════════
+  # PORTFOLIO
+  # ════════════════════════════════════════════════════════════════════════
+  /portfolio:
+    get:
+      tags: [portfolio]
+      summary: Полный портфель текущего пользователя
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portfolio'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /portfolio/summary:
+    get:
+      tags: [portfolio]
+      summary: Сводка по портфелю для главного экрана
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalValue:
+                    allOf:
+                      - $ref: '#/components/schemas/DecimalString'
+                    example: "128400.00"
+                  profitLoss:
+                    allOf:
+                      - $ref: '#/components/schemas/DecimalString'
+                    example: "2640.00"
+                  profitLossPct:
+                    allOf:
+                      - $ref: '#/components/schemas/DecimalString'
+                    example: "2.1"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ════════════════════════════════════════════════════════════════════════
+  # ORDERS
+  # ════════════════════════════════════════════════════════════════════════
+  /orders:
+    get:
+      tags: [orders]
+      summary: Список заявок пользователя
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+        - name: side
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderSide'
+        - name: securityId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [orders]
+      summary: Создать торговую заявку (купить / продать)
+      description: |
+        Создаёт рыночную заявку. Количество должно быть кратно lotSize бумаги.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Заявка принята
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Ошибка валидации или бизнес-ограничение
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                insufficient_funds:
+                  value:
+                    code: INSUFFICIENT_FUNDS
+                    message: Недостаточно средств для совершения сделки
+                insufficient_securities:
+                  value:
+                    code: INSUFFICIENT_SECURITIES
+                    message: Недостаточно бумаг в портфеле
+                invalid_lot:
+                  value:
+                    code: INVALID_LOT_SIZE
+                    message: Количество должно быть кратно размеру лота
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Бумага не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Рынок закрыт или бумага приостановлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /orders/{orderId}:
+    parameters:
+      - $ref: '#/components/parameters/OrderIdPath'
+    get:
+      tags: [orders]
+      summary: Детали заявки
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [orders]
+      summary: Отменить заявку
+      responses:
+        '204':
+          description: Заявка отменена
+        '400':
+          description: Заявку нельзя отменить
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ════════════════════════════════════════════════════════════════════════
+  # TRANSACTIONS
+  # ════════════════════════════════════════════════════════════════════════
+  /transactions:
+    get:
+      tags: [transactions]
+      summary: История транзакций пользователя
+      parameters:
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+        - name: securityId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /transactions/{transactionId}:
+    parameters:
+      - $ref: '#/components/parameters/TransactionIdPath'
+    get:
+      tags: [transactions]
+      summary: Детали транзакции
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ════════════════════════════════════════════════════════════════════════
+  # BALANCE
+  # ════════════════════════════════════════════════════════════════════════
+  /balance:
+    get:
+      tags: [balance]
+      summary: Текущий баланс брокерского счёта
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /balance/deposit:
+    post:
+      tags: [balance]
+      summary: Пополнение счёта
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  allOf:
+                    - $ref: '#/components/schemas/DecimalString'
+                  example: "10000.00"
+      responses:
+        '200':
+          description: Счёт пополнен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+        '400':
+          description: Некорректная сумма
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /balance/withdraw:
+    post:
+      tags: [balance]
+      summary: Вывод средств со счёта
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  allOf:
+                    - $ref: '#/components/schemas/DecimalString'
+                  example: "5000.00"
+      responses:
+        '200':
+          description: Вывод зарегистрирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+        '400':
+          description: Некорректная сумма или недостаточно средств
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_amount:
+                  value:
+                    code: INVALID_AMOUNT
+                    message: Сумма вывода должна быть больше нуля
+                insufficient_funds:
+                  value:
+                    code: INSUFFICIENT_FUNDS
+                    message: Недостаточно средств для вывода
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'

@@ -1,4 +1,4 @@
-.PHONY: help build run stop clean restart logs test docker-build docker-run docker-stop docker-clean
+.PHONY: help build run stop clean restart logs test test-unit test-integration docker-build docker-run docker-stop docker-clean
 
 # Default target
 help:
@@ -18,7 +18,10 @@ help:
 	@echo "  make logs         - View application logs"
 	@echo ""
 	@echo "Testing:"
-	@echo "  make test         - Run API tests against running service"
+	@echo "  make test         - Run all Gradle tests (unit + integration)"
+	@echo "  make test-unit    - Run unit tests only"
+	@echo "  make test-integration - Run integration tests only"
+	@echo "  make test-api     - Run API tests against running service"
 	@echo "  make test-docker  - Build, run Docker, and test (full pipeline)"
 	@echo ""
 	@echo "Database:"
@@ -83,8 +86,23 @@ logs:
 logs-tail:
 	docker-compose logs --tail=100 -f user-service-app
 
-# Run API tests
+# Run all Gradle tests
 test:
+	@echo "Running all Gradle tests..."
+	./gradlew test --no-daemon
+
+# Run unit tests only
+test-unit:
+	@echo "Running unit tests..."
+	./gradlew test --tests "*ApplicationTest*" --no-daemon
+
+# Run integration tests only
+test-integration:
+	@echo "Running integration tests..."
+	./gradlew test --tests "*IntegrationTest*" --tests "*RepositoryTest*" --tests "*ValidationTest*" --no-daemon
+
+# Run API tests against running service
+test-api:
 	@echo "Running API tests..."
 	@chmod +x test-api.sh
 	./test-api.sh

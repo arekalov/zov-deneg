@@ -60,7 +60,11 @@ log_result "/" "GET" "404" "$HTTP_CODE"
 
 # Test 2: Register regular user
 echo "Test 2: Register regular user..."
-USER_PHONE="+7999${RAND}01"
+USER_PHONE="+7900${RAND}001"
+# Ensure phone is exactly 11 digits (+7 followed by 10 digits)
+if [ ${#USER_PHONE} -ne 12 ]; then
+    USER_PHONE="+79000000001"
+fi
 REGISTER_DATA="{\"firstName\":\"Test\",\"lastName\":\"User\",\"email\":\"test${RAND}@example.com\",\"phone\":\"$USER_PHONE\",\"password\":\"password123\"}"
 echo "  Phone: $USER_PHONE"
 RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/auth/register" -H "Content-Type: application/json" -d "$REGISTER_DATA")
@@ -116,8 +120,12 @@ log_result "/users/me" "GET" "401" "$HTTP_CODE"
 
 # Test 10: Register admin user
 echo "Test 10: Register admin user..."
-ADMIN_PHONE="+7999${RAND}02"
-ADMIN_DATA="{\"firstName\":\"Admin\",\"lastName\":\"User\",\"email\":\"admin${RAND}@example.com\",\"phone\":\"$ADMIN_PHONE\",\"password\":\"admin123\"}"
+ADMIN_PHONE="+7900${RAND}002"
+# Ensure phone is exactly 11 digits
+if [ ${#ADMIN_PHONE} -ne 12 ]; then
+    ADMIN_PHONE="+79000000002"
+fi
+ADMIN_DATA="{\"firstName\":\"Admin\",\"lastName\":\"Adminov\",\"email\":\"admin${RAND}@example.com\",\"phone\":\"$ADMIN_PHONE\",\"password\":\"admin123\"}"
 echo "  Phone: $ADMIN_PHONE"
 RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/auth/register" -H "Content-Type: application/json" -d "$ADMIN_DATA")
 HTTP_CODE=$(echo "$RESPONSE" | tail -n1)

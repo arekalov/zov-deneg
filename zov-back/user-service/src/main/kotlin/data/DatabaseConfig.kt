@@ -9,7 +9,7 @@ class DatabaseConfig(val database: Database) {
 
     fun init() {
         transaction(database) {
-            SchemaUtils.create(UsersTable, RefreshTokensTable)
+            SchemaUtils.create(UsersTable, RefreshTokensTable, UserBalancesTable, TransactionsTable)
         }
     }
 }
@@ -21,8 +21,8 @@ fun Application.configureDatabase(): DatabaseConfig {
     val dbName = System.getenv("DB_NAME") ?: "zov_deneg_users"
     val dbUser = System.getenv("DB_USER") ?: "postgres"
     val dbPassword = System.getenv("DB_PASSWORD") ?: "postgres"
-    
-    val useEmbedded = System.getenv("USE_EMBEDDED_DB")?.toBoolean() ?: false
+
+    val useEmbedded = environment.config.propertyOrNull("database.useEmbedded")?.getString()?.toBoolean() ?: false
 
     val (driver, url, user, password) = if (useEmbedded) {
         listOf(

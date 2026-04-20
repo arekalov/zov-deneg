@@ -5,10 +5,8 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
-import zov.deneg.data.UserRepository
-import zov.deneg.data.configureDatabase
-import zov.deneg.routes.configureAuthRoutes
-import zov.deneg.routes.configureUserRoutes
+import zov.deneg.data.*
+import zov.deneg.routes.*
 import zov.deneg.security.JwtConfig
 
 fun main(args: Array<String>) {
@@ -19,13 +17,17 @@ fun Application.module() {
     val jwtConfig = JwtConfig(environment)
     val dbConfig = configureDatabase()
     val userRepository = UserRepository(dbConfig.database)
-    
+    val balanceRepository = BalanceRepository(dbConfig.database)
+    val transactionRepository = TransactionRepository(dbConfig.database)
+
     configureSerialization()
     configureSecurity(jwtConfig)
-    
+
     routing {
         configureAuthRoutes(userRepository, jwtConfig)
         configureUserRoutes(userRepository)
+        configureBalanceRoutes(balanceRepository, transactionRepository)
+        configureTransactionRoutes(transactionRepository)
     }
 }
 
