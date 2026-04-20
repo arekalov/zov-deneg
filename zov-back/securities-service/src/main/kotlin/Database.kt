@@ -26,7 +26,7 @@ class PoolConfig(
 // Application attribute key for ClickHouse DataSource
 val ClickHouseDataSourceKey = AttributeKey<ClickHouseDataSource>("ClickHouseDataSource")
 
-fun Application.configureDatabase() {
+fun Application.configureDatabase(): ClickHouseDataSource {
     val clickhouseConfig = environment.config.config("clickhouse")
 
     // Get environment variables with defaults
@@ -75,4 +75,6 @@ fun Application.configureDatabase() {
             println("Error stopping ClickHouse connection: ${e.message}")
         }
     }
+
+    return dataSource
 }
