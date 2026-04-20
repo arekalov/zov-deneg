@@ -9,10 +9,7 @@ fun main(args: Array<String>) {
 
 fun Application.module() {
     val dataSource = configureDatabase()
-    val securitiesRepository = SecuritiesRepository(dataSource)
-    val portfolioRepository = PortfolioRepository(dataSource)
-    val orderRepository = OrderRepository(dataSource)
 
     configureSecurity()
-    configureRouting(securitiesRepository, portfolioRepository, orderRepository)
+    configureRouting()
 }

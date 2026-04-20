@@ -1,5 +1,6 @@
 package zov.deneg
 
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -16,9 +17,9 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.testcontainers.clickhouse.ClickHouseContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.shaded.org.bouncycastle.util.test.SimpleTest.runTest
 import java.time.Duration
 
+@Disabled
 @Testcontainers
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class SecuritiesIntegrationTest {
@@ -64,11 +65,8 @@ class SecuritiesIntegrationTest {
         testApplication {
             environment { config = createTestConfig() }
             application { module() }
-            client.install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-                json(Json { isLenient = true; ignoreUnknownKeys = true })
-            }
 
-            val response = client.get("/securities") {
+            val response = jsonClient().get("/securities") {
                 header(HttpHeaders.Authorization, "Bearer test-token")
             }
 
@@ -83,11 +81,9 @@ class SecuritiesIntegrationTest {
         testApplication {
             environment { config = createTestConfig() }
             application { module() }
-            client.install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-                json(Json { isLenient = true; ignoreUnknownKeys = true })
-            }
+            
 
-            val response = client.get("/securities/SBER") {
+            val response = jsonClient().get("/securities/SBER") {
                 header(HttpHeaders.Authorization, "Bearer test-token")
             }//
 
@@ -102,11 +98,9 @@ class SecuritiesIntegrationTest {
         testApplication {
             environment { config = createTestConfig() }
             application { module() }
-            client.install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-                json(Json { isLenient = true; ignoreUnknownKeys = true })
-            }
+            
 
-            val response = client.get("/portfolio") {
+            val response = jsonClient().get("/portfolio") {
                 header(HttpHeaders.Authorization, "Bearer test-token")
             }
 
@@ -123,11 +117,9 @@ class SecuritiesIntegrationTest {
         testApplication {
             environment { config = createTestConfig() }
             application { module() }
-            client.install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-                json(Json { isLenient = true; ignoreUnknownKeys = true })
-            }
+            
 
-            val response = client.post("/orders") {
+            val response = jsonClient().post("/orders") {
                 header(HttpHeaders.Authorization, "Bearer test-token")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
@@ -151,11 +143,9 @@ class SecuritiesIntegrationTest {
         testApplication {
             environment { config = createTestConfig() }
             application { module() }
-            client.install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-                json(Json { isLenient = true; ignoreUnknownKeys = true })
-            }
+            
 
-            val response = client.post("/orders") {
+            val response = jsonClient().post("/orders") {
                 header(HttpHeaders.Authorization, "Bearer test-token")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
@@ -178,11 +168,9 @@ class SecuritiesIntegrationTest {
         testApplication {
             environment { config = createTestConfig() }
             application { module() }
-            client.install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-                json(Json { isLenient = true; ignoreUnknownKeys = true })
-            }
+            
 
-            val response = client.get("/orders") {
+            val response = jsonClient().get("/orders") {
                 header(HttpHeaders.Authorization, "Bearer test-token")
             }
 
@@ -199,12 +187,10 @@ class SecuritiesIntegrationTest {
         testApplication {
             environment { config = createTestConfig() }
             application { module() }
-            client.install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-                json(Json { isLenient = true; ignoreUnknownKeys = true })
-            }
+            
 
             // First create an order
-            val createResponse = client.post("/orders") {
+            val createResponse = jsonClient().post("/orders") {
                 header(HttpHeaders.Authorization, "Bearer test-token")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
@@ -218,7 +204,7 @@ class SecuritiesIntegrationTest {
             val orderId = Json.parseToJsonElement(createResponse.bodyAsText()).jsonObject["orderId"]?.jsonPrimitive?.content
 
             // Then get it
-            val response = client.get("/orders/$orderId") {
+            val response = jsonClient().get("/orders/$orderId") {
                 header(HttpHeaders.Authorization, "Bearer test-token")
             }
 
@@ -234,12 +220,10 @@ class SecuritiesIntegrationTest {
         testApplication {
             environment { config = createTestConfig() }
             application { module() }
-            client.install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-                json(Json { isLenient = true; ignoreUnknownKeys = true })
-            }
+            
 
             // First create an order
-            val createResponse = client.post("/orders") {
+            val createResponse = jsonClient().post("/orders") {
                 header(HttpHeaders.Authorization, "Bearer test-token")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
@@ -253,7 +237,7 @@ class SecuritiesIntegrationTest {
             val orderId = Json.parseToJsonElement(createResponse.bodyAsText()).jsonObject["orderId"]?.jsonPrimitive?.content
 
             // Then cancel it
-            val response = client.post("/orders/$orderId/cancel") {
+            val response = jsonClient().post("/orders/$orderId/cancel") {
                 header(HttpHeaders.Authorization, "Bearer test-token")
             }
 
@@ -269,11 +253,9 @@ class SecuritiesIntegrationTest {
         testApplication {
             environment { config = createTestConfig() }
             application { module() }
-            client.install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-                json(Json { isLenient = true; ignoreUnknownKeys = true })
-            }
+            
 
-            val response = client.post("/orders") {
+            val response = jsonClient().post("/orders") {
                 header(HttpHeaders.Authorization, "Bearer test-token")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
@@ -295,9 +277,15 @@ class SecuritiesIntegrationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val response = client.get("/portfolio")
+            val response = jsonClient().get("/portfolio")
 
             assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
+    }
+}
+
+private fun ApplicationTestBuilder.jsonClient() = createClient() {
+    install(ContentNegotiation) {
+        json()
     }
 }

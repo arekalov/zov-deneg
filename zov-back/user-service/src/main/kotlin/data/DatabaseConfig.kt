@@ -33,13 +33,6 @@ class DatabaseConfig(val database: Database) {
 }
 
 fun Application.configureDatabase(): DatabaseConfig {
-    // Read environment variables for Docker deployment
-    val dbHost = System.getenv("DB_HOST") ?: "localhost"
-    val dbPort = System.getenv("DB_PORT") ?: "5432"
-    val dbName = System.getenv("DB_NAME") ?: "zov_deneg_users"
-    val dbUser = System.getenv("DB_USER") ?: "postgres"
-    val dbPassword = System.getenv("DB_PASSWORD") ?: "postgres"
-
     val useEmbedded = environment.config.propertyOrNull("database.useEmbedded")?.getString()?.toBoolean() ?: false
 
     val (driver, url, user, password) = if (useEmbedded) {
@@ -51,10 +44,10 @@ fun Application.configureDatabase(): DatabaseConfig {
         )
     } else {
         listOf(
-            "org.postgresql.Driver",
-            "jdbc:postgresql://${dbHost}:${dbPort}/${dbName}",
-            dbUser,
-            dbPassword
+            environment.config.property("postgres.driver").getString(),
+            environment.config.property("postgres.url").getString(),
+            environment.config.property("postgres.user").getString(),
+            environment.config.property("postgres.password").getString()
         )
     }
 
