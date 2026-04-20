@@ -19,6 +19,8 @@ fun Application.module() {
     val userRepository = UserRepository(dbConfig.database)
     val balanceRepository = BalanceRepository(dbConfig.database)
     val transactionRepository = TransactionRepository(dbConfig.database)
+    val portfolioRepository = PortfolioRepository(dbConfig.database)
+    val orderRepository = OrderRepository(dbConfig.database)
 
     configureSerialization()
     configureSecurity(jwtConfig)
@@ -28,6 +30,8 @@ fun Application.module() {
         configureUserRoutes(userRepository)
         configureBalanceRoutes(balanceRepository, transactionRepository)
         configureTransactionRoutes(transactionRepository)
+        configurePortfolioRoutes(portfolioRepository)
+        configureOrderRoutes(orderRepository, portfolioRepository, balanceRepository)
     }
 }
 
