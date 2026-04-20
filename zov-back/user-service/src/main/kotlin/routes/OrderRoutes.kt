@@ -7,6 +7,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import zov.deneg.client.SecuritiesClient
 import zov.deneg.data.OrderRepository
 import zov.deneg.data.PortfolioRepository
 import zov.deneg.data.BalanceRepository
@@ -17,7 +18,8 @@ import java.util.*
 fun Routing.configureOrderRoutes(
     orderRepository: OrderRepository,
     portfolioRepository: PortfolioRepository,
-    balanceRepository: BalanceRepository
+    balanceRepository: BalanceRepository,
+    securitiesClient: SecuritiesClient
 ) {
 
     // GET /orders - List user orders with filters
@@ -114,16 +116,32 @@ fun Routing.configureOrderRoutes(
                 return@post
             }
 
-            // TODO: Fetch security details from securities service to get lot size
-            // For now, we'll create the order without lot size validation
+            // Parse security ID
+            val securityId = try {
+                UUID.fromString(request.securityId)
+            } catch (e: IllegalArgumentException) {
+                call.respond(HttpStatusCode.BadRequest, ErrorResponse(
+                    code = "INVALID_SECURITY_ID",
+                    message = "Некорректный формат ID инструмента"
+                ))
+                return@post
+            }
 
-            // TODO: Check if user has sufficient funds/securities
-            // This would require calling the securities service for price
+            // Fetch security details from securities service
+            val security = securitiesClient.getSecurityById(securityId)
+            if (security == null) {
+                call.respond(HttpStatusCode.NotFound, ErrorResponse(
+                    code = "SECURITY_NOT_FOUND",
+                    message = "Инструмент не найден"
+                ))
+                return@post
+            }
 
+            // Create the order with security details
             val order = orderRepository.create(
                 userId = UUID.fromString(userId),
-                securityId = UUID.fromString(request.securityId),
-                ticker = "UNKNOWN", // Should fetch from securities service
+                securityId = securityId,
+                ticker = security.ticker,
                 type = OrderType.MARKET,
                 side = request.side,
                 quantity = request.quantity
