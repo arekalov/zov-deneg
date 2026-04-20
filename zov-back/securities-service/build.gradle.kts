@@ -41,7 +41,9 @@ dependencies {
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.kotlinx.coroutines.test)
-    
+    testImplementation(libs.ktor.client.content.negotiation)
+
+
     // Testcontainers
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.clickhouse)
@@ -50,6 +52,9 @@ dependencies {
     // JUnit5
     testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // Additional test utilities
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
 }
 
 tasks.test {

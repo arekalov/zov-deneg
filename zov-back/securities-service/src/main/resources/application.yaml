@@ -18,8 +18,8 @@ clickhouse:
     password: ${CLICKHOUSE_PASSWORD:-}
     driver: "com.clickhouse.jdbc.ClickHouseDriver"
     pool:
-        max-size: 10
-        min-idle: 2
-        connection-timeout: 30000
-        idle-timeout: 600000
-        max-lifetime: 1800000
+        max-size: ${CLICKHOUSE_POOL_MAX_SIZE:10}
+        min-idle: ${CLICKHOUSE_POOL_MIN_IDLE:2}
+        connection-timeout: ${CLICKHOUSE_POOL_CONNECTION_TIMEOUT:30000}
+        idle-timeout: ${CLICKHOUSE_POOL_IDLE_TIMEOUT:600000}
+        max-lifetime: ${CLICKHOUSE_POOL_MAX_LIFETIME:1800000}

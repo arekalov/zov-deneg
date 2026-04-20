@@ -1,0 +1,101 @@
+services:
+  # ============================================================================
+  # DATABASES
+  # ============================================================================
+  
+  postgres:
+    image: postgres:15-alpine
+    container_name: zov-postgres
+    env_file:
+      - ./env/postgres.env
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - zov-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d userservice"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8-alpine
+    container_name: zov-clickhouse
+    env_file:
+      - ./env/clickhouse.env
+    ports:
+      - "${CLICKHOUSE_PORT_HTTP:-8123}:8123"
+      - "${CLICKHOUSE_PORT_NATIVE:-9000}:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./securities-service/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./securities-service/test-data.sql:/docker-entrypoint-initdb.d/test-data.sql
+    networks:
+      - zov-network
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --user default --password securities_pass --query 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ============================================================================
+  # APPLICATION SERVICES
+  # ============================================================================
+  
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: zov-user-service
+    env_file:
+      - ./env/postgres.env
+      - ./env/jwt.env
+      - ./env/user-service.env
+    ports:
+      - "${USER_SERVICE_PORT}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - zov-network
+    restart: unless-stopped
+
+  securities-service:
+    build:
+      context: ./securities-service
+      dockerfile: Dockerfile
+    container_name: zov-securities-service
+    env_file:
+      - ./env/clickhouse.env
+      - ./env/jwt.env
+      - ./env/securities-service.env
+    ports:
+      - "${SECURITIES_SERVICE_PORT}:8080"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - zov-network
+    restart: unless-stopped
+
+# ==============================================================================
+# VOLUMES
+# ==============================================================================
+volumes:
+  postgres_data:
+    driver: local
+    name: zov-postgres-data
+  clickhouse_data:
+    driver: local
+    name: zov-clickhouse-data
+
+# ==============================================================================
+# NETWORKS
+# ==============================================================================
+networks:
+  zov-network:
+    driver: bridge
+    name: zov-deneg-network

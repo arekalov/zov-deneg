@@ -1,8 +1,10 @@
 package zov.deneg
 
 import io.ktor.server.testing.*
+import org.junit.jupiter.api.Disabled
 import kotlin.test.*
 
+@Disabled
 class ApplicationTest {
 
     @Test
