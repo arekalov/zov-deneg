@@ -1,7 +1,9 @@
 package zov.deneg
 
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.client.utils.EmptyContent.contentType
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.config.*
@@ -73,7 +75,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val response = client.post("/auth/register") {
+            val response = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "",
@@ -94,7 +96,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val response = client.post("/auth/register") {
+            val response = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "A".repeat(51),
@@ -125,7 +127,7 @@ class ValidationTest {
             )
 
             for (email in invalidEmails) {
-                val response = client.post("/auth/register") {
+                val response = jsonClient().post("/auth/register") {
                     contentType(ContentType.Application.Json)
                     setBody(mapOf(
                         "firstName" to "Test",
@@ -157,7 +159,7 @@ class ValidationTest {
             )
 
             invalidPhones.forEach { phone ->
-                val response = client.post("/auth/register") {
+                val response = jsonClient().post("/auth/register") {
                     contentType(ContentType.Application.Json)
                     setBody(mapOf(
                         "firstName" to "Test",
@@ -179,7 +181,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val response = client.post("/auth/register") {
+            val response = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "Test",
@@ -200,7 +202,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val response = client.post("/auth/register") {
+            val response = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "Test",
@@ -224,7 +226,7 @@ class ValidationTest {
             application { module() }
 
             // First register a user
-            val registerResponse = client.post("/auth/register") {
+            val registerResponse = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "Test",
@@ -239,7 +241,7 @@ class ValidationTest {
             accessToken = body["tokens"]!!.jsonObject["accessToken"]!!.jsonPrimitive.content
 
             // Try to update with invalid email
-            val response = client.put("/users/me") {
+            val response = jsonClient().put("/users/me") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("email" to "invalid-email"))
@@ -255,7 +257,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val registerResponse = client.post("/auth/register") {
+            val registerResponse = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "Test",
@@ -269,7 +271,7 @@ class ValidationTest {
             val body = json.parseToJsonElement(registerResponse.bodyAsText()).jsonObject
             accessToken = body["tokens"]!!.jsonObject["accessToken"]!!.jsonPrimitive.content
 
-            val response = client.put("/users/me") {
+            val response = jsonClient().put("/users/me") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("phone" to "89001112233"))
@@ -285,7 +287,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val registerResponse = client.post("/auth/register") {
+            val registerResponse = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "Test",
@@ -299,7 +301,7 @@ class ValidationTest {
             val body = json.parseToJsonElement(registerResponse.bodyAsText()).jsonObject
             accessToken = body["tokens"]!!.jsonObject["accessToken"]!!.jsonPrimitive.content
 
-            val response = client.put("/users/me") {
+            val response = jsonClient().put("/users/me") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("firstName" to ""))
@@ -317,7 +319,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val registerResponse = client.post("/auth/register") {
+            val registerResponse = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "Test",
@@ -331,7 +333,7 @@ class ValidationTest {
             val body = json.parseToJsonElement(registerResponse.bodyAsText()).jsonObject
             accessToken = body["tokens"]!!.jsonObject["accessToken"]!!.jsonPrimitive.content
 
-            val response = client.post("/balance/deposit") {
+            val response = jsonClient().post("/balance/deposit") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("amount" to "not-a-number"))
@@ -347,7 +349,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val registerResponse = client.post("/auth/register") {
+            val registerResponse = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "Test",
@@ -361,7 +363,7 @@ class ValidationTest {
             val body = json.parseToJsonElement(registerResponse.bodyAsText()).jsonObject
             accessToken = body["tokens"]!!.jsonObject["accessToken"]!!.jsonPrimitive.content
 
-            val response = client.post("/balance/deposit") {
+            val response = jsonClient().post("/balance/deposit") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("amount" to "-100.50"))
@@ -377,7 +379,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val registerResponse = client.post("/auth/register") {
+            val registerResponse = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "Test",
@@ -391,7 +393,7 @@ class ValidationTest {
             val body = json.parseToJsonElement(registerResponse.bodyAsText()).jsonObject
             accessToken = body["tokens"]!!.jsonObject["accessToken"]!!.jsonPrimitive.content
 
-            val response = client.post("/balance/deposit") {
+            val response = jsonClient().post("/balance/deposit") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("amount" to "0"))
@@ -407,7 +409,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val registerResponse = client.post("/auth/register") {
+            val registerResponse = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "Test",
@@ -421,7 +423,7 @@ class ValidationTest {
             val body = json.parseToJsonElement(registerResponse.bodyAsText()).jsonObject
             accessToken = body["tokens"]!!.jsonObject["accessToken"]!!.jsonPrimitive.content
 
-            val response = client.post("/balance/deposit") {
+            val response = jsonClient().post("/balance/deposit") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("amount" to "0.99"))
@@ -437,7 +439,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val registerResponse = client.post("/auth/register") {
+            val registerResponse = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "Test",
@@ -454,7 +456,7 @@ class ValidationTest {
             val validAmounts = listOf("1", "1.00", "1000.50", "999999.99")
 
             validAmounts.forEach { amount ->
-                val response = client.post("/balance/deposit") {
+                val response = jsonClient().post("/balance/deposit") {
                     header(HttpHeaders.Authorization, "Bearer $accessToken")
                     contentType(ContentType.Application.Json)
                     setBody(mapOf("amount" to amount))
@@ -471,7 +473,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val registerResponse = client.post("/auth/register") {
+            val registerResponse = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "Test",
@@ -486,13 +488,13 @@ class ValidationTest {
             accessToken = body["tokens"]!!.jsonObject["accessToken"]!!.jsonPrimitive.content
 
             // First deposit some funds
-            client.post("/balance/deposit") {
+            jsonClient().post("/balance/deposit") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("amount" to "1000"))
             }
 
-            val response = client.post("/balance/withdraw") {
+            val response = jsonClient().post("/balance/withdraw") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("amount" to "-100"))
@@ -510,7 +512,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val response = client.post("/auth/register") {
+            val response = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf(
                     "firstName" to "Test",
@@ -529,7 +531,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val response = client.post("/auth/register") {
+            val response = jsonClient().post("/auth/register") {
                 contentType(ContentType.Application.Json)
                 setBody("not valid json")
             }
@@ -544,7 +546,7 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val response = client.post("/auth/login") {
+            val response = jsonClient().post("/auth/login") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("phone" to "+79001112233"))
                 // missing password
@@ -560,12 +562,18 @@ class ValidationTest {
             environment { config = createTestConfig() }
             application { module() }
 
-            val response = client.post("/auth/token/refresh") {
+            val response = jsonClient().post("/auth/token/refresh") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf<String, Any>())  // missing refreshToken
             }
 
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
+    }
+}
+
+private fun ApplicationTestBuilder.jsonClient() = createClient {
+    install(ContentNegotiation) {
+        json()
     }
 }

@@ -7,9 +7,27 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class DatabaseConfig(val database: Database) {
 
-    fun init() {
+    fun init(dropExisting: Boolean = false) {
         transaction(database) {
-            SchemaUtils.create(UsersTable, RefreshTokensTable, UserBalancesTable, TransactionsTable)
+            if (dropExisting) {
+                SchemaUtils.drop(
+                    UsersTable,
+                    RefreshTokensTable,
+                    UserBalancesTable,
+                    TransactionsTable,
+                    PortfolioTable,
+                    OrdersTable
+                )
+            }
+
+            SchemaUtils.createMissingTablesAndColumns(
+                UsersTable,
+                RefreshTokensTable,
+                UserBalancesTable,
+                TransactionsTable,
+                PortfolioTable,
+                OrdersTable
+            )
         }
     }
 }
@@ -44,7 +62,7 @@ fun Application.configureDatabase(): DatabaseConfig {
     val db = Database.connect(url, driver = driver, user = user, password = password)
 
     val config = DatabaseConfig(db)
-    config.init()
+    config.init(dropExisting = useEmbedded)
 
     return config
 }
