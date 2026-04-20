@@ -5,6 +5,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
+import zov.deneg.client.*
 import zov.deneg.data.*
 import zov.deneg.routes.*
 import zov.deneg.security.JwtConfig
@@ -22,6 +23,18 @@ fun Application.module() {
     val portfolioRepository = PortfolioRepository(dbConfig.database)
     val orderRepository = OrderRepository(dbConfig.database)
 
+    // Configure securities service client
+    val securitiesClientConfig = SecuritiesClientConfigProvider(environment)
+    val securitiesHttpClient = createSecuritiesClient(
+        SecuritiesClientConfig(
+            baseUrl = securitiesClientConfig.baseUrl,
+            connectTimeout = securitiesClientConfig.connectTimeout,
+            requestTimeout = securitiesClientConfig.requestTimeout,
+            maxConnections = securitiesClientConfig.maxConnections
+        )
+    )
+    val securitiesClient = SecuritiesClient(securitiesHttpClient, securitiesClientConfig.baseUrl)
+
     configureSerialization()
     configureSecurity(jwtConfig)
 
@@ -31,7 +44,7 @@ fun Application.module() {
         configureBalanceRoutes(balanceRepository, transactionRepository)
         configureTransactionRoutes(transactionRepository)
         configurePortfolioRoutes(portfolioRepository)
-        configureOrderRoutes(orderRepository, portfolioRepository, balanceRepository)
+        configureOrderRoutes(orderRepository, portfolioRepository, balanceRepository, securitiesClient)
     }
 }
 

@@ -27,3 +27,10 @@ h2:
 
 database:
     useEmbedded: false
+
+# Securities Service Configuration
+securities-service:
+    baseUrl: ${SECURITIES_SERVICE_URL:http://localhost:8081}
+    connectTimeout: ${SECURITIES_SERVICE_CONNECT_TIMEOUT:5000}
+    requestTimeout: ${SECURITIES_SERVICE_REQUEST_TIMEOUT:10000}
+    maxConnections: ${SECURITIES_SERVICE_MAX_CONNECTIONS:10}
