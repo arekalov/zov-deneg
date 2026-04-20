@@ -78,8 +78,8 @@ object PortfolioTable : Table("portfolio") {
 
     override val primaryKey = PrimaryKey(id)
     init {
-        uniqueIndex("user_security_unique", userId, securityId)
-        index("user_id_idx", false, userId)
+        uniqueIndex("portfolio_user_security_unique", userId, securityId)
+        index("portfolio_user_id_idx", false, userId)
     }
 }
 
@@ -101,8 +101,8 @@ object OrdersTable : Table("orders") {
 
     override val primaryKey = PrimaryKey(id)
     init {
-        index("user_id_idx", false, userId)
-        index("user_id_status_idx", false, userId, status)
-        index("user_id_security_id_idx", false, userId, securityId)
+        index("orders_user_id_idx", false, userId)
+        index("orders_user_id_status_idx", false, userId, status)
+        index("orders_user_id_security_id_idx", false, userId, securityId)
     }
 }
