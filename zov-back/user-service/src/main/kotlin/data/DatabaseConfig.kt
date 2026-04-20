@@ -33,7 +33,9 @@ class DatabaseConfig(val database: Database) {
 }
 
 fun Application.configureDatabase(): DatabaseConfig {
-    val useEmbedded = environment.config.propertyOrNull("database.useEmbedded")?.getString()?.toBoolean() ?: false
+    val useEmbedded = System.getenv("DATABASE_USE_EMBEDDED")?.toBoolean()
+        ?: environment.config.propertyOrNull("database.useEmbedded")?.getString()?.toBoolean()
+        ?: false
 
     val (driver, url, user, password) = if (useEmbedded) {
         listOf(
@@ -44,10 +46,10 @@ fun Application.configureDatabase(): DatabaseConfig {
         )
     } else {
         listOf(
-            environment.config.property("postgres.driver").getString(),
-            environment.config.property("postgres.url").getString(),
-            environment.config.property("postgres.user").getString(),
-            environment.config.property("postgres.password").getString()
+            System.getenv("POSTGRES_DRIVER") ?: environment.config.property("postgres.driver").getString(),
+            System.getenv("POSTGRES_URL") ?: environment.config.property("postgres.url").getString(),
+            System.getenv("POSTGRES_USER") ?: environment.config.property("postgres.user").getString(),
+            System.getenv("POSTGRES_PASSWORD") ?: environment.config.property("postgres.password").getString()
         )
     }
 
