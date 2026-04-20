@@ -1,0 +1,47 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8-alpine
+    container_name: securities-service-db
+    environment:
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-securities}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "${CLICKHOUSE_PORT_HTTP:-8123}:8123"
+      - "${CLICKHOUSE_PORT_NATIVE:-9000}:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./test-data.sql:/docker-entrypoint-initdb.d/test-data.sql
+      - ./clickhouse-users.xml:/etc/clickhouse-server/users.d/users.xml
+    networks:
+      - securities-service-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  securities-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: securities-service-app
+    env_file:
+      - .env
+    ports:
+      - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - securities-service-network
+    restart: unless-stopped
+
+volumes:
+  clickhouse_data:
+    driver: local
+
+networks:
+  securities-service-network:
+    driver: bridge
