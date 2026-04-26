@@ -209,7 +209,7 @@ class SecuritiesRepository(private val dataSource: ClickHouseDataSource) {
         // Get ticker
         val ticker = getTickerById(securityId) ?: return null
 
-        // Calculate step based on interval duration
+        // Calculate step based on interval duration (from and to are in seconds)
         val step = when {
             (to - from) < 86400 -> 60        // < 1 day → 1 min
             (to - from) < 604800 -> 300      // < 7 days → 5 min
@@ -226,8 +226,8 @@ class SecuritiesRepository(private val dataSource: ClickHouseDataSource) {
                     avg(price) AS price
                 FROM `quotes`
                 WHERE security_id = '$securityId'
-                  AND timestamp >= toDateTime64($from, 3, 'UTC')
-                  AND timestamp <= toDateTime64($to, 3, 'UTC')
+                  AND timestamp >= toDateTime64($from, 0, 'UTC')
+                  AND timestamp <= toDateTime64($to, 0, 'UTC')
                 GROUP BY ts
                 ORDER BY ts
             """.trimIndent()

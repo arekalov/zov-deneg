@@ -30,21 +30,21 @@ VALUES (generateUUIDv4(), 'SBER', 'Сбербанк', 'Крупнейший ба
 
 INSERT INTO quotes (security_id, timestamp, price, volume)
 SELECT (SELECT id FROM securities_dict WHERE ticker = 'SBER' LIMIT 1) as security_id,
-    toDateTime64('2024-01-15 10:00:00', 3, 'UTC') + INTERVAL (number * 300) SECOND as timestamp,
+    toDateTime64('2024-01-15 10:00:00', 0, 'UTC') + INTERVAL (number * 300) SECOND as timestamp,
     280 + (rand() % 30) + (number / 10) as price,
     (rand() % 10000) + 1000 as volume
 FROM numbers(100);
 
 INSERT INTO quotes (security_id, timestamp, price, volume)
 SELECT (SELECT id FROM securities_dict WHERE ticker = 'GAZP' LIMIT 1) as security_id,
-    toDateTime64('2024-01-15 10:00:00', 3, 'UTC') + INTERVAL (number * 300) SECOND as timestamp,
+    toDateTime64('2024-01-15 10:00:00', 0, 'UTC') + INTERVAL (number * 300) SECOND as timestamp,
     150 + (rand() % 20) + (number / 20) as price,
     (rand() % 15000) + 2000 as volume
 FROM numbers(100);
 
 INSERT INTO quotes (security_id, timestamp, price, volume)
 SELECT (SELECT id FROM securities_dict WHERE ticker = 'LKOH' LIMIT 1) as security_id,
-    toDateTime64('2024-01-15 10:00:00', 3, 'UTC') + INTERVAL (number * 300) SECOND as timestamp,
+    toDateTime64('2024-01-15 10:00:00', 0, 'UTC') + INTERVAL (number * 300) SECOND as timestamp,
     700 + (rand() % 50) + (number / 15) as price,
     (rand() % 5000) as volume
 FROM numbers(100);
