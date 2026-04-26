@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/users/m.s.taranenko/ideaprojects/itmo/zov-deneg/zov-back/user-service/test-api.sh)"
+    ]
+  }
+}

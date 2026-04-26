@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker restart *)",
+      "Bash(python3 *)",
+      "Bash(/users/m.s.taranenko/ideaprojects/itmo/zov-deneg/zov-back/securities-service/test-api.sh)"
+    ]
+  },
+  "$version": 3
+}

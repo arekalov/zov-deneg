@@ -1,0 +1,25 @@
+ktor:
+    application:
+        modules:
+            - zov.deneg.ApplicationKt.module
+    deployment:
+        port: 8080
+
+jwt:
+    secret: ${JWT_SECRET:"your-super-secret-jwt-key-change-this-in-production-min-32-chars"}
+    issuer: ${JWT_ISSUER:"zov-deneg-securities-service"}
+    audience: ${JWT_AUDIENCE:"zov-deneg-securities"}
+    realm: ${JWT_REALM:"zov-deneg securities service"}
+
+clickhouse:
+    url: "jdbc:clickhouse://${CLICKHOUSE_HOST:-localhost}:${CLICKHOUSE_PORT_HTTP:-8123}"
+    database: ${CLICKHOUSE_DB:-securities}
+    username: ${CLICKHOUSE_USER:-default}
+    password: ${CLICKHOUSE_PASSWORD:-}
+    driver: "com.clickhouse.jdbc.ClickHouseDriver"
+    pool:
+        max-size: ${CLICKHOUSE_POOL_MAX_SIZE:10}
+        min-idle: ${CLICKHOUSE_POOL_MIN_IDLE:2}
+        connection-timeout: ${CLICKHOUSE_POOL_CONNECTION_TIMEOUT:30000}
+        idle-timeout: ${CLICKHOUSE_POOL_IDLE_TIMEOUT:600000}
+        max-lifetime: ${CLICKHOUSE_POOL_MAX_LIFETIME:1800000}
