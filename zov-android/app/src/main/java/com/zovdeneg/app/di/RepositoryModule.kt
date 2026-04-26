@@ -1,6 +1,7 @@
 package com.zovdeneg.app.di
 
 import com.zovdeneg.app.data.repository.AuthRepositoryImpl
+import com.zovdeneg.app.data.repository.ClearRemoteSessionUseCaseImpl
 import com.zovdeneg.app.data.repository.BalanceRepositoryImpl
 import com.zovdeneg.app.data.repository.OrdersRepositoryImpl
 import com.zovdeneg.app.data.repository.PortfolioRepositoryImpl
@@ -8,6 +9,7 @@ import com.zovdeneg.app.data.repository.SecuritiesRepositoryImpl
 import com.zovdeneg.app.data.repository.TransactionsRepositoryImpl
 import com.zovdeneg.app.data.repository.UserProfileRepositoryImpl
 import com.zovdeneg.app.domain.auth.AuthRepository
+import com.zovdeneg.app.domain.auth.ClearRemoteSessionUseCase
 import com.zovdeneg.app.domain.balance.BalanceRepository
 import com.zovdeneg.app.domain.market.SecuritiesRepository
 import com.zovdeneg.app.domain.orders.OrdersRepository
@@ -52,4 +54,10 @@ internal abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindClearRemoteSessionUseCase(
+        impl: ClearRemoteSessionUseCaseImpl,
+    ): ClearRemoteSessionUseCase
 }

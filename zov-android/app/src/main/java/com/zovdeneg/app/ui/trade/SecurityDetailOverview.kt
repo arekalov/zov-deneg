@@ -8,6 +8,7 @@ import com.zovdeneg.app.ui.common.ZovItemSpacing
 import com.zovdeneg.app.ui.common.ZovShapeMedium
 import com.zovdeneg.app.ui.common.ZovSpace3
 import com.zovdeneg.app.ui.common.ZovTightGap
+import com.zovdeneg.app.ui.components.ZovCenteredCircularProgress
 import com.zovdeneg.app.ui.components.ZovChartPeriodChip
 import com.zovdeneg.app.ui.components.ZovSummaryCard
 import com.zovdeneg.app.ui.theme.ZovTheme
@@ -17,12 +18,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -153,6 +151,8 @@ internal fun SecurityDetailPriceChartBlock(
             color = c.onSurface,
             modifier = Modifier.padding(top = ZovItemSpacing),
         )
+        val hasChartContent = priceHistory.isNotEmpty()
+        val showPeriodChips = chartFailed || chartLoading || hasChartContent
         when {
             chartFailed ->
                 Text(
@@ -160,15 +160,14 @@ internal fun SecurityDetailPriceChartBlock(
                     style = t.bodyReg14,
                     color = c.negative,
                 )
-            priceHistory.isNotEmpty() -> {
+            hasChartContent -> {
                 ZovSecurityPriceChart(
                     points = priceHistory,
                     chartRange = chartRange,
                 )
             }
             chartLoading -> {
-                Spacer(Modifier.height(ZovTightGap))
-                CircularProgressIndicator(color = c.primary)
+                ZovCenteredCircularProgress()
             }
             else ->
                 Text(
@@ -177,10 +176,12 @@ internal fun SecurityDetailPriceChartBlock(
                     color = c.onSurfaceVariant,
                 )
         }
-        SecurityDetailPeriodChipsRow(
-            chartRange = chartRange,
-            onSelectChartRange = onSelectChartRange,
-        )
+        if (showPeriodChips) {
+            SecurityDetailPeriodChipsRow(
+                chartRange = chartRange,
+                onSelectChartRange = onSelectChartRange,
+            )
+        }
         HorizontalDivider(color = c.outline)
     }
 }

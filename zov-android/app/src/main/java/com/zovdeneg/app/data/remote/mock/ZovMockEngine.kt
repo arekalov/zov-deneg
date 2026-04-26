@@ -54,9 +54,9 @@ private fun mockGetJson(
     if (method != HttpMethod.Get) return null
     return when (path) {
         ZovApiPaths.PORTFOLIO_SUMMARY -> json.portfolioSummary()
-        ZovApiPaths.PORTFOLIO_HOLDINGS -> json.portfolioHoldings()
-        ZovApiPaths.SECURITIES_POPULAR -> json.popularSecurities()
-        ZovApiPaths.TRANSACTIONS -> json.transactions()
+        ZovApiPaths.PORTFOLIO -> json.portfolio()
+        ZovApiPaths.SECURITIES_LIST -> json.securitiesList()
+        ZovApiPaths.TRANSACTIONS -> json.transactionsList()
         ZovApiPaths.BALANCE -> json.balance()
         ZovApiPaths.USERS_ME -> json.userProfile()
         else -> securityGetBody(path, parameters, json)
@@ -64,15 +64,19 @@ private fun mockGetJson(
 }
 
 private fun securityGetBody(path: String, parameters: Parameters, json: ZovMockAssetJson): String? {
-    if (!path.startsWith("/v1/securities/")) return null
-    val tail = path.removePrefix("/v1/securities/")
-    if (tail.isEmpty() || tail == "popular") return null
+    if (!path.startsWith("/securities/")) return null
+    if (path.endsWith("/orderbook")) {
+        val idPart = path.removeSuffix("/orderbook").substringAfterLast('/')
+        return json.securityOrderBook(idPart)
+    }
+    val tail = path.removePrefix("/securities/")
+    if (tail.isEmpty()) return null
     if (tail.endsWith("/price/history")) {
-        val ticker = tail.removeSuffix("/price/history").trim('/')
-        if (ticker.isEmpty() || ticker.contains('/')) return null
+        val navKey = tail.removeSuffix("/price/history").trim('/')
+        if (navKey.isEmpty() || navKey.contains('/')) return null
         val from = parameters["from"]?.toLongOrNull() ?: return null
         val to = parameters["to"]?.toLongOrNull() ?: return null
-        return json.securityPriceHistory(ticker, from, to)
+        return json.securityPriceHistory(navKey, from, to)
     }
     return if (!tail.contains('/')) {
         json.securityDetail(tail)
@@ -88,8 +92,9 @@ private fun mockPostJson(method: HttpMethod, path: String, json: ZovMockAssetJso
         ZovApiPaths.BALANCE_WITHDRAW -> json.balanceAfterWithdraw()
         ZovApiPaths.USERS_ME_PIN -> json.pinChangeOk()
         ZovApiPaths.ORDERS -> json.orderCreated()
-        ZovApiPaths.AUTH_LOGIN -> json.authLoginResponse()
-        ZovApiPaths.AUTH_REGISTER -> json.authRegisterResponse()
+        ZovApiPaths.AUTH_LOGIN -> json.mockAssetText(ZovMockAssetPaths.AUTH_ENVELOPE)
+        ZovApiPaths.AUTH_REGISTER -> json.mockAssetText(ZovMockAssetPaths.AUTH_ENVELOPE)
+        ZovApiPaths.AUTH_REFRESH -> json.mockAssetText(ZovMockAssetPaths.AUTH_TOKENS_REFRESH)
         else -> null
     }
 }

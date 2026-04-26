@@ -85,6 +85,7 @@ private val registerRoutes =
     setOf(
         ZovRoutes.REGISTER_STEP1,
         ZovRoutes.REGISTER_STEP2,
+        ZovRoutes.REGISTER_STEP2_ROUTE,
         ZovRoutes.REGISTER_STEP3,
         ZovRoutes.REGISTER_STEP4,
     )
@@ -102,6 +103,8 @@ private val bottomBarRoutes =
 @Composable
 internal fun zovTopBarTitle(route: String?, backStack: NavBackStackEntry?): String? {
     val ticker = backStack?.arguments?.getString("ticker").orEmpty().replace('_', '/')
+    val buyDisplayTicker =
+        backStack?.arguments?.getString("displayTicker").orEmpty().replace('_', '/')
     return when (route) {
         ZovRoutes.MAIN_HOME -> stringResource(R.string.nav_top_home)
         ZovRoutes.MAIN_SEARCH -> stringResource(R.string.nav_top_search)
@@ -112,7 +115,7 @@ internal fun zovTopBarTitle(route: String?, backStack: NavBackStackEntry?): Stri
         ZovRoutes.DEPOSIT -> stringResource(R.string.nav_top_deposit)
         in registerRoutes -> stringResource(R.string.nav_top_sign_up)
         ZovRoutes.DETAIL -> stringResource(R.string.nav_top_detail_prefix) + ticker
-        ZovRoutes.BUY -> stringResource(R.string.nav_top_buy_prefix) + ticker
+        ZovRoutes.BUY -> stringResource(R.string.nav_top_buy_title, buyDisplayTicker)
         else -> null
     }
 }

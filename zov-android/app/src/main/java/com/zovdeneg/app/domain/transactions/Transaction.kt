@@ -10,5 +10,7 @@ data class Transaction(
 enum class TransactionSide {
     PURCHASE,
     SALE,
+    DEPOSIT,
+    WITHDRAWAL,
     OTHER,
 }

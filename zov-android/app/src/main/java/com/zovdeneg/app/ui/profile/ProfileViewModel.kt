@@ -1,5 +1,6 @@
 package com.zovdeneg.app.ui.profile
 
+import com.zovdeneg.app.domain.auth.ClearRemoteSessionUseCase
 import com.zovdeneg.app.domain.auth.LocalAuthStorage
 import com.zovdeneg.app.domain.profile.UserProfile
 import com.zovdeneg.app.domain.usecase.LoadUserProfileUseCase
@@ -26,6 +27,7 @@ data class ProfileUiState(
 class ProfileViewModel @Inject constructor(
     private val loadUserProfile: LoadUserProfileUseCase,
     private val localAuthStorage: LocalAuthStorage,
+    private val clearRemoteSession: ClearRemoteSessionUseCase,
 ) : ViewModel() {
     private val _uiState =
         MutableStateFlow(
@@ -72,5 +74,10 @@ class ProfileViewModel @Inject constructor(
     fun setBiometricUnlockEnabled(enabled: Boolean) {
         localAuthStorage.setBiometricUnlockEnabled(enabled)
         _uiState.update { it.copy(biometricUnlockEnabled = enabled) }
+    }
+
+    fun logout(navigateToLogin: () -> Unit) {
+        clearRemoteSession()
+        navigateToLogin()
     }
 }

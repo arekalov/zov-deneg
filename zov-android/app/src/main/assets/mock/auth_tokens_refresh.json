@@ -1,0 +1,5 @@
+{
+  "accessToken": "mock-access-token-refreshed",
+  "refreshToken": "mock-refresh-token-rotated",
+  "expiresIn": 900
+}

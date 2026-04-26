@@ -6,4 +6,6 @@ data class Holding(
     val valueText: String,
     val deltaText: String,
     val deltaPositive: Boolean,
+    /** UUID для zov-back или тикер для мок-HTTP. */
+    val detailNavKey: String = ticker,
 )

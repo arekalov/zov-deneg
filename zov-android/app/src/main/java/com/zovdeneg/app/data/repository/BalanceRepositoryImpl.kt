@@ -1,5 +1,6 @@
 package com.zovdeneg.app.data.repository
 
+import com.zovdeneg.app.data.format.ZovRubDisplay
 import com.zovdeneg.app.data.remote.api.ZovBalanceApi
 import com.zovdeneg.app.data.remote.dto.BalanceDto
 import com.zovdeneg.app.domain.balance.BalanceRepository
@@ -28,14 +29,5 @@ internal class BalanceRepositoryImpl @Inject constructor(
             totalText = total.toRubDisplay(),
         )
 
-    private fun String.toRubDisplay(): String {
-        val trimmed = trim()
-        val sign = if (trimmed.startsWith("-")) "−" else ""
-        val n = trimmed.removePrefix("-")
-        val parts = n.split(".")
-        val intRaw = parts[0].ifEmpty { "0" }
-        val frac = parts.getOrNull(1)?.take(2)?.padEnd(2, '0') ?: "00"
-        val grouped = intRaw.reversed().chunked(3).joinToString(" ").reversed()
-        return "$sign$grouped,$frac ₽"
-    }
+    private fun String.toRubDisplay(): String = ZovRubDisplay.formatApiDecimalToRubLine(this)
 }

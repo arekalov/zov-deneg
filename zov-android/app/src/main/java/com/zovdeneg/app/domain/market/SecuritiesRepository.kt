@@ -5,6 +5,8 @@ interface SecuritiesRepository {
 
     suspend fun getSecurityDetail(ticker: String): Result<SecurityDetail>
 
+    suspend fun getSecurityOrderBook(navId: String): Result<SecurityOrderBook>
+
     suspend fun getSecurityPriceHistory(
         ticker: String,
         fromEpochSeconds: Long,

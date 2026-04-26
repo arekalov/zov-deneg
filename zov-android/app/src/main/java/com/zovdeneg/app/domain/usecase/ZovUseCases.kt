@@ -5,6 +5,7 @@ import com.zovdeneg.app.domain.balance.BalanceRepository
 import com.zovdeneg.app.domain.balance.BrokerageBalance
 import com.zovdeneg.app.domain.market.SecuritiesRepository
 import com.zovdeneg.app.domain.market.SecurityDetail
+import com.zovdeneg.app.domain.market.SecurityOrderBook
 import com.zovdeneg.app.domain.market.SecurityListItem
 import com.zovdeneg.app.domain.market.SecurityPriceHistory
 import com.zovdeneg.app.domain.orders.OrderReceipt
@@ -26,6 +27,13 @@ class LoadSecurityDetailUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(ticker: String): Result<SecurityDetail> =
         securitiesRepository.getSecurityDetail(ticker)
+}
+
+class LoadSecurityOrderBookUseCase @Inject constructor(
+    private val securitiesRepository: SecuritiesRepository,
+) {
+    suspend operator fun invoke(navId: String): Result<SecurityOrderBook> =
+        securitiesRepository.getSecurityOrderBook(navId)
 }
 
 class LoadSecurityPriceHistoryUseCase @Inject constructor(

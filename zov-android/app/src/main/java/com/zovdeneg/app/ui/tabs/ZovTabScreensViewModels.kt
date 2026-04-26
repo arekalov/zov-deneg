@@ -84,6 +84,8 @@ data class HistoryTabUiState(
         when (filterIndex) {
             1 -> transactions.filter { it.side == TransactionSide.PURCHASE }
             2 -> transactions.filter { it.side == TransactionSide.SALE }
+            3 -> transactions.filter { it.side == TransactionSide.DEPOSIT }
+            4 -> transactions.filter { it.side == TransactionSide.WITHDRAWAL }
             else -> transactions
         }
 }
@@ -96,21 +98,30 @@ class ZovHistoryTabViewModel @Inject constructor(
     val uiState: StateFlow<HistoryTabUiState> = _uiState.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            loadTransactions().fold(
-                onSuccess = { list ->
-                    _uiState.update {
-                        it.copy(transactions = list, isLoading = false, loadFailed = false)
-                    }
-                },
-                onFailure = {
-                    _uiState.update { s -> s.copy(isLoading = false, loadFailed = true) }
-                },
-            )
-        }
+        viewModelScope.launch { reloadTransactions() }
     }
 
     fun setFilterIndex(index: Int) {
         _uiState.update { it.copy(filterIndex = index) }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, loadFailed = false) }
+            reloadTransactions()
+        }
+    }
+
+    private suspend fun reloadTransactions() {
+        loadTransactions().fold(
+            onSuccess = { list ->
+                _uiState.update {
+                    it.copy(transactions = list, isLoading = false, loadFailed = false)
+                }
+            },
+            onFailure = {
+                _uiState.update { s -> s.copy(isLoading = false, loadFailed = true) }
+            },
+        )
     }
 }

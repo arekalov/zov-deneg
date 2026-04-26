@@ -1,7 +1,10 @@
 package com.zovdeneg.app.ui.auth
 
+import android.content.Context
+import com.zovdeneg.app.R
 import com.zovdeneg.app.domain.usecase.RegisterNewAccountUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,13 +31,15 @@ data class RegisterStep1UiState(
     val password: String = "",
     val isSubmitting: Boolean = false,
     val validationError: Boolean = false,
-    val networkError: Boolean = false,
+    /** Текст с бэкенда или общая сетевая ошибка; `null` — ошибки нет. */
+    val submitError: String? = null,
 )
 
 @HiltViewModel
 class ZovRegisterStep1ViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val registerNewAccount: RegisterNewAccountUseCase,
+    @ApplicationContext private val appContext: Context,
 ) : ViewModel() {
     private val _uiState =
         MutableStateFlow(
@@ -54,29 +59,29 @@ class ZovRegisterStep1ViewModel @Inject constructor(
             it.copy(
                 firstName = value,
                 validationError = false,
-                networkError = false,
+                submitError = null,
             )
         }
     }
 
     fun setLastName(value: String) {
         savedStateHandle[KEY_LAST] = value
-        _uiState.update { it.copy(lastName = value, validationError = false, networkError = false) }
+        _uiState.update { it.copy(lastName = value, validationError = false, submitError = null) }
     }
 
     fun setEmail(value: String) {
         savedStateHandle[KEY_EMAIL] = value
-        _uiState.update { it.copy(email = value, validationError = false, networkError = false) }
+        _uiState.update { it.copy(email = value, validationError = false, submitError = null) }
     }
 
     fun setPhone(value: String) {
         savedStateHandle[KEY_PHONE] = value
-        _uiState.update { it.copy(phone = value, validationError = false, networkError = false) }
+        _uiState.update { it.copy(phone = value, validationError = false, submitError = null) }
     }
 
     fun setPassword(value: String) {
         savedStateHandle[KEY_PASSWORD] = value
-        _uiState.update { it.copy(password = value, validationError = false, networkError = false) }
+        _uiState.update { it.copy(password = value, validationError = false, submitError = null) }
     }
 
     fun submit(onSuccess: () -> Unit) {
@@ -95,7 +100,7 @@ class ZovRegisterStep1ViewModel @Inject constructor(
                 it.copy(
                     isSubmitting = true,
                     validationError = false,
-                    networkError = false,
+                    submitError = null,
                 )
             }
             registerNewAccount(
@@ -110,8 +115,10 @@ class ZovRegisterStep1ViewModel @Inject constructor(
                         _uiState.update { it.copy(isSubmitting = false) }
                         onSuccess()
                     },
-                    onFailure = {
-                        _uiState.update { it.copy(isSubmitting = false, networkError = true) }
+                    onFailure = { t ->
+                        val fallback = appContext.getString(R.string.register_network_error)
+                        val msg = t.message?.takeIf { it.isNotBlank() } ?: fallback
+                        _uiState.update { it.copy(isSubmitting = false, submitError = msg) }
                     },
                 )
         }

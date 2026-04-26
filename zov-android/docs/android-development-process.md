@@ -22,6 +22,7 @@
 3. Открыть в Android Studio **этот каталог** (`zov-android/`) как корень Gradle-проекта.
 4. Убедиться, что версии JDK/AGP из проекта собираются локально (`assembleDebug`).
 5. При правках макетов в Figma-плагине: из **корня** монорепы выполнить `node zov-figma/build.mjs`, затем пересобрать сцену в Figma по инструкции в `zov-figma/README.md`.
+6. **Локальный бэкенд и OpenAPI env.** В Insomnia / OpenAPI на Mac переменная **`host: localhost:8080`** означает «user-service на этой же машине». В **эмуляторе Android** адрес **`localhost` / `127.0.0.1`** указывает **на сам эмулятор**, а не на Mac. Эквивалент Mac `localhost:8080` для AVD: **`http://10.0.2.2:8080`**; для securities — **`http://10.0.2.2:8081`**. Задай их в **`zov-android/local.properties`** (см. шаблон **`local.properties.example`** в корне `zov-android/`), затем **Rebuild**. Поле **`bearerToken`** в env OpenAPI нужно только для ручных запросов из десктопа; приложение получает JWT через **`/auth/login`** и **`/auth/register`**.
 
 ---
 

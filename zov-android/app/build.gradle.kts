@@ -1,4 +1,5 @@
 import io.gitlab.arturbosch.detekt.Detekt
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -17,6 +18,13 @@ android {
         }
     }
 
+    val localProperties = Properties().apply {
+        val f = rootProject.file("local.properties")
+        if (f.exists()) {
+            f.inputStream().use { load(it) }
+        }
+    }
+
     defaultConfig {
         applicationId = "com.zovdeneg.app"
         minSdk = 28
@@ -25,8 +33,27 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "API_BASE_URL", "\"https://api.zovdeneg.mock/\"")
-        buildConfigField("boolean", "USE_MOCK_HTTP_ENGINE", "true")
+
+        val useMockHttp =
+            localProperties.getProperty("zov.useMockHttp")?.trim()?.equals("true", ignoreCase = true) == true
+        val userApiBase =
+            if (useMockHttp) {
+                "https://api.zovdeneg.mock"
+            } else {
+                localProperties.getProperty("zov.userApiBaseUrl")?.trim()?.trimEnd('/')
+                    ?: "http://10.0.2.2:8080"
+            }
+        val securitiesApiBase =
+            if (useMockHttp) {
+                "https://api.zovdeneg.mock"
+            } else {
+                localProperties.getProperty("zov.securitiesApiBaseUrl")?.trim()?.trimEnd('/')
+                    ?: "http://10.0.2.2:8081"
+            }
+
+        buildConfigField("String", "API_BASE_URL", "\"$userApiBase/\"")
+        buildConfigField("String", "SECURITIES_API_BASE_URL", "\"$securitiesApiBase/\"")
+        buildConfigField("boolean", "USE_MOCK_HTTP_ENGINE", if (useMockHttp) "true" else "false")
     }
 
     buildTypes {
@@ -37,6 +64,7 @@ android {
                 "proguard-rules.pro",
             )
             buildConfigField("String", "API_BASE_URL", "\"https://api.zovdengi.ru/v1/\"")
+            buildConfigField("String", "SECURITIES_API_BASE_URL", "\"https://api.zovdengi.ru/v1/\"")
             buildConfigField("boolean", "USE_MOCK_HTTP_ENGINE", "false")
         }
     }
@@ -69,6 +97,8 @@ dependencies {
     implementation(libs.ktor.client.mock)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.auth)
+    implementation(libs.ktor.client.logging)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)

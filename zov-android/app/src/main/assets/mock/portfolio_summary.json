@@ -1,4 +1,5 @@
 {
-  "portfolioAmountRub": "4 876 234,56 ₽",
-  "totalGainText": "+234 567,89 ₽ (+5,1%)"
+  "totalValue": "4876234.56",
+  "profitLoss": "234567.89",
+  "profitLossPct": "5.1"
 }

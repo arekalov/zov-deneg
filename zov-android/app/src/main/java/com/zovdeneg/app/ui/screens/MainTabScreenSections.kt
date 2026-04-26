@@ -11,8 +11,10 @@ import com.zovdeneg.app.ui.tabs.HistoryTabUiState
 import com.zovdeneg.app.ui.tabs.SearchTabUiState
 import com.zovdeneg.app.ui.theme.ZovTheme
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
@@ -40,28 +42,15 @@ internal fun SearchTabPopularSection(
                         deltaPositive = item.deltaPositive,
                         ticker = item.ticker,
                     ),
-                ) { onOpenSecurity(item.ticker) }
+                ) { onOpenSecurity(item.detailNavKey) }
             }
 
         searchUi.loadFailed || (!searchUi.isLoading && searchUi.allSecurities.isEmpty()) -> {
-            AssetRow(
-                AssetRowData(
-                    stringResource(R.string.asset_gazp_subtitle),
-                    stringResource(R.string.asset_gazp_value),
-                    stringResource(R.string.asset_gazp_delta),
-                    true,
-                    "GAZP",
-                ),
-            ) { onOpenSecurity("GAZP") }
-            AssetRow(
-                AssetRowData(
-                    stringResource(R.string.asset_sber_search_subtitle),
-                    stringResource(R.string.asset_sber_search_value),
-                    stringResource(R.string.asset_sber_search_delta),
-                    true,
-                    "SBER",
-                ),
-            ) { onOpenSecurity("SBER") }
+            Text(
+                stringResource(R.string.search_popular_empty),
+                style = t.subtitleReg14,
+                color = c.onSurfaceVariant,
+            )
         }
     }
 }
@@ -72,7 +61,10 @@ internal fun HistoryFilterChipsRow(
     historyUi: HistoryTabUiState,
     onSelectFilter: (Int) -> Unit,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(ZovItemSpacing)) {
+    Row(
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(ZovItemSpacing),
+    ) {
         filterResIds.forEachIndexed { i, resId ->
             ZovFilterChip(
                 label = stringResource(resId),
@@ -93,7 +85,7 @@ internal fun HistoryTabTransactionsSection(
             visibleTxs.forEach { tx -> HistoryTransactionCard(tx = tx) }
 
         historyUi.loadFailed || (!historyUi.isLoading && historyUi.transactions.isEmpty()) ->
-            HistoryTransactionFallbackRows()
+            HistoryTransactionsEmptyHint()
     }
 }
 
@@ -116,37 +108,12 @@ private fun HistoryTransactionCard(tx: Transaction) {
 }
 
 @Composable
-private fun HistoryTransactionFallbackRows() {
+private fun HistoryTransactionsEmptyHint() {
     val c = ZovTheme.colors
     val t = ZovTheme.text
-    val fallback =
-        listOf(
-            Triple(
-                R.string.history_row1_title,
-                R.string.history_row1_date,
-                R.string.history_row1_amount,
-            ),
-            Triple(
-                R.string.history_row2_title,
-                R.string.history_row2_date,
-                R.string.history_row2_amount,
-            ),
-        )
-    fallback.forEach { triple ->
-        val title = stringResource(triple.first)
-        val date = stringResource(triple.second)
-        val amount = stringResource(triple.third)
-        val amountColor =
-            when {
-                amount.contains('-') -> c.negative
-                amount.contains('+') -> c.positive
-                else -> c.onSurface
-            }
-        ZovElevatedListCard {
-            Text(title, style = t.bodyMed14, color = c.onSurface)
-            Text(date, style = t.labelReg12, color = c.onSurfaceVariant)
-            Spacer(Modifier.height(ZovUnit))
-            Text(amount, style = t.sectionSemi16, color = amountColor)
-        }
-    }
+    Text(
+        stringResource(R.string.history_empty),
+        style = t.subtitleReg14,
+        color = c.onSurfaceVariant,
+    )
 }

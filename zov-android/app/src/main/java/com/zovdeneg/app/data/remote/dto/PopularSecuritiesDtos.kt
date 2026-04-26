@@ -10,6 +10,7 @@ internal data class PopularSecurityDto(
     val deltaText: String,
     val deltaPositive: Boolean,
     val kind: String,
+    val securityId: String? = null,
 )
 
 @Serializable

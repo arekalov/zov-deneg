@@ -11,8 +11,11 @@ import com.zovdeneg.app.ui.common.ZovItemSpacing
 import com.zovdeneg.app.ui.common.ZovShapeMedium
 import com.zovdeneg.app.ui.components.LocalZovSnackbarHostState
 import com.zovdeneg.app.ui.components.LocalZovSnackbarScope
+import com.zovdeneg.app.ui.deposit.DepositSuccessSideEffect
 import com.zovdeneg.app.ui.components.ZovFilterChip
+import com.zovdeneg.app.ui.components.ZovCenteredCircularProgress
 import com.zovdeneg.app.ui.components.ZovScrollScreen
+import com.zovdeneg.app.ui.deposit.DepositUiState
 import com.zovdeneg.app.ui.deposit.DepositViewModel
 import com.zovdeneg.app.ui.theme.ZovAppTheme
 import com.zovdeneg.app.ui.theme.ZovTheme
@@ -36,7 +39,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PrimaryTabRow
@@ -54,8 +56,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
-import kotlinx.coroutines.launch
 
 private val previewSecurityOrderBook =
     SecurityOrderBook(
@@ -107,6 +107,7 @@ fun SecurityDetailScreen(
         onRetry = viewModel::retry,
         onBuy = onBuy,
         onSelectChartRange = viewModel::selectChartRange,
+        onOrderBookTabSelected = viewModel::loadOrderBookIfNeeded,
     )
 }
 
@@ -170,7 +171,16 @@ private fun SecurityDetailLoadedSection(
         SecurityDetailPortfolioBanner(detail)
         SecurityDetailAboutCompanyCard(detail)
     } else {
-        SecurityDetailOrderBookTab(detail = detail)
+        when {
+            uiState.orderBookLoading -> ZovCenteredCircularProgress()
+            uiState.orderBookLoadFailed ->
+                Text(
+                    stringResource(R.string.security_order_book_load_failed),
+                    style = t.bodyReg14,
+                    color = c.negative,
+                )
+            else -> SecurityDetailOrderBookTab(detail = detail)
+        }
     }
     Button(
         onClick = onBuy,
@@ -188,31 +198,47 @@ private fun SecurityDetailScreenContent(
     onRetry: () -> Unit,
     onBuy: () -> Unit,
     onSelectChartRange: (SecurityChartRange) -> Unit,
+    onOrderBookTabSelected: () -> Unit,
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
     var tab by remember { mutableIntStateOf(0) }
+    LaunchedEffect(tab) {
+        if (tab == 1) {
+            onOrderBookTabSelected()
+        }
+    }
     ZovScrollScreen {
-        SecurityDetailTabs(selectedTab = tab, onSelectTab = { tab = it })
         when {
             uiState.isLoading -> {
                 Spacer(Modifier.height(ZovItemSpacing))
-                CircularProgressIndicator(color = c.primary)
-            }
-            uiState.loadFailed -> {
-                Spacer(Modifier.height(ZovItemSpacing))
-                Text(stringResource(R.string.error_load), style = t.bodyReg14, color = c.negative)
-                Button(onClick = onRetry) {
-                    Text(stringResource(R.string.action_retry), style = t.bodyMed14)
-                }
+                ZovCenteredCircularProgress()
             }
             uiState.detail != null -> {
+                SecurityDetailTabs(selectedTab = tab, onSelectTab = { tab = it })
                 SecurityDetailLoadedSection(
                     tab = tab,
                     uiState = uiState,
                     onBuy = onBuy,
                     onSelectChartRange = onSelectChartRange,
                 )
+            }
+            uiState.detailFailed -> {
+                Text(
+                    stringResource(R.string.security_detail_card_failed),
+                    style = t.bodyReg14,
+                    color = c.negative,
+                )
+                SecurityDetailPriceChartBlock(
+                    chartLoading = uiState.chartLoading,
+                    chartFailed = uiState.chartFailed,
+                    priceHistory = uiState.priceHistory,
+                    chartRange = uiState.chartRange,
+                    onSelectChartRange = onSelectChartRange,
+                )
+                Button(onClick = onRetry) {
+                    Text(stringResource(R.string.action_retry), style = t.bodyMed14)
+                }
             }
         }
     }
@@ -258,20 +284,20 @@ private fun BuyLotsRow(
 fun BuyScreen(
     viewModel: BuyViewModel,
     onBack: () -> Unit,
+    onPortfolioChanged: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = LocalZovSnackbarHostState.current
-    val snackbarScope = LocalZovSnackbarScope.current
     val successMsg = stringResource(R.string.order_submitted)
     LaunchedEffect(state.orderJustPlaced) {
         if (!state.orderJustPlaced) return@LaunchedEffect
-        snackbarScope.launch {
-            snackbarHostState.showSnackbar(successMsg)
-        }
+        snackbarHostState.showSnackbar(successMsg)
+        onPortfolioChanged()
         viewModel.acknowledgeOrderPlaced()
         onBack()
     }
-    val label = state.detail?.ticker?.replace('_', '/') ?: ""
+    val label =
+        state.displayTicker.ifBlank { state.detail?.ticker.orEmpty() }.replace('_', '/')
     ZovScrollScreen {
         BuyScreenOrderContent(
             state = state,
@@ -292,7 +318,7 @@ private fun BuyScreenOrderContent(
     val c = ZovTheme.colors
     val t = ZovTheme.text
     when {
-        state.isLoading -> CircularProgressIndicator(color = c.primary)
+        state.isLoading -> ZovCenteredCircularProgress()
         state.loadFailed -> {
             Text(stringResource(R.string.error_load), style = t.bodyReg14, color = c.negative)
             Button(onClick = onBack) { Text(stringResource(R.string.action_back)) }
@@ -335,21 +361,20 @@ private fun BuyScreenOrderContent(
     }
 }
 
-private val depositAmounts = listOf("1000.00", "5000.00", "10000.00", "50000.00")
-
 private data class DepositTabModel(
     val chipResIds: List<Int>,
     val amountChip: Int,
     val balance: BrokerageBalance?,
     val isWorking: Boolean,
     val actionFailed: Boolean,
+    val selectedDepositAmountLine: String,
 )
 
 @Composable
 private fun DepositTabContent(
     model: DepositTabModel,
     onAmountChip: (Int) -> Unit,
-    onDeposit: (String) -> Unit,
+    onConfirmDeposit: () -> Unit,
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
@@ -373,7 +398,7 @@ private fun DepositTabContent(
     }
     Text(stringResource(R.string.deposit_amount_label), style = t.bodyMed14, color = c.onSurface)
     Text(
-        stringResource(R.string.deposit_amount_mock),
+        model.selectedDepositAmountLine,
         style = t.pinAmount20,
         color = c.onSurface,
         modifier = Modifier
@@ -394,10 +419,7 @@ private fun DepositTabContent(
         Text(stringResource(R.string.error_submit_deposit), style = t.bodyReg14, color = c.negative)
     }
     Button(
-        onClick = {
-            val idx = model.amountChip.coerceIn(0, depositAmounts.lastIndex)
-            onDeposit(depositAmounts[idx])
-        },
+        onClick = onConfirmDeposit,
         enabled = !model.isWorking,
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -408,6 +430,7 @@ private fun DepositTabContent(
 @Composable
 private fun WithdrawTabContent(
     balance: BrokerageBalance?,
+    withdrawAmountLine: String,
     isWorking: Boolean,
     actionFailed: Boolean,
     onWithdraw: () -> Unit,
@@ -423,8 +446,9 @@ private fun WithdrawTabContent(
     }
     Text(stringResource(R.string.withdraw_amount_label), style = t.bodyMed14, color = c.onSurface)
     Text(
-        stringResource(R.string.withdraw_amount_mock),
+        withdrawAmountLine,
         style = t.pinAmount20,
+        color = c.onSurface,
         modifier = Modifier
             .fillMaxWidth()
             .background(c.surfaceContainer, RoundedCornerShape(ZovShapeMedium))
@@ -446,10 +470,39 @@ private fun WithdrawTabContent(
 fun DepositScreen(
     viewModel: DepositViewModel,
     onBack: () -> Unit,
+    onAfterBalanceChanged: () -> Unit,
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = LocalZovSnackbarHostState.current
+    val snackbarScope = LocalZovSnackbarScope.current
+    var tab by remember { mutableIntStateOf(0) }
+    DepositSuccessSideEffect(
+        pendingSuccess = state.pendingSuccess,
+        snackbarHostState = snackbarHostState,
+        snackbarScope = snackbarScope,
+        onAcknowledge = viewModel::acknowledgePendingSuccess,
+        onAfterBalanceChanged = onAfterBalanceChanged,
+    )
+    ZovScrollScreen {
+        DepositScreenBody(
+            state = state,
+            tab = tab,
+            onTabChange = { tab = it },
+            viewModel = viewModel,
+            onBack = onBack,
+        )
+    }
+}
+
+@Composable
+private fun DepositScreenBody(
+    state: DepositUiState,
+    tab: Int,
+    onTabChange: (Int) -> Unit,
+    viewModel: DepositViewModel,
+    onBack: () -> Unit,
 ) {
     val t = ZovTheme.text
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var tab by remember { mutableIntStateOf(0) }
     val chipResIds =
         listOf(
             R.string.deposit_chip_1000,
@@ -457,49 +510,49 @@ fun DepositScreen(
             R.string.deposit_chip_10000,
             R.string.deposit_chip_50000,
         )
-    ZovScrollScreen {
-        ZovScrollBackgroundPrimaryTabRow(selectedTabIndex = tab) {
-            Tab(
-                selected = tab == 0,
-                onClick = { tab = 0 },
-                text = { Text(stringResource(R.string.deposit_tab_deposit), style = t.bodyReg14) },
-            )
-            Tab(
-                selected = tab == 1,
-                onClick = { tab = 1 },
-                text = { Text(stringResource(R.string.deposit_tab_withdraw), style = t.bodyReg14) },
-            )
+    ZovScrollBackgroundPrimaryTabRow(selectedTabIndex = tab) {
+        Tab(
+            selected = tab == 0,
+            onClick = { onTabChange(0) },
+            text = { Text(stringResource(R.string.deposit_tab_deposit), style = t.bodyReg14) },
+        )
+        Tab(
+            selected = tab == 1,
+            onClick = { onTabChange(1) },
+            text = { Text(stringResource(R.string.deposit_tab_withdraw), style = t.bodyReg14) },
+        )
+    }
+    when {
+        state.isLoading -> ZovCenteredCircularProgress()
+        state.loadFailed -> {
+            Text(stringResource(R.string.error_load))
+            Button(onClick = { viewModel.refresh() }) { Text(stringResource(R.string.action_retry)) }
         }
-        when {
-            state.isLoading -> CircularProgressIndicator()
-            state.loadFailed -> {
-                Text(stringResource(R.string.error_load))
-                Button(onClick = { viewModel.refresh() }) { Text(stringResource(R.string.action_retry)) }
-            }
-            else -> {
-                if (tab == 0) {
-                    DepositTabContent(
-                        model = DepositTabModel(
-                            chipResIds = chipResIds,
-                            amountChip = state.selectedDepositChipIndex,
-                            balance = state.balance,
-                            isWorking = state.isWorking,
-                            actionFailed = state.actionFailed,
-                        ),
-                        onAmountChip = viewModel::selectDepositChip,
-                        onDeposit = viewModel::depositSelectedAmount,
-                    )
-                } else {
-                    WithdrawTabContent(
+        else -> {
+            if (tab == 0) {
+                DepositTabContent(
+                    model = DepositTabModel(
+                        chipResIds = chipResIds,
+                        amountChip = state.selectedDepositChipIndex,
                         balance = state.balance,
                         isWorking = state.isWorking,
                         actionFailed = state.actionFailed,
-                        onWithdraw = viewModel::withdrawDemoAmount,
-                    )
-                }
-                TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.action_back))
-                }
+                        selectedDepositAmountLine = state.selectedDepositAmountLine,
+                    ),
+                    onAmountChip = viewModel::selectDepositChip,
+                    onConfirmDeposit = viewModel::depositSelectedChipAmount,
+                )
+            } else {
+                WithdrawTabContent(
+                    balance = state.balance,
+                    withdrawAmountLine = state.withdrawAmountLine,
+                    isWorking = state.isWorking,
+                    actionFailed = state.actionFailed,
+                    onWithdraw = viewModel::withdrawDemoAmount,
+                )
+            }
+            TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.action_back))
             }
         }
     }
@@ -513,11 +566,12 @@ private fun DetailPreviewLight() {
             uiState = SecurityDetailUiState(
                 isLoading = false,
                 detail = previewSecurityDetail,
-                loadFailed = false,
+                detailFailed = false,
             ),
             onRetry = {},
             onBuy = {},
             onSelectChartRange = {},
+            onOrderBookTabSelected = {},
         )
     }
 }
@@ -530,11 +584,12 @@ private fun DetailPreviewDark() {
             uiState = SecurityDetailUiState(
                 isLoading = false,
                 detail = previewSecurityDetail,
-                loadFailed = false,
+                detailFailed = false,
             ),
             onRetry = {},
             onBuy = {},
             onSelectChartRange = {},
+            onOrderBookTabSelected = {},
         )
     }
 }

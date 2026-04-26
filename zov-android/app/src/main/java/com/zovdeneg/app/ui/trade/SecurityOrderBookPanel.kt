@@ -1,5 +1,6 @@
 package com.zovdeneg.app.ui.trade
 
+import com.zovdeneg.app.data.format.ZovRubDisplay
 import com.zovdeneg.app.R
 import com.zovdeneg.app.domain.market.SecurityOrderBook
 import com.zovdeneg.app.ui.common.ZovHorizontalPadding
@@ -33,13 +34,8 @@ private const val BID_BEST_ROW_ALPHA = 0.16f
 internal fun formatOrderBookVolume(value: Int): String =
     value.toString().reversed().chunked(3).joinToString(" ").reversed()
 
-internal fun formatOrderBookPriceLine(decimalRaw: String): String {
-    val normalized = decimalRaw.trim().replace(',', '.')
-    val parts = normalized.split('.')
-    val intPart = parts.firstOrNull()?.ifEmpty { "0" } ?: "0"
-    val frac = (parts.getOrNull(1) ?: "00").take(2).padEnd(2, '0')
-    return "$intPart,$frac ₽"
-}
+internal fun formatOrderBookPriceLine(decimalRaw: String): String =
+    ZovRubDisplay.formatApiDecimalToRubLine(decimalRaw.trim().replace(',', '.'))
 
 @Composable
 internal fun SecurityOrderBookPanel(

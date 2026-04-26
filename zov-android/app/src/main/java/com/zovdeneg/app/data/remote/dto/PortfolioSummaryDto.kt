@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 internal data class PortfolioSummaryDto(
-    val portfolioAmountRub: String,
-    val totalGainText: String,
+    val totalValue: String,
+    val profitLoss: String,
+    val profitLossPct: String,
 )

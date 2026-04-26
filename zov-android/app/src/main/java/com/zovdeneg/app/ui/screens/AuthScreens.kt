@@ -18,7 +18,10 @@ import com.zovdeneg.app.ui.common.ZovSpace4
 import com.zovdeneg.app.ui.common.ZovSpace6
 import com.zovdeneg.app.ui.common.ZovTightGap
 import com.zovdeneg.app.ui.common.ZovUnit
+import com.zovdeneg.app.ui.components.ZovAuthPasswordFieldState
+import com.zovdeneg.app.ui.components.ZovAuthPasswordOutlinedField
 import com.zovdeneg.app.ui.components.ZovBiometricFilledButton
+import com.zovdeneg.app.ui.components.ZovCenteredCircularProgress
 import com.zovdeneg.app.ui.components.ZovPinDots
 import com.zovdeneg.app.ui.components.ZovPinKeypad
 import com.zovdeneg.app.ui.components.ZovScrollScreen
@@ -58,7 +61,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.fragment.app.FragmentActivity
@@ -68,19 +70,27 @@ private data class LoginScreenPinState(
     val pinLen: Int,
     val wrongPin: Boolean,
     val mustRegisterFirst: Boolean,
+    val remoteSessionFailed: Boolean,
+    val remoteSessionSyncing: Boolean,
+)
+
+private data class LoginScreenCallbacks(
+    val onLoggedIn: () -> Unit,
+    val onRegister: () -> Unit,
+    val onNeedPinSetupAfterLogin: () -> Unit,
 )
 
 @Composable
-private fun LoginWelcomeBlock() {
+private fun LoginWelcomeBlock(title: String, subtitle: String) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(ZovTightGap),
     ) {
-        Text(stringResource(R.string.auth_welcome), style = t.titleSemi22, color = c.onSurface)
+        Text(title, style = t.titleSemi22, color = c.onSurface)
         Text(
-            stringResource(R.string.auth_enter_pin),
+            subtitle,
             style = t.subtitleReg14,
             color = c.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -111,6 +121,14 @@ private fun LoginPinFeedbackTexts(
             textAlign = TextAlign.Center,
         )
     }
+    if (pinState.remoteSessionFailed) {
+        Text(
+            stringResource(R.string.login_failed_network),
+            style = t.bodyReg14,
+            color = c.negative,
+            textAlign = TextAlign.Center,
+        )
+    }
     biometricHint?.let { hint ->
         Text(
             hint,
@@ -126,11 +144,15 @@ internal fun LoginScreen(
     viewModel: ZovLoginViewModel,
     onLoggedIn: () -> Unit,
     onRegister: () -> Unit,
+    onNeedPinSetupAfterLogin: () -> Unit,
 ) {
     val c = ZovTheme.colors
+    val pinMode = viewModel.shouldShowPinUnlock()
     val draftPin by viewModel.draftPin.collectAsStateWithLifecycle()
     val wrongPin by viewModel.wrongPin.collectAsStateWithLifecycle()
     val mustRegisterFirst by viewModel.mustRegisterFirst.collectAsStateWithLifecycle()
+    val remoteSessionFailed by viewModel.remoteSessionFailed.collectAsStateWithLifecycle()
+    val remoteSessionSyncing by viewModel.remoteSessionSyncing.collectAsStateWithLifecycle()
     Box(
         Modifier
             .fillMaxSize()
@@ -138,14 +160,20 @@ internal fun LoginScreen(
         contentAlignment = Alignment.TopCenter,
     ) {
         LoginScreenColumn(
+            pinMode = pinMode,
             pinState = LoginScreenPinState(
                 pinLen = draftPin.length,
                 wrongPin = wrongPin,
                 mustRegisterFirst = mustRegisterFirst,
+                remoteSessionFailed = remoteSessionFailed,
+                remoteSessionSyncing = remoteSessionSyncing,
             ),
             viewModel = viewModel,
-            onLoggedIn = onLoggedIn,
-            onRegister = onRegister,
+            callbacks = LoginScreenCallbacks(
+                onLoggedIn = onLoggedIn,
+                onRegister = onRegister,
+                onNeedPinSetupAfterLogin = onNeedPinSetupAfterLogin,
+            ),
         )
     }
 }
@@ -153,6 +181,7 @@ internal fun LoginScreen(
 @Composable
 private fun LoginBiometricBlock(
     viewModel: ZovLoginViewModel,
+    remoteSessionSyncing: Boolean,
     onLoggedIn: () -> Unit,
     onBiometricHint: (String?) -> Unit,
 ) {
@@ -163,6 +192,7 @@ private fun LoginBiometricBlock(
     val biometricHardwareUnavailableMsg = stringResource(R.string.biometric_hardware_unavailable)
     ZovBiometricFilledButton(
         onClick = {
+            if (remoteSessionSyncing) return@ZovBiometricFilledButton
             onBiometricHint(null)
             val act = context as? FragmentActivity ?: return@ZovBiometricFilledButton
             if (!viewModel.isBiometricUnlockEnabled()) {
@@ -191,10 +221,10 @@ private fun LoginBiometricBlock(
 
 @Composable
 private fun LoginScreenColumn(
+    pinMode: Boolean,
     pinState: LoginScreenPinState,
     viewModel: ZovLoginViewModel,
-    onLoggedIn: () -> Unit,
-    onRegister: () -> Unit,
+    callbacks: LoginScreenCallbacks,
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
@@ -207,23 +237,100 @@ private fun LoginScreenColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(ZovSpace6),
     ) {
-        LoginWelcomeBlock()
-        ZovPinDots(filledCount = pinState.pinLen, total = 4)
-        LoginPinFeedbackTexts(pinState = pinState, biometricHint = biometricHint)
-        ZovPinKeypad(
-            modifier = Modifier.fillMaxWidth(),
-            onDigit = viewModel::appendDigit,
-            onDelete = viewModel::deleteLast,
-            onConfirm = { viewModel.tryCompleteLogin(onLoggedIn) },
-        )
-        LoginBiometricBlock(
-            viewModel = viewModel,
-            onLoggedIn = onLoggedIn,
-            onBiometricHint = { biometricHint = it },
-        )
-        TextButton(onClick = onRegister) {
+        if (pinMode) {
+            LoginWelcomeBlock(
+                title = stringResource(R.string.auth_welcome),
+                subtitle = stringResource(R.string.auth_enter_pin),
+            )
+            ZovPinDots(filledCount = pinState.pinLen, total = 4)
+            LoginPinFeedbackTexts(pinState = pinState, biometricHint = biometricHint)
+            if (pinState.remoteSessionSyncing) {
+                ZovCenteredCircularProgress()
+            }
+            ZovPinKeypad(
+                modifier = Modifier.fillMaxWidth(),
+                onDigit = viewModel::appendDigit,
+                onDelete = viewModel::deleteLast,
+                onConfirm = {
+                    if (!pinState.remoteSessionSyncing) {
+                        viewModel.tryCompleteLogin(callbacks.onLoggedIn)
+                    }
+                },
+            )
+            LoginBiometricBlock(
+                viewModel = viewModel,
+                remoteSessionSyncing = pinState.remoteSessionSyncing,
+                onLoggedIn = callbacks.onLoggedIn,
+                onBiometricHint = { biometricHint = it },
+            )
+        } else {
+            LoginCredentialBlock(
+                viewModel = viewModel,
+                onLoggedIn = callbacks.onLoggedIn,
+                onNeedPinSetupAfterLogin = callbacks.onNeedPinSetupAfterLogin,
+            )
+        }
+        TextButton(onClick = callbacks.onRegister) {
             Text(stringResource(R.string.auth_create_account), style = t.bodyMed14, color = c.primary)
         }
+    }
+}
+
+@Composable
+private fun LoginCredentialBlock(
+    viewModel: ZovLoginViewModel,
+    onLoggedIn: () -> Unit,
+    onNeedPinSetupAfterLogin: () -> Unit,
+) {
+    val c = ZovTheme.colors
+    val t = ZovTheme.text
+    val phone by viewModel.credentialPhone.collectAsStateWithLifecycle()
+    val password by viewModel.credentialPassword.collectAsStateWithLifecycle()
+    val credentialError by viewModel.credentialError.collectAsStateWithLifecycle()
+    val submitting by viewModel.credentialSubmitting.collectAsStateWithLifecycle()
+    LoginWelcomeBlock(
+        title = stringResource(R.string.auth_welcome),
+        subtitle = stringResource(R.string.auth_login_phone_password_subtitle),
+    )
+    OutlinedTextField(
+        value = phone,
+        onValueChange = viewModel::setCredentialPhone,
+        label = { Text(stringResource(R.string.field_phone)) },
+        modifier = Modifier.fillMaxWidth(),
+        enabled = !submitting,
+    )
+    ZovAuthPasswordOutlinedField(
+        state = ZovAuthPasswordFieldState(
+            value = password,
+            onValueChange = viewModel::setCredentialPassword,
+            enabled = !submitting,
+        ),
+        label = { Text(stringResource(R.string.field_password)) },
+        modifier = Modifier.fillMaxWidth(),
+    )
+    credentialError?.let { err ->
+        Text(
+            err,
+            style = t.bodyReg14,
+            color = c.negative,
+            textAlign = TextAlign.Center,
+        )
+    }
+    if (submitting) {
+        ZovCenteredCircularProgress()
+    }
+    Button(
+        onClick = {
+            viewModel.submitCredentials(
+                onLoggedIn = onLoggedIn,
+                onNeedPinSetup = onNeedPinSetupAfterLogin,
+            )
+        },
+        enabled = !submitting && phone.isNotBlank() && password.isNotBlank(),
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = c.onPrimary),
+    ) {
+        Text(stringResource(R.string.action_sign_in), style = t.bodyMed14)
     }
 }
 
@@ -281,13 +388,14 @@ private fun RegisterStep1TextFields(
         label = { Text(stringResource(R.string.field_email)) },
         modifier = Modifier.fillMaxWidth(),
     )
-    OutlinedTextField(
-        value = state.password,
-        onValueChange = viewModel::setPassword,
+    ZovAuthPasswordOutlinedField(
+        state = ZovAuthPasswordFieldState(
+            value = state.password,
+            onValueChange = viewModel::setPassword,
+        ),
         label = { Text(stringResource(R.string.field_password)) },
-        supportingText = { Text(stringResource(R.string.hint_password_min)) },
-        visualTransformation = PasswordVisualTransformation(),
         modifier = Modifier.fillMaxWidth(),
+        supportingText = { Text(stringResource(R.string.hint_password_min)) },
     )
 }
 
@@ -313,9 +421,9 @@ fun RegisterDataScreen(
                 color = c.negative,
             )
         }
-        if (state.networkError) {
+        state.submitError?.let { err ->
             Text(
-                stringResource(R.string.register_network_error),
+                err,
                 style = t.bodyReg14,
                 color = c.negative,
             )

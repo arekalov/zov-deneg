@@ -15,12 +15,14 @@
     <string name="nav_top_deposit">Брокерский счёт</string>
     <string name="nav_top_sign_up">Регистрация</string>
     <string name="nav_top_detail_prefix">Детали · </string>
-    <string name="nav_top_buy_prefix">Покупка </string>
+    <string name="nav_top_buy_title">Покупка · %1$s</string>
 
     <string name="cd_nav_profile">Профиль</string>
 
     <string name="cd_fingerprint">Отпечаток пальца</string>
     <string name="cd_chevron">Открыть</string>
+    <string name="cd_show_password">Показать пароль</string>
+    <string name="cd_hide_password">Скрыть пароль</string>
 
     <string name="pin_key_0">0</string>
     <string name="pin_key_1">1</string>
@@ -40,6 +42,7 @@
     <string name="auth_pin_keypad_note">(макет: клавиатура PIN)</string>
     <string name="auth_sign_in_biometrics">Войти по биометрии</string>
     <string name="auth_create_account">Создать аккаунт</string>
+    <string name="auth_login_phone_password_subtitle">Введите телефон и пароль. Новый номер — через «Создать аккаунт»</string>
 
     <string name="field_first_name">Имя</string>
     <string name="field_last_name">Фамилия</string>
@@ -84,57 +87,39 @@
     <string name="pin_dot">•</string>
 
     <string name="home_portfolio_value">Стоимость портфеля</string>
-    <string name="home_portfolio_amount_mock">128 400 ₽</string>
     <string name="home_total_gain">Совокупная доходность</string>
-    <string name="home_total_gain_mock">+2,1% · +2 640 ₽</string>
     <string name="home_loss_label">Убыток (отн. и абс.)</string>
     <string name="home_em_dash">—</string>
     <string name="home_brokerage_account">Брокерский счёт</string>
-    <string name="home_brokerage_balance_mock">45 320 ₽</string>
     <string name="home_holdings">Позиции</string>
-
-    <string name="asset_sber_subtitle">10 шт. · ср. 285 ₽</string>
-    <string name="asset_sber_value">29 812 ₽</string>
-    <string name="asset_sber_delta">+1 312 ₽ · +4,6%</string>
-    <string name="asset_lkoh_subtitle">5 шт. · ср. 6 200 ₽</string>
-    <string name="asset_lkoh_value">32 710 ₽</string>
-    <string name="asset_lkoh_delta">+1 710 ₽</string>
+    <string name="home_no_positions">Пока нет открытых позиций</string>
 
     <string name="search_placeholder">Название или тикер…</string>
     <string name="search_popular">Популярные акции</string>
+    <string name="search_popular_empty">Список бумаг пуст или не удалось загрузить</string>
     <string name="filter_all">Все</string>
     <string name="filter_stocks">Акции</string>
     <string name="filter_bonds">Облигации</string>
     <string name="filter_etf">ETF</string>
 
-    <string name="asset_gazp_subtitle">Газпром · энергетика</string>
-    <string name="asset_gazp_value">167,4 ₽</string>
-    <string name="asset_gazp_delta">+0,8%</string>
-    <string name="asset_sber_search_subtitle">Сбербанк · финансы</string>
-    <string name="asset_sber_search_value">298,12 ₽</string>
-    <string name="asset_sber_search_delta">+1,2%</string>
-
     <string name="history_filter_all">Все</string>
     <string name="history_filter_buys">Покупки</string>
     <string name="history_filter_sells">Продажи</string>
-    <string name="history_row1_title">Покупка · SBER</string>
-    <string name="history_row1_date">28 мар. 2026, 14:32</string>
-    <string name="history_row1_amount">+2 981 ₽</string>
-    <string name="history_row2_title">Продажа · LKOH</string>
-    <string name="history_row2_date">27 мар. 2026, 10:14</string>
-    <string name="history_row2_amount">−13 080 ₽</string>
+    <string name="history_filter_deposits">Пополнения</string>
+    <string name="history_filter_withdrawals">Снятия</string>
+    <string name="history_empty">Операций пока нет</string>
 
     <string name="security_tab_overview">Обзор</string>
     <string name="security_tab_order_book">Стакан</string>
     <string name="security_subtitle_format">%1$s · бумага</string>
-    <string name="security_price_mock">298,45 ₽</string>
-    <string name="security_change_mock">+4,6% · +13,12 ₽ за день</string>
     <string name="security_price_chart_section_title">Динамика цены</string>
     <string name="security_chart_period_1d">1Д</string>
     <string name="security_chart_period_1w">1Н</string>
     <string name="security_chart_period_1m">1М</string>
     <string name="security_chart_period_1y">1Г</string>
     <string name="security_chart_load_failed">Не удалось загрузить график</string>
+    <string name="security_detail_card_failed">Не удалось загрузить карточку бумаги</string>
+    <string name="security_order_book_load_failed">Не удалось загрузить стакан</string>
     <string name="security_chart_empty">Нет данных для графика</string>
     <string name="security_order_book_placeholder">Стакан заявок (заглушка)</string>
     <string name="security_order_book_col_volume">Объём</string>
@@ -151,22 +136,20 @@
 
     <string name="buy_title_format">Купить %1$s</string>
     <string name="buy_lots_label">Количество лотов</string>
-    <string name="buy_lots_mock">1</string>
-    <string name="buy_order_value_mock">Сумма сделки · ~2 981 ₽</string>
     <string name="action_place_order">Разместить заявку</string>
 
     <string name="deposit_tab_deposit">Пополнение</string>
     <string name="deposit_tab_withdraw">Вывод</string>
     <string name="deposit_amount_label">Сумма пополнения</string>
-    <string name="deposit_amount_mock">10 000</string>
     <string name="deposit_chip_1000">1 000 ₽</string>
     <string name="deposit_chip_5000">5 000 ₽</string>
     <string name="deposit_chip_10000">10 000 ₽</string>
     <string name="deposit_chip_50000">50 000 ₽</string>
     <string name="deposit_action">Пополнить</string>
     <string name="withdraw_amount_label">Сумма вывода</string>
-    <string name="withdraw_amount_mock">0</string>
     <string name="withdraw_action">Вывести</string>
+    <string name="deposit_success_snackbar">Счёт пополнен</string>
+    <string name="withdraw_success_snackbar">Вывод выполнен</string>
 
     <string name="error_load">Не удалось загрузить данные</string>
     <string name="action_retry">Повторить</string>
@@ -203,4 +186,6 @@
     <string name="pin_change_wrong_current">Неверный текущий PIN</string>
     <string name="pin_change_success">PIN-код успешно изменён</string>
     <string name="profile_save_success">Профиль сохранён</string>
+    <string name="profile_save_failed">Не удалось сохранить профиль. Проверьте подключение и попробуйте снова</string>
+    <string name="pin_change_remote_failed">Не удалось завершить смену PIN. Проверьте сеть и попробуйте ещё раз</string>
 </resources>

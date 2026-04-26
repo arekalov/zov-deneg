@@ -360,7 +360,7 @@ private fun ZovM3PreviewCardsBlock() {
             color = c.onSurfaceVariant,
         )
         Text(
-            stringResource(R.string.home_portfolio_amount_mock),
+            "128 400 ₽",
             style = t.titleSemi22,
             color = c.onSurface,
         )
@@ -373,7 +373,7 @@ private fun ZovM3PreviewCardsBlock() {
                 color = c.onSurfaceVariant,
             )
             Text(
-                stringResource(R.string.home_brokerage_balance_mock),
+                "45 320 ₽",
                 style = t.titleSemi20,
                 color = c.onSurface,
             )
@@ -383,7 +383,7 @@ private fun ZovM3PreviewCardsBlock() {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ZovHalfUnit)) {
             Text("SBER", style = t.sectionSemi16, color = c.onSurface)
             Text(
-                stringResource(R.string.asset_sber_subtitle),
+                "10 шт. · ср. 285 ₽",
                 style = t.labelReg12,
                 color = c.onSurfaceVariant,
             )
@@ -393,17 +393,17 @@ private fun ZovM3PreviewCardsBlock() {
             verticalArrangement = Arrangement.spacedBy(ZovHalfUnit),
         ) {
             Text(
-                stringResource(R.string.asset_sber_value),
+                "29 812 ₽",
                 style = t.sectionSemi16,
                 color = c.onSurface,
             )
-            Text(stringResource(R.string.asset_sber_delta), style = t.bodyMed14, color = c.positive)
+            Text("+1 312 ₽ · +4,6%", style = t.bodyMed14, color = c.positive)
         }
     }
     ZovElevatedListCard {
-        Text(stringResource(R.string.history_row1_title), style = t.bodyMed14, color = c.onSurface)
+        Text("Покупка · SBER", style = t.bodyMed14, color = c.onSurface)
         Text(
-            stringResource(R.string.history_row1_date),
+            "28 мар. 2026, 14:32",
             style = t.labelReg12,
             color = c.onSurfaceVariant,
         )

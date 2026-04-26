@@ -15,7 +15,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
@@ -43,6 +42,7 @@ import com.zovdeneg.app.ui.common.ZovTightGap
 import com.zovdeneg.app.ui.common.ZovUnit
 import com.zovdeneg.app.ui.components.LocalZovSnackbarHostState
 import com.zovdeneg.app.ui.components.LocalZovSnackbarScope
+import com.zovdeneg.app.ui.components.ZovCenteredCircularProgress
 import com.zovdeneg.app.ui.components.ZovOutlinedRow
 import com.zovdeneg.app.ui.components.ZovPinDots
 import com.zovdeneg.app.ui.components.ZovPinKeypad
@@ -169,7 +169,7 @@ fun ProfileScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     ZovScrollScreen {
         when {
-            state.isLoading -> CircularProgressIndicator(color = c.primary)
+            state.isLoading -> ZovCenteredCircularProgress()
             state.loadFailed -> {
                 Text(stringResource(R.string.error_load), style = t.bodyReg14, color = c.negative)
                 Button(onClick = { viewModel.refresh() }) { Text(stringResource(R.string.action_retry)) }
@@ -224,7 +224,7 @@ private fun EditProfileFormFields(
     )
     if (state.saveFailed) {
         Text(
-            stringResource(R.string.error_load),
+            stringResource(R.string.profile_save_failed),
             style = t.bodyReg14,
             color = c.negative,
         )
@@ -242,6 +242,7 @@ private fun EditProfileFormFields(
 fun EditProfileScreen(
     viewModel: EditProfileViewModel,
     onBack: () -> Unit,
+    onAfterSave: () -> Unit,
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
@@ -255,11 +256,11 @@ fun EditProfileScreen(
             snackbarHostState.showSnackbar(savedMsg)
         }
         viewModel.acknowledgeSave()
-        onBack()
+        onAfterSave()
     }
     ZovScrollScreen {
         when {
-            state.isLoading -> CircularProgressIndicator(color = c.primary)
+            state.isLoading -> ZovCenteredCircularProgress()
             state.loadFailed -> {
                 Text(stringResource(R.string.error_load), style = t.bodyReg14, color = c.negative)
                 Button(onClick = onBack) { Text(stringResource(R.string.action_back)) }
@@ -330,7 +331,7 @@ private fun ChangePinInlineErrors(state: ChangePinUiState) {
     }
     if (state.failed) {
         Text(
-            stringResource(R.string.error_load),
+            stringResource(R.string.pin_change_remote_failed),
             modifier = Modifier.fillMaxWidth(),
             style = t.bodyReg14,
             color = c.negative,

@@ -17,6 +17,7 @@ import androidx.lifecycle.viewModelScope
 import javax.inject.Inject
 
 data class BuyUiState(
+    val displayTicker: String = "",
     val detail: SecurityDetail? = null,
     val lots: Int = 1,
     val isLoading: Boolean = true,
@@ -32,17 +33,19 @@ class BuyViewModel @Inject constructor(
     private val loadSecurityDetail: LoadSecurityDetailUseCase,
     private val placeMarketBuyOrder: PlaceMarketBuyOrderUseCase,
 ) : ViewModel() {
-    private val ticker = savedStateHandle.get<String>("ticker").orEmpty()
+    private val displayTicker =
+        savedStateHandle.get<String>("displayTicker").orEmpty().replace('_', '/')
 
-    private val _uiState = MutableStateFlow(BuyUiState())
+    private val _uiState = MutableStateFlow(BuyUiState(displayTicker = displayTicker))
     val uiState: StateFlow<BuyUiState> = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch {
-            loadSecurityDetail(ticker).fold(
+            loadSecurityDetail(displayTicker).fold(
                 onSuccess = { detail ->
                     _uiState.update {
                         BuyUiState(
+                            displayTicker = displayTicker,
                             detail = detail,
                             lots = 1,
                             isLoading = false,
@@ -51,7 +54,13 @@ class BuyViewModel @Inject constructor(
                     }
                 },
                 onFailure = {
-                    _uiState.update { BuyUiState(isLoading = false, loadFailed = true) }
+                    _uiState.update {
+                        BuyUiState(
+                            displayTicker = displayTicker,
+                            isLoading = false,
+                            loadFailed = true,
+                        )
+                    }
                 },
             )
         }

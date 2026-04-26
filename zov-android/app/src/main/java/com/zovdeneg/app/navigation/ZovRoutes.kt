@@ -5,6 +5,9 @@ object ZovRoutes {
     const val REGISTER_FLOW = "register_flow"
     const val REGISTER_STEP1 = "register_step1"
     const val REGISTER_STEP2 = "register_step2"
+
+    /** Маршрут composable шага PIN (с аргументом для сброса черновика после входа по паролю). */
+    const val REGISTER_STEP2_ROUTE = "register_step2?freshPin={freshPin}"
     const val REGISTER_STEP3 = "register_step3"
     const val REGISTER_STEP4 = "register_step4"
     const val MAIN_HOME = "main_home"
@@ -15,11 +18,16 @@ object ZovRoutes {
     const val CHANGE_PIN = "change_pin"
     const val DEPOSIT = "deposit"
     const val DETAIL = "detail/{ticker}"
-    const val BUY = "buy/{ticker}"
+    const val BUY = "buy/{securityId}/{displayTicker}"
 
     fun detail(ticker: String) = "detail/${ticker.encodeTicker()}"
 
-    fun buy(ticker: String) = "buy/${ticker.encodeTicker()}"
+    fun buy(securityId: String, displayTicker: String) =
+        "buy/${securityId.encodeTicker()}/${displayTicker.encodeTicker()}"
+
+    /** Вложенный маршрут: задать PIN после входа по паролю без локального PIN. */
+    fun registerFlowPinSetupAfterPassword(): String =
+        "$REGISTER_FLOW/$REGISTER_STEP2?freshPin=true"
 
     private fun String.encodeTicker() = replace("/", "_")
 }

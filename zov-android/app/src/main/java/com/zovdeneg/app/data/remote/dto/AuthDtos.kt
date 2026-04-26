@@ -25,6 +25,11 @@ internal data class TokensDto(
 )
 
 @Serializable
+internal data class RefreshTokenRequestDto(
+    val refreshToken: String,
+)
+
+@Serializable
 internal data class AuthEnvelopeDto(
     val user: UserProfileDto,
     val tokens: TokensDto,

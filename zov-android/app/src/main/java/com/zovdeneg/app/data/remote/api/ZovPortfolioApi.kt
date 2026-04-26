@@ -1,7 +1,7 @@
 package com.zovdeneg.app.data.remote.api
 
 import com.zovdeneg.app.data.remote.contract.ZovApiPaths
-import com.zovdeneg.app.data.remote.dto.HoldingsEnvelopeDto
+import com.zovdeneg.app.data.remote.dto.PortfolioRemoteDto
 import com.zovdeneg.app.data.remote.dto.PortfolioSummaryDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -15,6 +15,6 @@ internal class ZovPortfolioApi @Inject constructor(
     suspend fun getPortfolioSummary(): PortfolioSummaryDto =
         client.get(ZovApiPaths.PORTFOLIO_SUMMARY).body()
 
-    suspend fun getHoldingsEnvelope(): HoldingsEnvelopeDto =
-        client.get(ZovApiPaths.PORTFOLIO_HOLDINGS).body()
+    suspend fun getPortfolio(): PortfolioRemoteDto =
+        client.get(ZovApiPaths.PORTFOLIO).body()
 }

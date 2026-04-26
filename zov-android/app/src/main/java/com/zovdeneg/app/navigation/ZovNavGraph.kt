@@ -33,6 +33,7 @@ import dagger.hilt.android.EntryPointAccessors
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +46,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 internal fun ZovNavGraphHost(
@@ -73,6 +75,11 @@ private fun NavGraphBuilder.zovAuthDestinations(navController: NavHostController
                 }
             },
             onRegister = { navController.navigate(ZovRoutes.REGISTER_FLOW) },
+            onNeedPinSetupAfterLogin = {
+                navController.navigate(ZovRoutes.registerFlowPinSetupAfterPassword()) {
+                    launchSingleTop = true
+                }
+            },
         )
     }
     zovRegisterFlow(navController)
@@ -112,10 +119,25 @@ private fun NavGraphBuilder.registerFlowStep1(navController: NavHostController) 
 }
 
 private fun NavGraphBuilder.registerFlowStep2(navController: NavHostController) {
-    composable(ZovRoutes.REGISTER_STEP2) {
+    composable(
+        route = ZovRoutes.REGISTER_STEP2_ROUTE,
+        arguments = listOf(
+            navArgument("freshPin") {
+                type = NavType.BoolType
+                defaultValue = false
+            },
+        ),
+    ) { entry ->
         val registerVm: ZovRegisterFlowViewModel =
             hiltViewModel(registerFlowBackStackEntry(navController))
-        LaunchedEffect(Unit) { registerVm.clearDraft() }
+        val freshPin = entry.arguments?.getBoolean("freshPin") ?: false
+        LaunchedEffect(freshPin) {
+            if (freshPin) {
+                registerVm.resetFlow()
+            } else {
+                registerVm.clearDraft()
+            }
+        }
         RegisterPinScreen(
             viewModel = registerVm,
             onContinue = {
@@ -171,8 +193,17 @@ private fun NavGraphBuilder.registerFlowStep4(navController: NavHostController) 
 }
 
 private fun NavGraphBuilder.zovTabDestinations(navController: NavHostController) {
-    composable(ZovRoutes.MAIN_HOME) {
+    composable(ZovRoutes.MAIN_HOME) { homeEntry ->
         val homeVm: MainHomeViewModel = hiltViewModel()
+        val homeRefreshTick by homeEntry.savedStateHandle
+            .getStateFlow(MAIN_HOME_DATA_REFRESH_TICK_KEY, 0L)
+            .collectAsStateWithLifecycle()
+        LaunchedEffect(homeRefreshTick) {
+            if (homeRefreshTick != 0L) {
+                homeVm.refresh()
+                homeEntry.savedStateHandle[MAIN_HOME_DATA_REFRESH_TICK_KEY] = 0L
+            }
+        }
         MainHomeScreen(
             viewModel = homeVm,
             onOpenBrokerAccount = { navController.navigate(ZovRoutes.DEPOSIT) },
@@ -190,22 +221,42 @@ private fun NavGraphBuilder.zovTabDestinations(navController: NavHostController)
             },
         )
     }
-    composable(ZovRoutes.MAIN_HISTORY) {
+    composable(ZovRoutes.MAIN_HISTORY) { historyEntry ->
         val historyVm: ZovHistoryTabViewModel = hiltViewModel()
+        val historyRefreshTick by historyEntry.savedStateHandle
+            .getStateFlow(MAIN_HISTORY_DATA_REFRESH_TICK_KEY, 0L)
+            .collectAsStateWithLifecycle()
+        LaunchedEffect(historyRefreshTick) {
+            if (historyRefreshTick != 0L) {
+                historyVm.refresh()
+                historyEntry.savedStateHandle[MAIN_HISTORY_DATA_REFRESH_TICK_KEY] = 0L
+            }
+        }
         HistoryTabScreen(viewModel = historyVm)
     }
 }
 
-private fun NavGraphBuilder.zovProfileAndTradeDestinations(navController: NavHostController) {
-    composable(ZovRoutes.PROFILE) {
+private fun NavGraphBuilder.zovProfileDestinations(navController: NavHostController) {
+    composable(ZovRoutes.PROFILE) { profileEntry ->
         val profileVm: ProfileViewModel = hiltViewModel()
+        val refreshTick by profileEntry.savedStateHandle
+            .getStateFlow(PROFILE_REFRESH_TICK_KEY, 0L)
+            .collectAsStateWithLifecycle()
+        LaunchedEffect(refreshTick) {
+            if (refreshTick != 0L) {
+                profileVm.refresh()
+                profileEntry.savedStateHandle[PROFILE_REFRESH_TICK_KEY] = 0L
+            }
+        }
         ProfileScreen(
             viewModel = profileVm,
             onEditProfile = { navController.navigate(ZovRoutes.EDIT_PROFILE) },
             onChangePin = { navController.navigate(ZovRoutes.CHANGE_PIN) },
             onLogout = {
-                navController.navigate(ZovRoutes.LOGIN) {
-                    popUpTo(navController.graph.id) { inclusive = true }
+                profileVm.logout {
+                    navController.navigate(ZovRoutes.LOGIN) {
+                        popUpTo(navController.graph.id) { inclusive = true }
+                    }
                 }
             },
         )
@@ -215,6 +266,12 @@ private fun NavGraphBuilder.zovProfileAndTradeDestinations(navController: NavHos
         EditProfileScreen(
             viewModel = editVm,
             onBack = { navController.popBackStack() },
+            onAfterSave = {
+                navController.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.set(PROFILE_REFRESH_TICK_KEY, System.nanoTime())
+                navController.popBackStack()
+            },
         )
     }
     composable(ZovRoutes.CHANGE_PIN) {
@@ -224,11 +281,18 @@ private fun NavGraphBuilder.zovProfileAndTradeDestinations(navController: NavHos
             onBack = { navController.popBackStack() },
         )
     }
+}
+
+private fun NavGraphBuilder.zovTradeDestinations(navController: NavHostController) {
     composable(ZovRoutes.DEPOSIT) {
         val depositVm: DepositViewModel = hiltViewModel()
         DepositScreen(
             viewModel = depositVm,
             onBack = { navController.popBackStack() },
+            onAfterBalanceChanged = {
+                navController.notifyPortfolioOrBalanceChangedExternally()
+                navController.popBackStack()
+            },
         )
     }
     composable(
@@ -239,17 +303,31 @@ private fun NavGraphBuilder.zovProfileAndTradeDestinations(navController: NavHos
         val detailVm: SecurityDetailViewModel = hiltViewModel()
         SecurityDetailScreen(
             viewModel = detailVm,
-            onBuy = { navController.navigate(ZovRoutes.buy(ticker)) },
+            onBuy = {
+                val d = detailVm.uiState.value.detail
+                if (d != null) {
+                    navController.navigate(ZovRoutes.buy(d.securityId, d.ticker))
+                }
+            },
         )
     }
     composable(
         ZovRoutes.BUY,
-        arguments = listOf(navArgument("ticker") { type = NavType.StringType }),
+        arguments = listOf(
+            navArgument("securityId") { type = NavType.StringType },
+            navArgument("displayTicker") { type = NavType.StringType },
+        ),
     ) { _ ->
         val buyVm: BuyViewModel = hiltViewModel()
         BuyScreen(
             viewModel = buyVm,
             onBack = { navController.popBackStack() },
+            onPortfolioChanged = { navController.notifyPortfolioOrBalanceChangedExternally() },
         )
     }
+}
+
+private fun NavGraphBuilder.zovProfileAndTradeDestinations(navController: NavHostController) {
+    zovProfileDestinations(navController)
+    zovTradeDestinations(navController)
 }

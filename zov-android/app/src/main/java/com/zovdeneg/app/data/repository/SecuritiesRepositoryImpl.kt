@@ -1,8 +1,10 @@
 package com.zovdeneg.app.data.repository
 
+import com.zovdeneg.app.data.format.ZovRubDisplay
 import com.zovdeneg.app.data.remote.api.ZovSecuritiesApi
 import com.zovdeneg.app.data.remote.dto.PopularSecurityDto
 import com.zovdeneg.app.data.remote.dto.SecurityDetailDto
+import com.zovdeneg.app.data.remote.dto.toSecurityOrderBookDto
 import com.zovdeneg.app.data.remote.dto.SecurityOrderBookDto
 import com.zovdeneg.app.data.remote.dto.SecurityOrderBookLevelDto
 import com.zovdeneg.app.data.remote.dto.SecurityPriceHistoryDto
@@ -32,6 +34,11 @@ internal class SecuritiesRepositoryImpl @Inject constructor(
             securitiesApi.getSecurityDetail(ticker).toDomain()
         }
 
+    override suspend fun getSecurityOrderBook(navId: String): Result<SecurityOrderBook> =
+        runCatching {
+            securitiesApi.getSecurityOrderBook(navId).toSecurityOrderBookDto().toDomain()
+        }
+
     override suspend fun getSecurityPriceHistory(
         ticker: String,
         fromEpochSeconds: Long,
@@ -45,8 +52,8 @@ internal class SecuritiesRepositoryImpl @Inject constructor(
         SecurityDetail(
             ticker = ticker,
             subtitle = subtitle,
-            priceLine = priceLine,
-            changeLine = changeLine,
+            priceLine = ZovRubDisplay.formatApiDecimalToRubLine(priceLine.removeSuffix("₽").trim()),
+            changeLine = formatDetailChangeLine(changeLine),
             changePositive = changePositive,
             securityId = securityId,
             lotSize = lotSize,
@@ -55,9 +62,23 @@ internal class SecuritiesRepositoryImpl @Inject constructor(
             exchangeCode = exchangeCode,
             companyDescription = companyDescription,
             portfolioQuantity = portfolioQuantity,
-            portfolioAvgPriceLine = portfolioAvgPriceLine,
+            portfolioAvgPriceLine = portfolioAvgPriceLine?.takeIf { it.isNotBlank() }?.let { line ->
+                ZovRubDisplay.formatApiDecimalToRubLine(line.removeSuffix("₽").trim())
+            },
             orderBook = orderBook?.toDomain(),
         )
+
+    private fun formatDetailChangeLine(raw: String): String {
+        val sep = " · "
+        if (!raw.contains(sep)) return raw
+        val idx = raw.indexOf(sep)
+        val left = raw.substring(0, idx)
+        val right = raw.substring(idx + sep.length)
+        val rubPart = right.trim().removeSuffix("₽").trim()
+        val formattedRub =
+            runCatching { ZovRubDisplay.formatSignedDecimalRubLine(rubPart) }.getOrElse { right }
+        return "$left · $formattedRub"
+    }
 
     private fun SecurityOrderBookDto.toDomain(): SecurityOrderBook =
         SecurityOrderBook(
@@ -82,6 +103,7 @@ internal class SecuritiesRepositoryImpl @Inject constructor(
             deltaText = deltaText,
             deltaPositive = deltaPositive,
             kind = kind.toSecurityKind(),
+            detailNavKey = securityId ?: ticker,
         )
 
     private fun String.toSecurityKind(): SecurityKind =

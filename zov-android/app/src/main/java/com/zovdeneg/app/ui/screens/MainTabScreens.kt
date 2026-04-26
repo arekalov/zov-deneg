@@ -36,6 +36,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
+private data class MainHomeSummaryBlockTexts(
+    val amountText: String,
+    val gainText: String,
+    val brokerageBalanceLine: String,
+)
+
 @Composable
 internal fun MainHomeScreen(
     viewModel: MainHomeViewModel,
@@ -43,14 +49,14 @@ internal fun MainHomeScreen(
     onOpenSecurity: (String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val amountText =
-        uiState.portfolioAmountRub ?: stringResource(R.string.home_portfolio_amount_mock)
-    val gainText =
-        uiState.totalGainText ?: stringResource(R.string.home_total_gain_mock)
+    val placeholder = stringResource(R.string.home_em_dash)
     MainHomeScrollContent(
         holdings = uiState.holdings,
-        amountText = amountText,
-        gainText = gainText,
+        summaryBlock = MainHomeSummaryBlockTexts(
+            amountText = uiState.portfolioAmountRub ?: placeholder,
+            gainText = uiState.totalGainText ?: placeholder,
+            brokerageBalanceLine = uiState.brokerageTotalRub ?: placeholder,
+        ),
         onOpenBrokerAccount = onOpenBrokerAccount,
         onOpenSecurity = onOpenSecurity,
     )
@@ -59,14 +65,19 @@ internal fun MainHomeScreen(
 @Composable
 private fun MainHomeScrollContent(
     holdings: List<Holding>,
-    amountText: String,
-    gainText: String,
+    summaryBlock: MainHomeSummaryBlockTexts,
     onOpenBrokerAccount: () -> Unit,
     onOpenSecurity: (String) -> Unit,
 ) {
     ZovScrollScreen {
-        MainHomePortfolioSummaryCard(amountText = amountText, gainText = gainText)
-        MainHomeBrokerBalanceRow(onOpenBrokerAccount = onOpenBrokerAccount)
+        MainHomePortfolioSummaryCard(
+            amountText = summaryBlock.amountText,
+            gainText = summaryBlock.gainText,
+        )
+        MainHomeBrokerBalanceRow(
+            brokerageBalanceLine = summaryBlock.brokerageBalanceLine,
+            onOpenBrokerAccount = onOpenBrokerAccount,
+        )
         MainHomeHoldingsSection(holdings = holdings, onOpenSecurity = onOpenSecurity)
     }
 }
@@ -102,7 +113,10 @@ private fun MainHomePortfolioSummaryCard(amountText: String, gainText: String) {
 }
 
 @Composable
-private fun MainHomeBrokerBalanceRow(onOpenBrokerAccount: () -> Unit) {
+private fun MainHomeBrokerBalanceRow(
+    brokerageBalanceLine: String,
+    onOpenBrokerAccount: () -> Unit,
+) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
     ZovBalanceStrip(onClick = onOpenBrokerAccount) {
@@ -116,7 +130,7 @@ private fun MainHomeBrokerBalanceRow(onOpenBrokerAccount: () -> Unit) {
                 color = c.onSurfaceVariant,
             )
             Text(
-                stringResource(R.string.home_brokerage_balance_mock),
+                brokerageBalanceLine,
                 style = t.titleSemi20,
                 color = c.onSurface,
             )
@@ -147,27 +161,14 @@ private fun MainHomeHoldingsSection(
                     deltaPositive = h.deltaPositive,
                     ticker = h.ticker,
                 ),
-            ) { onOpenSecurity(h.ticker) }
+            ) { onOpenSecurity(h.detailNavKey) }
         }
     } else {
-        AssetRow(
-            AssetRowData(
-                stringResource(R.string.asset_sber_subtitle),
-                stringResource(R.string.asset_sber_value),
-                stringResource(R.string.asset_sber_delta),
-                true,
-                "SBER",
-            ),
-        ) { onOpenSecurity("SBER") }
-        AssetRow(
-            AssetRowData(
-                stringResource(R.string.asset_lkoh_subtitle),
-                stringResource(R.string.asset_lkoh_value),
-                stringResource(R.string.asset_lkoh_delta),
-                false,
-                "LKOH",
-            ),
-        ) { onOpenSecurity("LKOH") }
+        Text(
+            stringResource(R.string.home_no_positions),
+            style = t.subtitleReg14,
+            color = c.onSurfaceVariant,
+        )
     }
 }
 
@@ -281,6 +282,8 @@ internal fun HistoryTabScreen(viewModel: ZovHistoryTabViewModel) {
             R.string.history_filter_all,
             R.string.history_filter_buys,
             R.string.history_filter_sells,
+            R.string.history_filter_deposits,
+            R.string.history_filter_withdrawals,
         )
     ZovScrollScreen {
         HistoryFilterChipsRow(
@@ -298,8 +301,11 @@ private fun MainHomePreviewLight() {
     ZovAppTheme(darkTheme = false) {
         MainHomeScrollContent(
             holdings = emptyList(),
-            amountText = "1 234 567,89 ₽",
-            gainText = "+12 345,67 ₽ (+2,3%)",
+            summaryBlock = MainHomeSummaryBlockTexts(
+                amountText = "1 234 567,89 ₽",
+                gainText = "+12 345,67 ₽ (+2,3%)",
+                brokerageBalanceLine = "45 320,00 ₽",
+            ),
             onOpenBrokerAccount = {},
             onOpenSecurity = {},
         )
@@ -312,8 +318,11 @@ private fun MainHomePreviewDark() {
     ZovAppTheme(darkTheme = true) {
         MainHomeScrollContent(
             holdings = emptyList(),
-            amountText = "1 234 567,89 ₽",
-            gainText = "+12 345,67 ₽ (+2,3%)",
+            summaryBlock = MainHomeSummaryBlockTexts(
+                amountText = "1 234 567,89 ₽",
+                gainText = "+12 345,67 ₽ (+2,3%)",
+                brokerageBalanceLine = "45 320,00 ₽",
+            ),
             onOpenBrokerAccount = {},
             onOpenSecurity = {},
         )

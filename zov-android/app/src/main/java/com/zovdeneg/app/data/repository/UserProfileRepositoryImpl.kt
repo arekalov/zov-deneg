@@ -5,6 +5,7 @@ import com.zovdeneg.app.data.remote.dto.UserProfileDto
 import com.zovdeneg.app.data.remote.dto.UserProfileUpdateDto
 import com.zovdeneg.app.domain.profile.UserProfile
 import com.zovdeneg.app.domain.profile.UserProfileRepository
+import io.ktor.client.plugins.ClientRequestException
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,7 +30,17 @@ internal class UserProfileRepositoryImpl @Inject constructor(
     override suspend fun changePin(): Result<Unit> =
         runCatching {
             usersApi.postPinChange()
-        }
+        }.fold(
+            onSuccess = { Result.success(Unit) },
+            onFailure = { e ->
+                val code = (e as? ClientRequestException)?.response?.status?.value
+                if (code == 404 || code == 405 || code == 501) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(e)
+                }
+            },
+        )
 
     private fun UserProfileDto.toDomain(): UserProfile =
         UserProfile(
