@@ -1,0 +1,51 @@
+# Build Go binary for Ubuntu
+
+name: Go Build
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - "zov-go/**"
+  pull_request:
+    paths:
+      - "zov-go/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zov-go
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: zov-go/go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build -v -o collector ./cmd/collector
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: collector-linux-amd64
+          path: zov-go/collector
+          if-no-files-found: error
