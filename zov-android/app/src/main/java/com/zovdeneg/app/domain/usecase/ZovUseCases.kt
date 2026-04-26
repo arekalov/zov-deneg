@@ -10,6 +10,7 @@ import com.zovdeneg.app.domain.market.SecurityListItem
 import com.zovdeneg.app.domain.market.SecurityPriceHistory
 import com.zovdeneg.app.domain.orders.OrderReceipt
 import com.zovdeneg.app.domain.orders.OrdersRepository
+import com.zovdeneg.app.domain.orders.UserOrder
 import com.zovdeneg.app.domain.portfolio.Holding
 import com.zovdeneg.app.domain.portfolio.PortfolioRepository
 import com.zovdeneg.app.domain.portfolio.PortfolioSummary
@@ -82,6 +83,24 @@ class PlaceMarketBuyOrderUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(securityId: String, quantity: Int): Result<OrderReceipt> =
         ordersRepository.placeMarketBuy(securityId, quantity)
+}
+
+class LoadUserOrdersUseCase @Inject constructor(
+    private val ordersRepository: OrdersRepository,
+) {
+    suspend operator fun invoke(): Result<List<UserOrder>> = ordersRepository.listOrders()
+}
+
+class LoadOrderDetailUseCase @Inject constructor(
+    private val ordersRepository: OrdersRepository,
+) {
+    suspend operator fun invoke(orderId: String): Result<UserOrder> = ordersRepository.getOrder(orderId)
+}
+
+class CancelOrderUseCase @Inject constructor(
+    private val ordersRepository: OrdersRepository,
+) {
+    suspend operator fun invoke(orderId: String): Result<Unit> = ordersRepository.cancelOrder(orderId)
 }
 
 class LoadBrokerageBalanceUseCase @Inject constructor(

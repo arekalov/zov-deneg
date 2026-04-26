@@ -33,6 +33,8 @@ class BuyViewModel @Inject constructor(
     private val loadSecurityDetail: LoadSecurityDetailUseCase,
     private val placeMarketBuyOrder: PlaceMarketBuyOrderUseCase,
 ) : ViewModel() {
+    private val securityNavId =
+        savedStateHandle.get<String>("securityId").orEmpty().replace('_', '/')
     private val displayTicker =
         savedStateHandle.get<String>("displayTicker").orEmpty().replace('_', '/')
 
@@ -41,7 +43,7 @@ class BuyViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            loadSecurityDetail(displayTicker).fold(
+            loadSecurityDetail(securityNavId).fold(
                 onSuccess = { detail ->
                     _uiState.update {
                         BuyUiState(

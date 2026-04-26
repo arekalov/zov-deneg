@@ -16,6 +16,8 @@
     <string name="nav_top_sign_up">Регистрация</string>
     <string name="nav_top_detail_prefix">Детали · </string>
     <string name="nav_top_buy_title">Покупка · %1$s</string>
+    <string name="nav_top_orders">Заявки</string>
+    <string name="nav_top_order_detail">Заявка</string>
 
     <string name="cd_nav_profile">Профиль</string>
 
@@ -93,6 +95,8 @@
     <string name="home_brokerage_account">Брокерский счёт</string>
     <string name="home_holdings">Позиции</string>
     <string name="home_no_positions">Пока нет открытых позиций</string>
+    <string name="home_orders_strip_title">Заявки</string>
+    <string name="home_orders_strip_subtitle">Активные и завершённые</string>
 
     <string name="search_placeholder">Название или тикер…</string>
     <string name="search_popular">Популярные акции</string>
@@ -155,6 +159,25 @@
     <string name="action_retry">Повторить</string>
     <string name="action_back">Назад</string>
     <string name="order_submitted">Заявка отправлена</string>
+    <string name="orders_empty">Заявок пока нет</string>
+    <string name="orders_row_title">%1$s · %2$s · %3$d шт.</string>
+    <string name="order_side_buy">покупка</string>
+    <string name="order_side_sell">продажа</string>
+    <string name="order_status_pending">В очереди</string>
+    <string name="order_status_executed">Исполнена</string>
+    <string name="order_status_partial">Частично</string>
+    <string name="order_status_cancelled">Отменена</string>
+    <string name="order_status_rejected">Отклонена</string>
+    <string name="order_detail_created_at">Создана: %1$s</string>
+    <string name="order_detail_side">Направление</string>
+    <string name="order_detail_quantity">Количество, шт.</string>
+    <string name="order_detail_status">Статус</string>
+    <string name="order_detail_executed_price">Цена исполнения</string>
+    <string name="order_detail_total">Сумма</string>
+    <string name="order_cancel">Отменить заявку</string>
+    <string name="order_cancelling">Отмена…</string>
+    <string name="order_cancel_failed">Не удалось отменить заявку</string>
+    <string name="order_cancelled_snackbar">Заявка отменена</string>
     <string name="buy_order_hint">К заявке · %1$d шт. · цена лота %2$s</string>
     <string name="error_submit_order">Не удалось разместить заявку</string>
     <string name="error_submit_deposit">Не удалось пополнить счёт</string>

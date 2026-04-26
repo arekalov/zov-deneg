@@ -6,6 +6,8 @@ object ZovApiPaths {
     const val SECURITIES_LIST = "/securities"
     const val TRANSACTIONS = "/transactions"
     const val ORDERS = "/orders"
+
+    fun order(orderId: String): String = "/orders/${orderId.trim('/')}"
     const val BALANCE = "/balance"
     const val BALANCE_DEPOSIT = "/balance/deposit"
     const val BALANCE_WITHDRAW = "/balance/withdraw"

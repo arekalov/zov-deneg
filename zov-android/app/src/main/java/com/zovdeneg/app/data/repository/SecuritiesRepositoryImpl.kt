@@ -77,7 +77,13 @@ internal class SecuritiesRepositoryImpl @Inject constructor(
         val rubPart = right.trim().removeSuffix("₽").trim()
         val formattedRub =
             runCatching { ZovRubDisplay.formatSignedDecimalRubLine(rubPart) }.getOrElse { right }
-        return "$left · $formattedRub"
+        val formattedLeft =
+            if (left.trim().endsWith("%")) {
+                ZovRubDisplay.formatPercentTwoDecimals(left.trim().removeSuffix("%"))
+            } else {
+                left
+            }
+        return "$formattedLeft · $formattedRub"
     }
 
     private fun SecurityOrderBookDto.toDomain(): SecurityOrderBook =

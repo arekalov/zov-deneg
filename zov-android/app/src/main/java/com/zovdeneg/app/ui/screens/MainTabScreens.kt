@@ -20,9 +20,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -46,7 +48,8 @@ private data class MainHomeSummaryBlockTexts(
 internal fun MainHomeScreen(
     viewModel: MainHomeViewModel,
     onOpenBrokerAccount: () -> Unit,
-    onOpenSecurity: (String) -> Unit,
+    onOpenOrders: () -> Unit,
+    onOpenSecurity: (securityId: String, displayTicker: String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val placeholder = stringResource(R.string.home_em_dash)
@@ -58,6 +61,7 @@ internal fun MainHomeScreen(
             brokerageBalanceLine = uiState.brokerageTotalRub ?: placeholder,
         ),
         onOpenBrokerAccount = onOpenBrokerAccount,
+        onOpenOrders = onOpenOrders,
         onOpenSecurity = onOpenSecurity,
     )
 }
@@ -67,7 +71,8 @@ private fun MainHomeScrollContent(
     holdings: List<Holding>,
     summaryBlock: MainHomeSummaryBlockTexts,
     onOpenBrokerAccount: () -> Unit,
-    onOpenSecurity: (String) -> Unit,
+    onOpenOrders: () -> Unit,
+    onOpenSecurity: (securityId: String, displayTicker: String) -> Unit,
 ) {
     ZovScrollScreen {
         MainHomePortfolioSummaryCard(
@@ -78,6 +83,7 @@ private fun MainHomeScrollContent(
             brokerageBalanceLine = summaryBlock.brokerageBalanceLine,
             onOpenBrokerAccount = onOpenBrokerAccount,
         )
+        MainHomeOrdersRow(onOpenOrders = onOpenOrders)
         MainHomeHoldingsSection(holdings = holdings, onOpenSecurity = onOpenSecurity)
     }
 }
@@ -108,6 +114,40 @@ private fun MainHomePortfolioSummaryCard(amountText: String, gainText: String) {
             stringResource(R.string.home_em_dash),
             style = t.sectionSemi16,
             color = c.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun MainHomeOrdersRow(onOpenOrders: () -> Unit) {
+    val c = ZovTheme.colors
+    val t = ZovTheme.text
+    ZovBalanceStrip(onClick = onOpenOrders) {
+        Icon(
+            Icons.AutoMirrored.Filled.List,
+            contentDescription = null,
+            tint = c.primary,
+            modifier = Modifier.size(ZovHalfUnit * 3),
+        )
+        Column(
+            Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(ZovHalfUnit),
+        ) {
+            Text(
+                stringResource(R.string.home_orders_strip_title),
+                style = t.subtitleReg13,
+                color = c.onSurfaceVariant,
+            )
+            Text(
+                stringResource(R.string.home_orders_strip_subtitle),
+                style = t.titleSemi20,
+                color = c.onSurface,
+            )
+        }
+        Icon(
+            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = stringResource(R.string.cd_chevron),
+            tint = c.onSurfaceVariant,
         )
     }
 }
@@ -146,7 +186,7 @@ private fun MainHomeBrokerBalanceRow(
 @Composable
 private fun MainHomeHoldingsSection(
     holdings: List<Holding>,
-    onOpenSecurity: (String) -> Unit,
+    onOpenSecurity: (securityId: String, displayTicker: String) -> Unit,
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
@@ -161,7 +201,7 @@ private fun MainHomeHoldingsSection(
                     deltaPositive = h.deltaPositive,
                     ticker = h.ticker,
                 ),
-            ) { onOpenSecurity(h.detailNavKey) }
+            ) { onOpenSecurity(h.detailNavKey, h.ticker) }
         }
     } else {
         Text(
@@ -243,7 +283,7 @@ private fun SearchTabSearchField(
 @Composable
 internal fun SearchTabScreen(
     viewModel: ZovSearchTabViewModel,
-    onOpenSecurity: (String) -> Unit,
+    onOpenSecurity: (securityId: String, displayTicker: String) -> Unit,
 ) {
     val searchUi by viewModel.uiState.collectAsStateWithLifecycle()
     val visibleSecurities = remember(searchUi) { searchUi.visibleSecurities() }
@@ -307,7 +347,8 @@ private fun MainHomePreviewLight() {
                 brokerageBalanceLine = "45 320,00 ₽",
             ),
             onOpenBrokerAccount = {},
-            onOpenSecurity = {},
+            onOpenOrders = {},
+            onOpenSecurity = { _, _ -> },
         )
     }
 }
@@ -324,7 +365,8 @@ private fun MainHomePreviewDark() {
                 brokerageBalanceLine = "45 320,00 ₽",
             ),
             onOpenBrokerAccount = {},
-            onOpenSecurity = {},
+            onOpenOrders = {},
+            onOpenSecurity = { _, _ -> },
         )
     }
 }

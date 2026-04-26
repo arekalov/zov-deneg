@@ -23,19 +23,25 @@ internal class PortfolioRepositoryImpl @Inject constructor(
             portfolioApi.getPortfolio().items.map { it.toDomain() }
         }
 
-    private fun PortfolioItemRemoteDto.toDomain(): Holding =
-        Holding(
+    private fun PortfolioItemRemoteDto.toDomain(): Holding {
+        val rub = ZovRubDisplay.formatSignedDecimalRubLine(profitLoss.trim())
+        val pct = ZovRubDisplay.formatPercentTwoDecimals(profitLossPct.trim())
+        return Holding(
             ticker = security.ticker,
             subtitle = "${security.name} · $quantity шт.",
             valueText = ZovRubDisplay.formatApiDecimalToRubLine(currentValue.trim()),
-            deltaText = "${ZovRubDisplay.formatSignedDecimalRubLine(profitLoss.trim())} (${profitLossPct.trim()}%)",
+            deltaText = "$rub ($pct)",
             deltaPositive = !profitLoss.trim().startsWith("-"),
             detailNavKey = securityId,
         )
+    }
 
-    private fun PortfolioSummaryDto.toDomain(): PortfolioSummary =
-        PortfolioSummary(
+    private fun PortfolioSummaryDto.toDomain(): PortfolioSummary {
+        val rub = ZovRubDisplay.formatSignedDecimalRubLine(profitLoss.trim())
+        val pct = ZovRubDisplay.formatPercentTwoDecimals(profitLossPct.trim())
+        return PortfolioSummary(
             portfolioAmountRub = ZovRubDisplay.formatApiDecimalToRubLine(totalValue.trim()),
-            totalGainText = "${ZovRubDisplay.formatSignedDecimalRubLine(profitLoss.trim())} (${profitLossPct.trim()}%)",
+            totalGainText = "$rub ($pct)",
         )
+    }
 }

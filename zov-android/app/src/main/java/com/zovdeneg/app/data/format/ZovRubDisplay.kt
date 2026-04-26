@@ -45,4 +45,31 @@ internal object ZovRubDisplay {
             }
         return "$sign$body ₽"
     }
+
+    /**
+     * Процент для UI: всегда ровно 2 знака после запятой, десятичный разделитель «,».
+     * Пример: `0.00000000` → `0,00%`, `-1.2` → `−1,20%`.
+     */
+    fun formatPercentTwoDecimals(raw: String): String {
+        val normalized =
+            raw.trim()
+                .removeSuffix("%")
+                .trim()
+                .replace(',', '.')
+                .removePrefix("+")
+        if (normalized.isEmpty()) return "0,00%"
+        val negative = normalized.startsWith("-")
+        val unsigned = normalized.removePrefix("-")
+        val bd =
+            runCatching { BigDecimal(unsigned) }.getOrNull()
+                ?: return "${raw.trim()}%"
+        val scaled = bd.setScale(2, RoundingMode.HALF_UP)
+        val plain = scaled.toPlainString()
+        val dot = plain.indexOf('.')
+        val intRaw = if (dot < 0) plain else plain.substring(0, dot)
+        val frac = if (dot < 0) "00" else plain.substring(dot + 1).padEnd(2, '0').take(2)
+        val grouped = intRaw.ifEmpty { "0" }.reversed().chunked(3).joinToString(" ").reversed()
+        val sign = if (negative) "−" else ""
+        return "$sign$grouped,$frac%"
+    }
 }

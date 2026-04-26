@@ -1,0 +1,36 @@
+{
+  "data": [
+    {
+      "id": "f1eebc99-9c0b-4ef8-bb6d-6bb9bd380a31",
+      "securityId": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      "ticker": "SBER",
+      "type": "market",
+      "side": "buy",
+      "status": "pending",
+      "quantity": 10,
+      "createdAt": 1731571200,
+      "updatedAt": 1731571200
+    },
+    {
+      "id": "e1eebc99-9c0b-4ef8-bb6d-6bb9bd380a21",
+      "securityId": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      "ticker": "SBER",
+      "type": "market",
+      "side": "buy",
+      "status": "executed",
+      "quantity": 10,
+      "executedPrice": "298.45",
+      "executedQuantity": 10,
+      "totalAmount": "2984.50",
+      "commission": "8.95",
+      "createdAt": 1731484800,
+      "updatedAt": 1731484900
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pageSize": 50,
+    "totalItems": 2,
+    "totalPages": 1
+  }
+}

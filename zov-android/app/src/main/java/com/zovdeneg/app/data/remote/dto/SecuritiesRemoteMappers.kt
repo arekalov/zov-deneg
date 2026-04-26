@@ -4,12 +4,14 @@ import com.zovdeneg.app.data.format.ZovRubDisplay
 
 internal fun SecurityCardRemoteDto.toSecurityDetailDto(
     orderBook: OrderBookRemoteDto?,
-): SecurityDetailDto =
-    SecurityDetailDto(
+): SecurityDetailDto {
+    val pct = ZovRubDisplay.formatPercentTwoDecimals(priceChangePct.trim())
+    val rubDelta = ZovRubDisplay.formatSignedDecimalRubLine(priceChange.trim())
+    return SecurityDetailDto(
         ticker = ticker,
         subtitle = "$name · $exchange",
         priceLine = ZovRubDisplay.formatApiDecimalToRubLine(lastPrice.trim()),
-        changeLine = "$priceChangePct% · ${ZovRubDisplay.formatSignedDecimalRubLine(priceChange.trim())}",
+        changeLine = "$pct · $rubDelta",
         changePositive = !priceChange.trim().startsWith("-"),
         securityId = id,
         lotSize = lotSize,
@@ -21,6 +23,7 @@ internal fun SecurityCardRemoteDto.toSecurityDetailDto(
         portfolioAvgPriceLine = null,
         orderBook = orderBook?.toSecurityOrderBookDto(),
     )
+}
 
 internal fun OrderBookRemoteDto.toSecurityOrderBookDto(): SecurityOrderBookDto =
     SecurityOrderBookDto(

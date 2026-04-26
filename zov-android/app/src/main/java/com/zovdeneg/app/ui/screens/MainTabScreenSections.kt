@@ -26,7 +26,7 @@ import androidx.compose.ui.res.stringResource
 internal fun SearchTabPopularSection(
     visibleSecurities: List<SecurityListItem>,
     searchUi: SearchTabUiState,
-    onOpenSecurity: (String) -> Unit,
+    onOpenSecurity: (securityId: String, displayTicker: String) -> Unit,
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
@@ -42,7 +42,7 @@ internal fun SearchTabPopularSection(
                         deltaPositive = item.deltaPositive,
                         ticker = item.ticker,
                     ),
-                ) { onOpenSecurity(item.detailNavKey) }
+                ) { onOpenSecurity(item.detailNavKey, item.ticker) }
             }
 
         searchUi.loadFailed || (!searchUi.isLoading && searchUi.allSecurities.isEmpty()) -> {

@@ -25,3 +25,9 @@ internal data class OrderResponseDto(
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,
 )
+
+@Serializable
+internal data class OrdersListRemoteDto(
+    val data: List<OrderResponseDto>,
+    val pagination: PaginationRemoteDto,
+)

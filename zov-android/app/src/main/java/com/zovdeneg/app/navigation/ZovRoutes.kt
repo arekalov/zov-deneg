@@ -17,13 +17,20 @@ object ZovRoutes {
     const val EDIT_PROFILE = "edit_profile"
     const val CHANGE_PIN = "change_pin"
     const val DEPOSIT = "deposit"
-    const val DETAIL = "detail/{ticker}"
+
+    /** Список заявок (порядок composable в графе: сначала деталь `orders/{id}`, затем список `orders`). */
+    const val ORDERS_LIST = "orders"
+    const val ORDER_DETAIL = "orders/{orderId}"
+    const val DETAIL = "detail/{securityId}/{displayTicker}"
     const val BUY = "buy/{securityId}/{displayTicker}"
 
-    fun detail(ticker: String) = "detail/${ticker.encodeTicker()}"
+    fun detail(securityId: String, displayTicker: String) =
+        "detail/${securityId.encodeTicker()}/${displayTicker.encodeTicker()}"
 
     fun buy(securityId: String, displayTicker: String) =
         "buy/${securityId.encodeTicker()}/${displayTicker.encodeTicker()}"
+
+    fun orderDetail(orderId: String) = "$ORDERS_LIST/${orderId.encodeTicker()}"
 
     /** Вложенный маршрут: задать PIN после входа по паролю без локального PIN. */
     fun registerFlowPinSetupAfterPassword(): String =

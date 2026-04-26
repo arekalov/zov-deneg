@@ -33,7 +33,7 @@ internal class ZovSecuritiesApi @Inject constructor(
                     ticker = s.ticker,
                     subtitle = s.name,
                     valueText = ZovRubDisplay.formatApiDecimalToRubLine(s.lastPrice.trim()),
-                    deltaText = "${s.priceChangePct.trim()}%",
+                    deltaText = ZovRubDisplay.formatPercentTwoDecimals(s.priceChangePct.trim()),
                     deltaPositive = !s.priceChange.trim().startsWith("-"),
                     kind = s.type,
                     securityId = s.id,
