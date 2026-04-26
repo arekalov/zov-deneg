@@ -223,7 +223,7 @@ class SecuritiesRepository(private val dataSource: ClickHouseDataSource) {
                     toUnixTimestamp(
                         toStartOfInterval(timestamp, INTERVAL $step SECOND)
                     ) AS ts,
-                    avg(price) AS price
+                    toFloat64(avg(price)) AS price
                 FROM `quotes`
                 WHERE security_id = '$securityId'
                   AND timestamp >= toDateTime64($from, 0, 'UTC')
@@ -239,7 +239,7 @@ class SecuritiesRepository(private val dataSource: ClickHouseDataSource) {
                         points.add(
                             PricePoint(
                                 timestamp = rs.getLong("ts"),
-                                price = rs.getBigDecimal("price")?.toPlainString() ?: "0.00"
+                                price = rs.getString("price")
                             )
                         )
                     }
