@@ -1,0 +1,7 @@
+{
+  "name": "zov-react",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}
