@@ -1,26 +1,6 @@
 version: "3.9"
 
 services:
-  # ============================================================================
-  # DATABASES
-  # ============================================================================
-
-  postgres:
-    image: postgres:15-alpine
-    container_name: zov-postgres
-    env_file:
-      - ./zov-back/env/postgres.env
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - zov-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d userservice"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   clickhouse:
     image: clickhouse/clickhouse-server:24.8-alpine
@@ -46,50 +26,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
-
-  # ============================================================================
-  # APPLICATION SERVICES
-  # ============================================================================
-
-  user-service:
-    build:
-      context: ./zov-back/user-service
-      dockerfile: Dockerfile
-    container_name: zov-user-service
-    env_file:
-      - ./zov-back/env/postgres.env
-      - ./zov-back/env/jwt.env
-      - ./zov-back/env/user-service.env
-    ports:
-      - "${USER_SERVICE_PORT}:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - zov-network
-    restart: unless-stopped
-
-  securities-service:
-    build:
-      context: ./zov-back/securities-service
-      dockerfile: Dockerfile
-    container_name: zov-securities-service
-    env_file:
-      - ./zov-back/env/clickhouse.env
-      - ./zov-back/env/jwt.env
-      - ./zov-back/env/securities-service.env
-    ports:
-      - "${SECURITIES_SERVICE_PORT}:8080"
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-    networks:
-      - zov-network
-    restart: unless-stopped
-
-  # ============================================================================
-  # GO COLLECTOR & C DRIVER (Unix Socket Communication)
-  # ============================================================================
 
   collector:
     build:
@@ -126,9 +62,6 @@ services:
 # VOLUMES
 # ==============================================================================
 volumes:
-  postgres_data:
-    driver: local
-    name: zov-postgres-data
   clickhouse_data:
     driver: local
     name: zov-clickhouse-data
