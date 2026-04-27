@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+
+  collector:
+    build: ./zov-go
+    container_name: collector
+    depends_on:
+      - clickhouse
+    environment:
+      CLICKHOUSE_ADDR: clickhouse:9000
+      CLICKHOUSE_DB: securities
+      SOCKET_PATH: /tmp/zovdengi/driver.sock
+    volumes:
+      - shared_socket:/tmp
+
+  driver:
+    build: ./zov-c-driver
+    container_name: driver
+    depends_on:
+      - collector
+    volumes:
+      - shared_socket:/tmp
+
+volumes:
+  clickhouse_data:
+  shared_socket:
