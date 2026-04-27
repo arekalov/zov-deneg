@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -57,6 +58,9 @@ func (s *Storage) Close() error {
 
 // GetUUIDByTicker returns UUID for a ticker, using cache or querying database
 func (s *Storage) GetUUIDByTicker(ctx context.Context, ticker string) (uuid.UUID, error) {
+	// Trim null bytes from ticker (protocol uses fixed 16-byte strings)
+	ticker = strings.TrimRight(ticker, "\x00")
+
 	// Check cache first
 	if cached, ok := s.tickerCache.Load(ticker); ok {
 		return cached.(uuid.UUID), nil
@@ -64,7 +68,7 @@ func (s *Storage) GetUUIDByTicker(ctx context.Context, ticker string) (uuid.UUID
 
 	// Query database
 	var id uuid.UUID
-	err := s.conn.QueryRow(ctx, "SELECT id FROM securities WHERE ticker = ?", ticker).Scan(&id)
+	err := s.conn.QueryRow(ctx, "SELECT id FROM securities_dict WHERE ticker = ?", ticker).Scan(&id)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("lookup ticker %s: %w", ticker, err)
 	}
