@@ -174,7 +174,7 @@ class SecuritiesRepository(private val dataSource: ClickHouseDataSource) {
                     s.lot_size,
                     sl.last_price,
                     sl.last_price - sl.day_open_price AS price_change,
-                    round((sl.last_price - sl.day_open_price) / sl.day_open_price * 100, 2) AS price_change_pct
+                    round((sl.last_price - sl.day_open_price) / NULLIF(sl.day_open_price, 0) * 100, 2) AS price_change_pct
                 FROM `securities_dict` AS s
                 LEFT JOIN `securities_latest` AS sl ON s.id = sl.security_id
                 WHERE s.id = '$id'
