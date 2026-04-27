@@ -16,6 +16,10 @@ import com.zovdeneg.app.ui.screens.DepositScreen
 import com.zovdeneg.app.ui.screens.EditProfileScreen
 import com.zovdeneg.app.ui.screens.HistoryTabScreen
 import com.zovdeneg.app.ui.screens.LoginScreen
+import com.zovdeneg.app.ui.screens.OrderDetailScreen
+import com.zovdeneg.app.ui.screens.OrdersListScreen
+import com.zovdeneg.app.ui.orders.OrderDetailViewModel
+import com.zovdeneg.app.ui.orders.OrdersListViewModel
 import com.zovdeneg.app.ui.screens.MainHomeScreen
 import com.zovdeneg.app.ui.screens.ProfileScreen
 import com.zovdeneg.app.ui.screens.RegisterBiometricScreen
@@ -207,8 +211,9 @@ private fun NavGraphBuilder.zovTabDestinations(navController: NavHostController)
         MainHomeScreen(
             viewModel = homeVm,
             onOpenBrokerAccount = { navController.navigate(ZovRoutes.DEPOSIT) },
-            onOpenSecurity = { ticker ->
-                navController.navigate(ZovRoutes.detail(ticker))
+            onOpenOrders = { navController.navigate(ZovRoutes.ORDERS_LIST) },
+            onOpenSecurity = { securityId, displayTicker ->
+                navController.navigate(ZovRoutes.detail(securityId, displayTicker))
             },
         )
     }
@@ -216,8 +221,8 @@ private fun NavGraphBuilder.zovTabDestinations(navController: NavHostController)
         val searchVm: ZovSearchTabViewModel = hiltViewModel()
         SearchTabScreen(
             viewModel = searchVm,
-            onOpenSecurity = { ticker ->
-                navController.navigate(ZovRoutes.detail(ticker))
+            onOpenSecurity = { securityId, displayTicker ->
+                navController.navigate(ZovRoutes.detail(securityId, displayTicker))
             },
         )
     }
@@ -283,7 +288,46 @@ private fun NavGraphBuilder.zovProfileDestinations(navController: NavHostControl
     }
 }
 
+private fun NavGraphBuilder.zovOrdersDestinations(navController: NavHostController) {
+    composable(
+        ZovRoutes.ORDER_DETAIL,
+        arguments = listOf(navArgument("orderId") { type = NavType.StringType }),
+    ) { _ ->
+        val detailVm: OrderDetailViewModel = hiltViewModel()
+        OrderDetailScreen(
+            viewModel = detailVm,
+            onBack = { navController.popBackStack() },
+            onCancelSuccess = {
+                runCatching {
+                    val entry = navController.getBackStackEntry(ZovRoutes.ORDERS_LIST)
+                    entry.savedStateHandle[ORDERS_LIST_REFRESH_TICK_KEY] = System.nanoTime()
+                }
+                navController.popBackStack()
+            },
+        )
+    }
+    composable(ZovRoutes.ORDERS_LIST) { ordersEntry ->
+        val ordersVm: OrdersListViewModel = hiltViewModel()
+        val ordersRefreshTick by ordersEntry.savedStateHandle
+            .getStateFlow(ORDERS_LIST_REFRESH_TICK_KEY, 0L)
+            .collectAsStateWithLifecycle()
+        LaunchedEffect(ordersRefreshTick) {
+            if (ordersRefreshTick != 0L) {
+                ordersVm.refresh()
+                ordersEntry.savedStateHandle[ORDERS_LIST_REFRESH_TICK_KEY] = 0L
+            }
+        }
+        OrdersListScreen(
+            viewModel = ordersVm,
+            onOpenOrder = { orderId ->
+                navController.navigate(ZovRoutes.orderDetail(orderId))
+            },
+        )
+    }
+}
+
 private fun NavGraphBuilder.zovTradeDestinations(navController: NavHostController) {
+    zovOrdersDestinations(navController)
     composable(ZovRoutes.DEPOSIT) {
         val depositVm: DepositViewModel = hiltViewModel()
         DepositScreen(
@@ -297,9 +341,11 @@ private fun NavGraphBuilder.zovTradeDestinations(navController: NavHostControlle
     }
     composable(
         ZovRoutes.DETAIL,
-        arguments = listOf(navArgument("ticker") { type = NavType.StringType }),
-    ) { entry ->
-        val ticker = entry.arguments?.getString("ticker").orEmpty()
+        arguments = listOf(
+            navArgument("securityId") { type = NavType.StringType },
+            navArgument("displayTicker") { type = NavType.StringType },
+        ),
+    ) { _ ->
         val detailVm: SecurityDetailViewModel = hiltViewModel()
         SecurityDetailScreen(
             viewModel = detailVm,

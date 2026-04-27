@@ -21,12 +21,122 @@
       "amount": "12800.00",
       "commission": "12.00",
       "createdAt": 1714053600
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "type": "deposit",
+      "ticker": "",
+      "securityName": "",
+      "quantity": 0,
+      "price": "0",
+      "amount": "50000.00",
+      "commission": "0",
+      "createdAt": 1713967200
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "type": "withdrawal",
+      "ticker": "",
+      "securityName": "",
+      "quantity": 0,
+      "price": "0",
+      "amount": "10000.00",
+      "commission": "0",
+      "createdAt": 1713880800
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440004",
+      "type": "dividend",
+      "ticker": "GAZP",
+      "securityName": "Газпром",
+      "quantity": 0,
+      "price": "0",
+      "amount": "1200.00",
+      "commission": "0",
+      "createdAt": 1713794400
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440005",
+      "type": "buy",
+      "ticker": "GAZP",
+      "securityName": "Газпром",
+      "quantity": 50,
+      "price": "165.20",
+      "amount": "8260.00",
+      "commission": "8.00",
+      "createdAt": 1713708000
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440006",
+      "type": "sell",
+      "ticker": "SBER",
+      "securityName": "Сбербанк",
+      "quantity": 5,
+      "price": "285.00",
+      "amount": "1425.00",
+      "commission": "3.00",
+      "createdAt": 1713621600
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440007",
+      "type": "buy",
+      "ticker": "YNDX",
+      "securityName": "Яндекс",
+      "quantity": 3,
+      "price": "2450.00",
+      "amount": "7350.00",
+      "commission": "7.00",
+      "createdAt": 1713535200
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440008",
+      "type": "sell",
+      "ticker": "YNDX",
+      "securityName": "Яндекс",
+      "quantity": 1,
+      "price": "2500.00",
+      "amount": "2500.00",
+      "commission": "2.50",
+      "createdAt": 1713448800
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440009",
+      "type": "deposit",
+      "ticker": "",
+      "securityName": "",
+      "quantity": 0,
+      "price": "0",
+      "amount": "15000.00",
+      "commission": "0",
+      "createdAt": 1713362400
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-44665544000a",
+      "type": "buy",
+      "ticker": "ROSN",
+      "securityName": "Роснефть",
+      "quantity": 20,
+      "price": "520.10",
+      "amount": "10402.00",
+      "commission": "10.00",
+      "createdAt": 1713276000
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-44665544000b",
+      "type": "dividend",
+      "ticker": "SBER",
+      "securityName": "Сбербанк",
+      "quantity": 0,
+      "price": "0",
+      "amount": "800.00",
+      "commission": "0",
+      "createdAt": 1713189600
     }
   ],
   "pagination": {
     "page": 1,
     "pageSize": 20,
-    "totalItems": 2,
+    "totalItems": 12,
     "totalPages": 1
   }
 }

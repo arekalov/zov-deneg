@@ -1,5 +1,11 @@
 package com.zovdeneg.app.domain.transactions
 
-fun interface TransactionsRepository {
-    suspend fun getTransactions(): Result<List<Transaction>>
+import com.zovdeneg.app.domain.PageEnvelope
+
+interface TransactionsRepository {
+    suspend fun getTransactionsPage(
+        page: Int,
+        pageSize: Int,
+        type: String?,
+    ): Result<PageEnvelope<Transaction>>
 }

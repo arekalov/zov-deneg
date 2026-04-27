@@ -14,4 +14,5 @@ internal object ZovMockAssetPaths {
     const val AUTH_TOKENS_REFRESH = "${P}auth_tokens_refresh.json"
     const val PIN_CHANGE_OK = "${P}pin_change_ok.json"
     const val ORDER_CREATED = "${P}order_created.json"
+    const val ORDERS_LIST = "${P}orders_list.json"
 }

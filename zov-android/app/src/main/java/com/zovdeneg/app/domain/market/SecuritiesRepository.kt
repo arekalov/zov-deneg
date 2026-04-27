@@ -1,7 +1,14 @@
 package com.zovdeneg.app.domain.market
 
+import com.zovdeneg.app.domain.PageEnvelope
+
 interface SecuritiesRepository {
-    suspend fun getPopularSecurities(): Result<List<SecurityListItem>>
+    suspend fun getSecuritiesPage(
+        query: String,
+        type: String?,
+        page: Int,
+        pageSize: Int,
+    ): Result<PageEnvelope<SecurityListItem>>
 
     suspend fun getSecurityDetail(ticker: String): Result<SecurityDetail>
 

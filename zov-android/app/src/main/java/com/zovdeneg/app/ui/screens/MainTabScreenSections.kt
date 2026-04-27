@@ -1,7 +1,6 @@
 package com.zovdeneg.app.ui.screens
 
 import com.zovdeneg.app.R
-import com.zovdeneg.app.domain.market.SecurityListItem
 import com.zovdeneg.app.domain.transactions.Transaction
 import com.zovdeneg.app.ui.common.ZovItemSpacing
 import com.zovdeneg.app.ui.common.ZovUnit
@@ -14,26 +13,44 @@ import com.zovdeneg.app.ui.theme.ZovTheme
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 
 @Composable
 internal fun SearchTabPopularSection(
-    visibleSecurities: List<SecurityListItem>,
     searchUi: SearchTabUiState,
-    onOpenSecurity: (String) -> Unit,
+    onOpenSecurity: (securityId: String, displayTicker: String) -> Unit,
+    onLoadMore: () -> Unit,
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
     Text(stringResource(R.string.search_popular), style = t.sectionSemi16, color = c.onSurface)
     when {
-        visibleSecurities.isNotEmpty() ->
-            visibleSecurities.forEach { item ->
+        searchUi.isLoading && searchUi.securities.isEmpty() ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(28.dp),
+                    color = c.primary,
+                    strokeWidth = 2.dp,
+                )
+            }
+
+        searchUi.securities.isNotEmpty() -> {
+            searchUi.securities.forEach { item ->
                 AssetRow(
                     AssetRowData(
                         subtitle = item.subtitle,
@@ -42,10 +59,16 @@ internal fun SearchTabPopularSection(
                         deltaPositive = item.deltaPositive,
                         ticker = item.ticker,
                     ),
-                ) { onOpenSecurity(item.detailNavKey) }
+                ) { onOpenSecurity(item.detailNavKey, item.ticker) }
             }
+            ListLoadMoreFooter(
+                hasMore = searchUi.hasMore,
+                isLoadingMore = searchUi.isLoadingMore,
+                onLoadMore = onLoadMore,
+            )
+        }
 
-        searchUi.loadFailed || (!searchUi.isLoading && searchUi.allSecurities.isEmpty()) -> {
+        searchUi.loadFailed || (!searchUi.isLoading && searchUi.securities.isEmpty()) -> {
             Text(
                 stringResource(R.string.search_popular_empty),
                 style = t.subtitleReg14,
@@ -77,15 +100,67 @@ internal fun HistoryFilterChipsRow(
 
 @Composable
 internal fun HistoryTabTransactionsSection(
-    visibleTxs: List<Transaction>,
+    transactions: List<Transaction>,
     historyUi: HistoryTabUiState,
+    onLoadMore: () -> Unit,
 ) {
     when {
-        visibleTxs.isNotEmpty() ->
-            visibleTxs.forEach { tx -> HistoryTransactionCard(tx = tx) }
+        historyUi.isLoading && transactions.isEmpty() ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                val c = ZovTheme.colors
+                CircularProgressIndicator(
+                    modifier = Modifier.size(28.dp),
+                    color = c.primary,
+                    strokeWidth = 2.dp,
+                )
+            }
 
-        historyUi.loadFailed || (!historyUi.isLoading && historyUi.transactions.isEmpty()) ->
+        transactions.isNotEmpty() -> {
+            transactions.forEach { tx -> HistoryTransactionCard(tx = tx) }
+            ListLoadMoreFooter(
+                hasMore = historyUi.hasMore,
+                isLoadingMore = historyUi.isLoadingMore,
+                onLoadMore = onLoadMore,
+            )
+        }
+
+        historyUi.loadFailed || (!historyUi.isLoading && transactions.isEmpty()) ->
             HistoryTransactionsEmptyHint()
+    }
+}
+
+@Composable
+private fun ListLoadMoreFooter(
+    hasMore: Boolean,
+    isLoadingMore: Boolean,
+    onLoadMore: () -> Unit,
+) {
+    if (!hasMore) return
+    val c = ZovTheme.colors
+    val t = ZovTheme.text
+    Spacer(Modifier.height(ZovItemSpacing))
+    if (isLoadingMore) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(28.dp),
+                color = c.primary,
+                strokeWidth = 2.dp,
+            )
+        }
+    } else {
+        OutlinedButton(
+            onClick = onLoadMore,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.list_load_more), style = t.bodyMed14)
+        }
     }
 }
 

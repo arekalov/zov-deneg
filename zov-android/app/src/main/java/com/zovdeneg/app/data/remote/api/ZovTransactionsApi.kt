@@ -5,12 +5,22 @@ import com.zovdeneg.app.data.remote.dto.TransactionsListRemoteDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
-
+import io.ktor.client.request.parameter
 import javax.inject.Inject
 
 internal class ZovTransactionsApi @Inject constructor(
     private val client: HttpClient,
 ) {
-    suspend fun getTransactionsList(): TransactionsListRemoteDto =
-        client.get(ZovApiPaths.TRANSACTIONS).body()
+    suspend fun getTransactionsPage(
+        page: Int,
+        pageSize: Int,
+        type: String?,
+    ): TransactionsListRemoteDto =
+        client.get(ZovApiPaths.TRANSACTIONS) {
+            parameter("page", page)
+            parameter("pageSize", pageSize)
+            if (!type.isNullOrBlank()) {
+                parameter("type", type)
+            }
+        }.body()
 }

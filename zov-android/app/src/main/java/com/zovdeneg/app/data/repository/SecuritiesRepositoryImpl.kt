@@ -2,7 +2,7 @@ package com.zovdeneg.app.data.repository
 
 import com.zovdeneg.app.data.format.ZovRubDisplay
 import com.zovdeneg.app.data.remote.api.ZovSecuritiesApi
-import com.zovdeneg.app.data.remote.dto.PopularSecurityDto
+import com.zovdeneg.app.data.remote.dto.SecurityCardRemoteDto
 import com.zovdeneg.app.data.remote.dto.SecurityDetailDto
 import com.zovdeneg.app.data.remote.dto.toSecurityOrderBookDto
 import com.zovdeneg.app.data.remote.dto.SecurityOrderBookDto
@@ -13,9 +13,12 @@ import com.zovdeneg.app.domain.market.SecuritiesRepository
 import com.zovdeneg.app.domain.market.SecurityDetail
 import com.zovdeneg.app.domain.market.SecurityOrderBook
 import com.zovdeneg.app.domain.market.SecurityOrderBookRow
+import com.zovdeneg.app.domain.PageEnvelope
 import com.zovdeneg.app.domain.market.SecurityKind
 import com.zovdeneg.app.domain.market.SecurityListItem
 import com.zovdeneg.app.domain.market.SecurityPriceHistory
+
+import java.util.Locale
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,9 +27,20 @@ import javax.inject.Singleton
 internal class SecuritiesRepositoryImpl @Inject constructor(
     private val securitiesApi: ZovSecuritiesApi,
 ) : SecuritiesRepository {
-    override suspend fun getPopularSecurities(): Result<List<SecurityListItem>> =
+    override suspend fun getSecuritiesPage(
+        query: String,
+        type: String?,
+        page: Int,
+        pageSize: Int,
+    ): Result<PageEnvelope<SecurityListItem>> =
         runCatching {
-            securitiesApi.getPopularEnvelope().items.map { it.toDomain() }
+            val dto = securitiesApi.getSecuritiesPage(query, type, page, pageSize)
+            PageEnvelope(
+                items = dto.data.map { it.toListItem() },
+                page = dto.pagination.page,
+                pageSize = dto.pagination.pageSize,
+                totalPages = dto.pagination.totalPages,
+            )
         }
 
     override suspend fun getSecurityDetail(ticker: String): Result<SecurityDetail> =
@@ -77,7 +91,13 @@ internal class SecuritiesRepositoryImpl @Inject constructor(
         val rubPart = right.trim().removeSuffix("₽").trim()
         val formattedRub =
             runCatching { ZovRubDisplay.formatSignedDecimalRubLine(rubPart) }.getOrElse { right }
-        return "$left · $formattedRub"
+        val formattedLeft =
+            if (left.trim().endsWith("%")) {
+                ZovRubDisplay.formatPercentTwoDecimals(left.trim().removeSuffix("%"))
+            } else {
+                left
+            }
+        return "$formattedLeft · $formattedRub"
     }
 
     private fun SecurityOrderBookDto.toDomain(): SecurityOrderBook =
@@ -95,19 +115,19 @@ internal class SecuritiesRepositoryImpl @Inject constructor(
             rightQuantity = mirrorQuantity,
         )
 
-    private fun PopularSecurityDto.toDomain(): SecurityListItem =
+    private fun SecurityCardRemoteDto.toListItem(): SecurityListItem =
         SecurityListItem(
             ticker = ticker,
-            subtitle = subtitle,
-            valueText = valueText,
-            deltaText = deltaText,
-            deltaPositive = deltaPositive,
-            kind = kind.toSecurityKind(),
-            detailNavKey = securityId ?: ticker,
+            subtitle = name,
+            valueText = ZovRubDisplay.formatApiDecimalToRubLine(lastPrice.trim()),
+            deltaText = ZovRubDisplay.formatPercentTwoDecimals(priceChangePct.trim()),
+            deltaPositive = !priceChange.trim().startsWith("-"),
+            kind = type.toSecurityKind(),
+            detailNavKey = id,
         )
 
     private fun String.toSecurityKind(): SecurityKind =
-        when (lowercase()) {
+        when (lowercase(Locale.ROOT)) {
             "bond" -> SecurityKind.BOND
             "etf" -> SecurityKind.ETF
             else -> SecurityKind.STOCK

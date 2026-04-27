@@ -40,8 +40,8 @@ class SecurityDetailViewModel @Inject constructor(
     private val loadSecurityOrderBook: LoadSecurityOrderBookUseCase,
     private val loadSecurityPriceHistory: LoadSecurityPriceHistoryUseCase,
 ) : ViewModel() {
-    private val ticker =
-        savedStateHandle.get<String>("ticker").orEmpty().replace('_', '/')
+    private val securityNavId =
+        savedStateHandle.get<String>("securityId").orEmpty().replace('_', '/')
 
     private var orderBookFetchStarted: Boolean = false
 
@@ -110,7 +110,7 @@ class SecurityDetailViewModel @Inject constructor(
                     chartRange = SecurityChartRange.ONE_DAY,
                 )
             }
-            loadSecurityDetail(ticker).fold(
+            loadSecurityDetail(securityNavId).fold(
                 onSuccess = { detail ->
                     _uiState.update {
                         it.copy(
@@ -145,7 +145,7 @@ class SecurityDetailViewModel @Inject constructor(
     private suspend fun fetchPriceHistory(range: SecurityChartRange) {
         val to = Instant.now().epochSecond
         val from = to - range.rangeSeconds()
-        loadSecurityPriceHistory(ticker, from, to).fold(
+        loadSecurityPriceHistory(securityNavId, from, to).fold(
             onSuccess = { history ->
                 _uiState.update {
                     it.copy(

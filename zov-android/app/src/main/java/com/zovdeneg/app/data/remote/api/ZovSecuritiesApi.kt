@@ -1,11 +1,8 @@
 package com.zovdeneg.app.data.remote.api
 
-import com.zovdeneg.app.data.format.ZovRubDisplay
 import com.zovdeneg.app.data.remote.ZovJson
 import com.zovdeneg.app.data.remote.contract.ZovApiPaths
 import com.zovdeneg.app.data.remote.dto.OrderBookRemoteDto
-import com.zovdeneg.app.data.remote.dto.PopularSecuritiesEnvelopeDto
-import com.zovdeneg.app.data.remote.dto.PopularSecurityDto
 import com.zovdeneg.app.data.remote.dto.SecuritiesListRemoteDto
 import com.zovdeneg.app.data.remote.dto.SecurityCardRemoteDto
 import com.zovdeneg.app.data.remote.dto.SecurityDetailDto
@@ -21,26 +18,22 @@ import javax.inject.Inject
 internal class ZovSecuritiesApi @Inject constructor(
     @param:ZovSecuritiesHttpClient private val client: HttpClient,
 ) {
-    suspend fun getPopularEnvelope(): PopularSecuritiesEnvelopeDto {
-        val list: SecuritiesListRemoteDto =
-            client.get(ZovApiPaths.SECURITIES_LIST) {
-                parameter("pageSize", 50)
-                parameter("page", 1)
-            }.body()
-        val items =
-            list.data.map { s ->
-                PopularSecurityDto(
-                    ticker = s.ticker,
-                    subtitle = s.name,
-                    valueText = ZovRubDisplay.formatApiDecimalToRubLine(s.lastPrice.trim()),
-                    deltaText = "${s.priceChangePct.trim()}%",
-                    deltaPositive = !s.priceChange.trim().startsWith("-"),
-                    kind = s.type,
-                    securityId = s.id,
-                )
+    suspend fun getSecuritiesPage(
+        query: String,
+        type: String?,
+        page: Int,
+        pageSize: Int,
+    ): SecuritiesListRemoteDto =
+        client.get(ZovApiPaths.SECURITIES_LIST) {
+            if (query.isNotBlank()) {
+                parameter("q", query)
             }
-        return PopularSecuritiesEnvelopeDto(items = items)
-    }
+            if (!type.isNullOrBlank()) {
+                parameter("type", type)
+            }
+            parameter("page", page)
+            parameter("pageSize", pageSize)
+        }.body()
 
     suspend fun getSecurityDetail(securityNavId: String): SecurityDetailDto {
         val raw: String = client.get(ZovApiPaths.securityDetail(securityNavId)).body<String>()
