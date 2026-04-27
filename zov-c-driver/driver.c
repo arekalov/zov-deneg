@@ -7,6 +7,7 @@
 #include <sys/un.h>
 #include <time.h>
 #include <errno.h>
+#include <signal.h>
 
 #define SOCKET_PATH "/tmp/zovdengi/driver.sock"
 
@@ -20,7 +21,8 @@
 #define MSG_SESSION_END   0x11
 
 #define PRICE_SCALE 100000000LL
-#define SEC_COUNT 5
+#define SEC_COUNT 18
+#define ORDERBOOK_LEVELS 5
 
 #pragma pack(push, 1)
 typedef struct {
@@ -60,7 +62,7 @@ uint8_t securities[SEC_COUNT][16] = {
     {'G','O','O','G',0,0,0,0,0,0,0,0,0,0,0,0}
 };
 
-double prices[SEC_COUNT] = {100.0, 200.0, 300.0, 400.0, 500.0};
+double prices[SEC_COUNT];
 
 typedef struct {
     double mid;
@@ -250,7 +252,7 @@ void send_orderbook(int sock, int i) {
         memcpy(buf + off, &ob_state[i].bid_qty[k], 4); off += 4;
     }
 
-    send_msg(sock, MSG_ORDERBOOK, buf, off);
+    send_message(sock, MSG_ORDERBOOK, buf, off);
 }
 
 void send_session_end(int sock) {
@@ -281,7 +283,13 @@ int main() {
 
     global_socket = connect_socket();
 
-    send_session_start(sock);
+    for (int i = 0; i < SEC_COUNT; i++) {
+      prices[i] = 100.0 + i * 10;
+    }
+
+    init_ob();
+
+    send_session_start(global_socket);
     signal(SIGINT, handle_sigint);
 
     int counter = 0;
@@ -290,12 +298,12 @@ int main() {
         // случайный инструмент
         int idx = rand() % SEC_COUNT;
 
-        send_quote(sock, idx);
-        send_orderbook(sock, idx);
+        send_quote(global_socket, idx);
+        send_orderbook(global_socket, idx);
 
         // heartbeat раз в ~5 сек
         if (++counter % 50 == 0) {
-            send_message(sock, MSG_HEARTBEAT, NULL, 0);
+            send_message(global_socket, MSG_HEARTBEAT, NULL, 0);
             printf("[driver] heartbeat\n");
         }
 
