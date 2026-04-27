@@ -8,9 +8,9 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/zovdengi/collector/internal/collector"
-    "github.com/zovdengi/collector/internal/protocol"
-    "github.com/zovdengi/collector/internal/storage"
+	"example.com/collector/internal/collector"
+	"example.com/collector/internal/protocol"
+	"example.com/collector/internal/storage"
 )
 
 func main() {

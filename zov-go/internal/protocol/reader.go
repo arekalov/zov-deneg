@@ -44,70 +44,95 @@ func ReadMessage(conn net.Conn) (uint8, []byte, error) {
 }
 
 func ParseQuote(data []byte) (Quote, error) {
-    if len(data) != 36 {
-        return Quote{}, fmt.Errorf("quote: expected 36 bytes, got %d", len(data))
-    }
-    var q Quote
-    copy(q.SecurityID[:], data[0:16])
-    q.TimestampMs = int64(le.Uint64(data[16:24]))
-    q.Price = int64(le.Uint64(data[24:32]))
-    q.Volume = le.Uint32(data[32:36])
-    return q, nil
+	if len(data) < 2 {
+		return Quote{}, fmt.Errorf("quote: too short (%d bytes)", len(data))
+	}
+
+	tickerLen := int(le.Uint16(data[0:2]))
+	if len(data) != 2+tickerLen+26 {
+		return Quote{}, fmt.Errorf("quote: size %d != expected %d", len(data), 2+tickerLen+26)
+	}
+
+	var q Quote
+	q.Ticker = string(data[2 : 2+tickerLen])
+	q.TimestampMs = int64(le.Uint64(data[2+tickerLen : 2+tickerLen+8]))
+	q.Price = int64(le.Uint64(data[2+tickerLen+8 : 2+tickerLen+16]))
+	q.Volume = le.Uint32(data[2+tickerLen+16 : 2+tickerLen+20])
+	return q, nil
 }
 
 func ParseOrderBook(data []byte) (OrderBook, error) {
-    if len(data) < 36 {
-        return OrderBook{}, fmt.Errorf("orderbook: too short (%d bytes)", len(data))
-    }
+	if len(data) < 2 {
+		return OrderBook{}, fmt.Errorf("orderbook: too short (%d bytes)", len(data))
+	}
 
-    var ob OrderBook
-    copy(ob.SecurityID[:], data[0:16])
-    ob.TimestampMs = int64(le.Uint64(data[16:24]))
-    ob.SnapshotID = le.Uint64(data[24:32])
-    askN := int(le.Uint16(data[32:34]))
-    bidN := int(le.Uint16(data[34:36]))
+	tickerLen := int(le.Uint16(data[0:2]))
+	offset := 2 + tickerLen
 
-    expected := 36 + (askN+bidN)*12
-    if len(data) != expected {
-        return OrderBook{}, fmt.Errorf("orderbook: size %d != expected %d", len(data), expected)
-    }
+	if len(data) < offset+20 {
+		return OrderBook{}, fmt.Errorf("orderbook: too short (%d bytes)", len(data))
+	}
 
-    off := 36
-    ob.Asks = make([]OrderBookLevel, askN)
-    for i := range ob.Asks {
-        ob.Asks[i].Price = int64(le.Uint64(data[off:]))
-        ob.Asks[i].Quantity = le.Uint32(data[off+8:])
-        off += 12
-    }
+	var ob OrderBook
+	ob.Ticker = string(data[2 : 2+tickerLen])
+	ob.TimestampMs = int64(le.Uint64(data[offset : offset+8]))
+	ob.SnapshotID = le.Uint64(data[offset+8 : offset+16])
+	askN := int(le.Uint16(data[offset+16 : offset+18]))
+	bidN := int(le.Uint16(data[offset+18 : offset+20]))
+	offset += 20
 
-    ob.Bids = make([]OrderBookLevel, bidN)
-    for i := range ob.Bids {
-        ob.Bids[i].Price = int64(le.Uint64(data[off:]))
-        ob.Bids[i].Quantity = le.Uint32(data[off+8:])
-        off += 12
-    }
+	expected := offset + (askN+bidN)*12
+	if len(data) != expected {
+		return OrderBook{}, fmt.Errorf("orderbook: size %d != expected %d", len(data), expected)
+	}
 
-    return ob, nil
+	ob.Asks = make([]OrderBookLevel, askN)
+	for i := range ob.Asks {
+		ob.Asks[i].Price = int64(le.Uint64(data[offset : offset+8]))
+		ob.Asks[i].Quantity = le.Uint32(data[offset+8 : offset+12])
+		offset += 12
+	}
+
+	ob.Bids = make([]OrderBookLevel, bidN)
+	for i := range ob.Bids {
+		ob.Bids[i].Price = int64(le.Uint64(data[offset : offset+8]))
+		ob.Bids[i].Quantity = le.Uint32(data[offset+8 : offset+12])
+		offset += 12
+	}
+
+	return ob, nil
 }
 
 func ParseSessionStart(data []byte) (SessionStart, error) {
-    if len(data) < 10 {
-        return SessionStart{}, fmt.Errorf("session_start: too short")
-    }
+	if len(data) < 10 {
+		return SessionStart{}, fmt.Errorf("session_start: too short")
+	}
 
-    var ss SessionStart
-    ss.TimestampMs = int64(le.Uint64(data[0:8]))
-    count := int(le.Uint16(data[8:10]))
+	var ss SessionStart
+	ss.TimestampMs = int64(le.Uint64(data[0:8]))
+	count := int(le.Uint16(data[8:10]))
 
-    if len(data) != 10+count*16 {
-        return SessionStart{}, fmt.Errorf("session_start: size %d != expected %d", len(data), 10+count*16)
-    }
+	offset := 10
+	ss.Tickers = make([]string, count)
+	for i := 0; i < count; i++ {
+		if len(data) < offset+2 {
+			return SessionStart{}, fmt.Errorf("session_start: ticker %d length missing", i)
+		}
+		tickerLen := int(le.Uint16(data[offset : offset+2]))
+		offset += 2
 
-    ss.SecurityIDs = make([][16]byte, count)
-    for i := 0; i < count; i++ {
-        copy(ss.SecurityIDs[i][:], data[10+i*16:10+(i+1)*16])
-    }
-    return ss, nil
+		if len(data) < offset+tickerLen {
+			return SessionStart{}, fmt.Errorf("session_start: ticker %d data missing", i)
+		}
+		ss.Tickers[i] = string(data[offset : offset+tickerLen])
+		offset += tickerLen
+	}
+
+	if len(data) != offset {
+		return SessionStart{}, fmt.Errorf("session_start: size %d != expected %d", len(data), offset)
+	}
+
+	return ss, nil
 }
 
 func ParseSessionEnd(data []byte) (SessionEnd, error) {

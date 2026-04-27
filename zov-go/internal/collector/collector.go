@@ -1,15 +1,14 @@
 package collector
 
 import (
-    "context"
-    "log"
-    "net"
-    "sync"
-    "time"
+	"context"
+	"log"
+	"net"
+	"sync"
+	"time"
 
-    "github.com/google/uuid"
-    "github.com/zovdengi/collector/internal/protocol"
-    "github.com/zovdengi/collector/internal/storage"
+	"example.com/collector/internal/protocol"
+	"example.com/collector/internal/storage"
 )
 
 type Collector struct {
@@ -102,20 +101,14 @@ func (c *Collector) handleConnection(ctx context.Context, conn net.Conn) {
                 log.Printf("[collector] insert orderbook error: %v", err)
             }
 
-        case protocol.MsgSessionStart:
-            ss, err := protocol.ParseSessionStart(payload)
-            if err != nil {
-                log.Printf("[collector] parse session_start error: %v", err)
-                continue
-            }
-            ids := make([]string, len(ss.SecurityIDs))
-            for i, raw := range ss.SecurityIDs {
-                u, _ := uuid.FromBytes(raw[:])
-                ids[i] = u.String()
-            }
-            log.Printf("[collector] session started, %d securities: %v",
-                len(ss.SecurityIDs), ids)
-
+		case protocol.MsgSessionStart:
+			ss, err := protocol.ParseSessionStart(payload)
+			if err != nil {
+				log.Printf("[collector] parse session_start error: %v", err)
+				continue
+			}
+			log.Printf("[collector] session started, %d securities: %v",
+				len(ss.Tickers), ss.Tickers)
         case protocol.MsgSessionEnd:
             se, err := protocol.ParseSessionEnd(payload)
             if err != nil {
