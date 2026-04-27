@@ -18,7 +18,7 @@ bodyHist.appendChild(chipRow);
 chipRow.layoutSizingHorizontal = "FILL";
 chipRow.layoutSizingVertical = "HUG";
 
-for (const chipComp of [chipAll, chipBuy, chipSell]) {
+for (const chipComp of [chipAll, chipBuy, chipSell, chipDeposit, chipWithdraw]) {
   const inst = chipComp.createInstance();
   chipRow.appendChild(inst);
   inst.layoutSizingHorizontal = "HUG";

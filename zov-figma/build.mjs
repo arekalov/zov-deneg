@@ -17,6 +17,7 @@ const ORDER = [
   "screens/screen-login.js",
   "screens/screen-register.js",
   "screens/screen-main.js",
+  "screens/screen-orders.js",
   "screens/screen-deposit.js",
   "screens/screen-search.js",
   "screens/screen-history.js",
