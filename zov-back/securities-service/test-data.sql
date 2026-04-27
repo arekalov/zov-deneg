@@ -22,29 +22,56 @@ VALUES (generateUUIDv4(), 'SBER', 'Сбербанк', 'Крупнейший ба
        (generateUUIDv4(), 'MTSS', 'МТС', 'Крупнейший российский оператор связи', 'stock', 'MOEX', 'Телекоммуникации',
         10),
        (generateUUIDv4(), 'GMKN', 'Норникель', 'Крупнейший производитель палладия и никеля', 'stock', 'MOEX',
-        'Металлургия', 1);
+        'Металлургия', 1),
 
--- ============================================================
--- SAMPLE QUOTES — ссылаемся на security_id через подзапрос по ticker
--- ============================================================
+       -- Additional stocks
+       (generateUUIDv4(), 'AFLT', 'Аэрофлот', 'Крупнейшая российская авиакомпания', 'stock', 'MOEX', 'Транспорт', 10),
+       (generateUUIDv4(), 'SNGS', 'Сургутнефтегаз', 'Одна из крупнейших нефтегазовых компаний', 'stock', 'MOEX', 'Энергетика', 100),
+       (generateUUIDv4(), 'TATN', 'Татнефть', 'Нефтяная компания с полным циклом производства', 'stock', 'MOEX', 'Энергетика', 1),
+       (generateUUIDv4(), 'ALRS', 'АЛРОСА', 'Крупнейший в мире производитель алмазов', 'stock', 'MOEX', 'Металлургия', 10),
+       (generateUUIDv4(), 'MAGN', 'Магнитогорский металлургический комбинат', 'Производитель стали и проката', 'stock', 'MOEX', 'Металлургия', 100),
+       (generateUUIDv4(), 'PLZL', 'Полюс Золото', 'Крупнейший производитель золота в России', 'stock', 'MOEX', 'Металлургия', 10),
+       (generateUUIDv4(), 'NLMK', 'НЛМК', 'Один из крупнейших металлургических комбинатов', 'stock', 'MOEX', 'Металлургия', 100),
+       (generateUUIDv4(), 'SIBN', 'Газпром нефть', 'Вертикально интегрированная нефтяная компания', 'stock', 'MOEX', 'Энергетика', 100),
+       (generateUUIDv4(), 'BSPB', 'Банк Санкт-Петербург', 'Региональный банк', 'stock', 'MOEX', 'Финансы', 100),
+       (generateUUIDv4(), 'OZON', 'Ozon Holdings', 'Крупнейший интернет-ритейлер', 'stock', 'MOEX', 'Потребительский сектор', 1),
+       (generateUUIDv4(), 'WELT', 'Welt', 'Застройщик премиум-класса', 'stock', 'MOEX', 'Недвижимость', 100),
+       (generateUUIDv4(), 'PIK', 'ПИК', 'Крупнейший застройщик России', 'stock', 'MOEX', 'Недвижимость', 10),
+       (generateUUIDv4(), 'MRKK', 'Мираторг', 'Агропромышленный холдинг', 'stock', 'SPB', 'Сельское хозяйство', 100),
+       (generateUUIDv4(), 'RUAL', 'РУСАЛ', 'Производитель алюминия', 'stock', 'MOEX', 'Металлургия', 100),
 
-INSERT INTO quotes (security_id, timestamp, price, volume)
-SELECT (SELECT id FROM securities_dict WHERE ticker = 'SBER' LIMIT 1) as security_id,
-    toDateTime64('2024-01-15 10:00:00', 0, 'UTC') + INTERVAL (number * 300) SECOND as timestamp,
-    280 + (rand() % 30) + (number / 10) as price,
-    (rand() % 10000) + 1000 as volume
-FROM numbers(100);
+       -- Bonds (облигации)
+       (generateUUIDv4(), 'SBERB1', 'Сбербанк БО-001P-07', 'Облигации Сбербанка серии 07', 'bond', 'MOEX', 'Финансы', 1000),
+       (generateUUIDv4(), 'SBERB2', 'Сбербанк БО-002P-08', 'Облигации Сбербанка серии 08', 'bond', 'MOEX', 'Финансы', 1000),
+       (generateUUIDv4(), 'GAZPB1', 'Газпром БО-001P-23', 'Облигации Газпрома серии 23', 'bond', 'MOEX', 'Энергетика', 1000),
+       (generateUUIDv4(), 'VTBRB1', 'ВТБ БО-001P-15', 'Облигации ВТБ серии 15', 'bond', 'MOEX', 'Финансы', 1000),
+       (generateUUIDv4(), 'AFLOTB1', 'Аэрофлот БО-001P-05', 'Облигации Аэрофлота серии 05', 'bond', 'MOEX', 'Транспорт', 1000),
+       (generateUUIDv4(), 'LKOH2B1', 'Лукойл БО-001P-02', 'Облигации Лукойл серии 02', 'bond', 'MOEX', 'Энергетика', 1000),
+       (generateUUIDv4(), 'TCSGB1', 'Тинькофф БО-002P-09', 'Облигации Тинькофф серии 09', 'bond', 'MOEX', 'Финансы', 1000),
+       (generateUUIDv4(), 'MTSSB1', 'МТС БО-001P-32', 'Облигации МТС серии 32', 'bond', 'MOEX', 'Телекоммуникации', 1000),
+       (generateUUIDv4(), 'ROSNB1', 'Роснефть БО-001P-18', 'Облигации Роснефти серии 18', 'bond', 'MOEX', 'Энергетика', 1000),
+       (generateUUIDv4(), 'PIKB1', 'ПИК БО-001P-04', 'Облигации ПИК серии 04', 'bond', 'MOEX', 'Недвижимость', 1000),
 
-INSERT INTO quotes (security_id, timestamp, price, volume)
-SELECT (SELECT id FROM securities_dict WHERE ticker = 'GAZP' LIMIT 1) as security_id,
-    toDateTime64('2024-01-15 10:00:00', 0, 'UTC') + INTERVAL (number * 300) SECOND as timestamp,
-    150 + (rand() % 20) + (number / 20) as price,
-    (rand() % 15000) + 2000 as volume
-FROM numbers(100);
+       -- ETFs (биржевые фонды)
+       (generateUUIDv4(), 'SBMX', 'Сбербанк - Индекс МосБиржи', 'ETF на индекс МосБиржи', 'etf', 'MOEX', 'Фондовый рынок', 10),
+       (generateUUIDv4(), 'VTBX', 'ВТБ - Индекс РТС', 'ETF на индекс РТС', 'etf', 'MOEX', 'Фондовый рынок', 100),
+       (generateUUIDv4(), 'TBRU', 'Тинькофф - Индекс МосБиржи', 'ETF на индекс МосБиржи', 'etf', 'MOEX', 'Фондовый рынок', 10),
+       (generateUUIDv4(), 'SBGB', 'Сбербанк - Гособлигации', 'ETF на государственные облигации', 'etf', 'MOEX', 'Фондовый рынок', 10),
+       (generateUUIDv4(), 'LQDT', 'ВИМ Ликвидность', 'ETF денежного рынка', 'etf', 'MOEX', 'Фондовый рынок', 10),
+       (generateUUIDv4(), 'GOLD', 'ВИМ Золото', 'ETF на золото', 'etf', 'MOEX', 'Драгоценные металлы', 10),
+       (generateUUIDv4(), 'USDRUB', 'ВИМ Доллар', 'ETF на доллар США', 'etf', 'MOEX', 'Валютный рынок', 100),
+       (generateUUIDv4(), 'EURRUB', 'ВИМ Евро', 'ETF на евро', 'etf', 'MOEX', 'Валютный рынок', 100),
+       (generateUUIDv4(), 'TECH', 'Тинькофф - Технологии', 'ETF на технологический сектор', 'etf', 'MOEX', 'Информационные технологии', 10),
+       (generateUUIDv4(), 'DIVD', 'Тинькофф - Дивиденды', 'ETF на дивидендные акции', 'etf', 'MOEX', 'Фондовый рынок', 10),
 
-INSERT INTO quotes (security_id, timestamp, price, volume)
-SELECT (SELECT id FROM securities_dict WHERE ticker = 'LKOH' LIMIT 1) as security_id,
-    toDateTime64('2024-01-15 10:00:00', 0, 'UTC') + INTERVAL (number * 300) SECOND as timestamp,
-    700 + (rand() % 50) + (number / 15) as price,
-    (rand() % 5000) as volume
-FROM numbers(100);
+       -- Additional securities (mixed types)
+       (generateUUIDv4(), 'AKRN', 'Акрон', 'Производитель минеральных удобрений', 'stock', 'MOEX', 'Химическая промышленность', 10),
+       (generateUUIDv4(), 'PHOR', 'ФосАгро', 'Производитель фосфорных удобрений', 'stock', 'MOEX', 'Химическая промышленность', 10),
+       (generateUUIDv4(), 'CHMF', 'Северсталь', 'Металлургический и горнодобывающий комбинат', 'stock', 'MOEX', 'Металлургия', 10),
+       (generateUUIDv4(), 'TRNFP', 'Транснефть-п', 'Транспортная нефтяная компания (преф)', 'stock', 'MOEX', 'Энергетика', 100),
+       (generateUUIDv4(), 'TATNP', 'Татнефть-п', 'Нефтяная компания (преференциальные)', 'stock', 'MOEX', 'Энергетика', 1),
+       (generateUUIDv4(), 'SBERP', 'Сбербанк-п', 'Сбербанк (преференциальные)', 'stock', 'MOEX', 'Финансы', 10),
+       (generateUUIDv4(), 'MGNT', 'Магнит', 'Розничная торговая сеть', 'stock', 'MOEX', 'Потребительский сектор', 100),
+       (generateUUIDv4(), 'BRKL', 'Брокеркредитсервис', 'Финансовая компания', 'stock', 'MOEX', 'Финансы', 1000),
+       (generateUUIDv4(), 'ETLN', 'Эталон', 'Застройщик жилой недвижимости', 'stock', 'MOEX', 'Недвижимость', 100),
+       (generateUUIDv4(), 'RSTI', 'Рости Агро', 'Агропромышленная компания', 'stock', 'SPB', 'Сельское хозяйство', 10);
