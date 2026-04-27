@@ -21,7 +21,7 @@
 #define MSG_SESSION_END   0x11
 
 #define PRICE_SCALE 100000000LL
-#define SEC_COUNT 18
+#define SEC_COUNT 54
 #define ORDERBOOK_LEVELS 5
 
 #pragma pack(push, 1)

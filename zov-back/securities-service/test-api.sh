@@ -5,7 +5,7 @@
 
 set -e
 
-BASE_URL="${BASE_URL:-http://localhost:8081}"
+BASE_URL="${BASE_URL:-http://localhost:58234}"
 RESULTS_FILE="${RESULTS_FILE:-test-results.md}"
 JWT_TOKEN="${JWT_TOKEN:-}"
 
