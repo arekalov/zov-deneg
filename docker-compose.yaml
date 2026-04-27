@@ -1,40 +1,145 @@
 version: "3.9"
 
 services:
+  # ============================================================================
+  # DATABASES
+  # ============================================================================
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: zov-postgres
+    env_file:
+      - ./zov-back/env/postgres.env
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - zov-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d userservice"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   clickhouse:
-    image: clickhouse/clickhouse-server:latest
-    container_name: clickhouse
+    image: clickhouse/clickhouse-server:24.8-alpine
+    container_name: zov-clickhouse
+    env_file:
+      - ./zov-back/env/clickhouse.env
     ports:
-      - "8123:8123"
-      - "9000:9000"
+      - "${CLICKHOUSE_PORT_HTTP:-8123}:8123"
+      - "${CLICKHOUSE_PORT_NATIVE:-9000}:9000"
     ulimits:
       nofile:
         soft: 262144
         hard: 262144
     volumes:
       - clickhouse_data:/var/lib/clickhouse
+      - ./zov-back/securities-service/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./zov-back/securities-service/test-data.sql:/docker-entrypoint-initdb.d/test-data.sql
+    networks:
+      - zov-network
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --user default --password securities_pass --query 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ============================================================================
+  # APPLICATION SERVICES
+  # ============================================================================
+
+  user-service:
+    build:
+      context: ./zov-back/user-service
+      dockerfile: Dockerfile
+    container_name: zov-user-service
+    env_file:
+      - ./zov-back/env/postgres.env
+      - ./zov-back/env/jwt.env
+      - ./zov-back/env/user-service.env
+    ports:
+      - "${USER_SERVICE_PORT}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - zov-network
+    restart: unless-stopped
+
+  securities-service:
+    build:
+      context: ./zov-back/securities-service
+      dockerfile: Dockerfile
+    container_name: zov-securities-service
+    env_file:
+      - ./zov-back/env/clickhouse.env
+      - ./zov-back/env/jwt.env
+      - ./zov-back/env/securities-service.env
+    ports:
+      - "${SECURITIES_SERVICE_PORT}:8080"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - zov-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # GO COLLECTOR & C DRIVER (Unix Socket Communication)
+  # ============================================================================
 
   collector:
-    build: ./zov-go
-    container_name: collector
+    build:
+      context: ./zov-go
+      dockerfile: Dockerfile
+    container_name: zov-collector
     depends_on:
-      - clickhouse
+      clickhouse:
+        condition: service_healthy
     environment:
       CLICKHOUSE_ADDR: clickhouse:9000
       CLICKHOUSE_DB: securities
       SOCKET_PATH: /tmp/zovdengi/driver.sock
     volumes:
-      - shared_socket:/tmp
+      - shared_socket:/tmp/zovdengi
+    networks:
+      - zov-network
+    restart: unless-stopped
 
   driver:
-    build: ./zov-c-driver
-    container_name: driver
+    build:
+      context: ./zov-c-driver
+      dockerfile: Dockerfile
+    container_name: zov-driver
     depends_on:
       - collector
     volumes:
-      - shared_socket:/tmp
+      - shared_socket:/tmp/zovdengi
+    networks:
+      - zov-network
+    restart: unless-stopped
 
+# ==============================================================================
+# VOLUMES
+# ==============================================================================
 volumes:
+  postgres_data:
+    driver: local
+    name: zov-postgres-data
   clickhouse_data:
+    driver: local
+    name: zov-clickhouse-data
   shared_socket:
+    driver: local
+    name: zov-shared-socket
+
+# ==============================================================================
+# NETWORKS
+# ==============================================================================
+networks:
+  zov-network:
+    driver: bridge
+    name: zov-deneg-network
