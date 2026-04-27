@@ -27,7 +27,7 @@ class OrderRepository(private val dataSource: ClickHouseDataSource) {
                     commission, created_at, updated_at
                 ) VALUES (
                     '$orderId', '$userId', '$securityId', '$ticker',
-                    '${type.name.lowercase()}', '${side.name.lowercase()}', 'pending',
+                    '${type.name.lowercase()}', '${side.name.lowercase()}', 'executed',
                     $quantity, NULL, NULL, NULL, NULL,
                     toDateTime64(${now.toEpochMilli() / 1000.0}, 3, 'UTC'),
                     toDateTime64(${now.toEpochMilli() / 1000.0}, 3, 'UTC')
@@ -45,7 +45,7 @@ class OrderRepository(private val dataSource: ClickHouseDataSource) {
             ticker = ticker,
             type = type,
             side = side,
-            status = OrderStatus.PENDING,
+            status = OrderStatus.EXECUTED,
             quantity = quantity,
             executedPrice = null,
             executedQuantity = null,
