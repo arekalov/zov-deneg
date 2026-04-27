@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # ============================================================================
   # DATABASES
@@ -30,10 +28,6 @@ services:
     ports:
       - "${CLICKHOUSE_PORT_HTTP:-8123}:8123"
       - "${CLICKHOUSE_PORT_NATIVE:-9000}:9000"
-    ulimits:
-      nofile:
-        soft: 262144
-        hard: 262144
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - ./zov-back/securities-service/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
@@ -87,46 +81,6 @@ services:
       - zov-network
     restart: unless-stopped
 
-  # ============================================================================
-  # GO COLLECTOR & C DRIVER (Unix Socket Communication)
-  # ============================================================================
-
-  collector:
-    build:
-      context: ./zov-go
-      dockerfile: Dockerfile
-    container_name: zov-collector
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-    env_file:
-      - ./zov-back/env/clickhouse.env
-    environment:
-      SOCKET_PATH: /tmp/zovdengi/driver.sock
-    volumes:
-      - shared_socket:/tmp/zovdengi
-    networks:
-      - zov-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "test", "-S", "/tmp/zovdengi/driver.sock"]
-      interval: 2s
-      retries: 10
-
-  driver:
-    build:
-      context: ./zov-c-driver
-      dockerfile: Dockerfile
-    container_name: zov-driver
-    depends_on:
-      collector:
-        condition: service_healthy
-    volumes:
-      - shared_socket:/tmp/zovdengi
-    networks:
-      - zov-network
-    restart: unless-stopped
-
 # ==============================================================================
 # VOLUMES
 # ==============================================================================
@@ -137,9 +91,6 @@ volumes:
   clickhouse_data:
     driver: local
     name: zov-clickhouse-data
-  shared_socket:
-    driver: local
-    name: zov-shared-socket
 
 # ==============================================================================
 # NETWORKS
