@@ -1,7 +1,8 @@
 package protocol
 
 const (
-    SocketPath = "/tmp/zovdengi/driver.sock"
+    DefaultSocketPath = "/tmp/zovdengi/driver.sock"
+    SocketPath        = "/tmp/zovdengi/driver.sock"
     Magic      uint16 = 0xDACE
     Version    uint8  = 0x01
     HeaderSize        = 9
@@ -24,7 +25,7 @@ type Header struct {
 }
 
 type Quote struct {
-    SecurityID  [16]byte
+    Ticker      string
     TimestampMs int64
     Price       int64
     Volume      uint32
@@ -36,7 +37,7 @@ type OrderBookLevel struct {
 }
 
 type OrderBook struct {
-    SecurityID  [16]byte
+    Ticker      string
     TimestampMs int64
     SnapshotID  uint64
     Asks        []OrderBookLevel
@@ -45,7 +46,7 @@ type OrderBook struct {
 
 type SessionStart struct {
     TimestampMs int64
-    SecurityIDs [][16]byte
+    Tickers     []string
 }
 
 type SessionEnd struct {

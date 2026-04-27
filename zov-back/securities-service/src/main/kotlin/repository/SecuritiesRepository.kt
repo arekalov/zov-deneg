@@ -174,7 +174,7 @@ class SecuritiesRepository(private val dataSource: ClickHouseDataSource) {
                     s.lot_size,
                     sl.last_price,
                     sl.last_price - sl.day_open_price AS price_change,
-                    round((sl.last_price - sl.day_open_price) / sl.day_open_price * 100, 2) AS price_change_pct
+                    round((sl.last_price - sl.day_open_price) / NULLIF(sl.day_open_price, 0) * 100, 2) AS price_change_pct
                 FROM `securities_dict` AS s
                 LEFT JOIN `securities_latest` AS sl ON s.id = sl.security_id
                 WHERE s.id = '$id'
@@ -209,7 +209,7 @@ class SecuritiesRepository(private val dataSource: ClickHouseDataSource) {
         // Get ticker
         val ticker = getTickerById(securityId) ?: return null
 
-        // Calculate step based on interval duration
+        // Calculate step based on interval duration (from and to are in seconds)
         val step = when {
             (to - from) < 86400 -> 60        // < 1 day → 1 min
             (to - from) < 604800 -> 300      // < 7 days → 5 min
@@ -223,11 +223,11 @@ class SecuritiesRepository(private val dataSource: ClickHouseDataSource) {
                     toUnixTimestamp(
                         toStartOfInterval(timestamp, INTERVAL $step SECOND)
                     ) AS ts,
-                    avg(price) AS price
+                    toFloat64(avg(price)) AS price
                 FROM `quotes`
                 WHERE security_id = '$securityId'
-                  AND timestamp >= toDateTime64($from, 3, 'UTC')
-                  AND timestamp <= toDateTime64($to, 3, 'UTC')
+                  AND timestamp >= toDateTime64($from, 0, 'UTC')
+                  AND timestamp <= toDateTime64($to, 0, 'UTC')
                 GROUP BY ts
                 ORDER BY ts
             """.trimIndent()
@@ -239,7 +239,7 @@ class SecuritiesRepository(private val dataSource: ClickHouseDataSource) {
                         points.add(
                             PricePoint(
                                 timestamp = rs.getLong("ts"),
-                                price = rs.getBigDecimal("price")?.toPlainString() ?: "0.00"
+                                price = rs.getString("price")
                             )
                         )
                     }

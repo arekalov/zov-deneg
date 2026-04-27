@@ -4,7 +4,10 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT as JwtDecodedJWT
 import io.ktor.server.application.*
+import io.ktor.server.util.*
 import zov.deneg.models.UserRole
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.*
 
 class JwtConfig(private val environment: ApplicationEnvironment) {
@@ -20,7 +23,7 @@ class JwtConfig(private val environment: ApplicationEnvironment) {
     
     fun generateAccessToken(userId: String, role: UserRole): String {
         val now = Date()
-        val expiresAt = Date(now.time + accessTokenTtlSeconds * 1000)
+        val expiresAt = Date.from(now.toInstant().plusSeconds(accessTokenTtlSeconds))
         
         return JWT.create()
             .withSubject(userId)
@@ -37,7 +40,7 @@ class JwtConfig(private val environment: ApplicationEnvironment) {
     }
     
     fun getRefreshTokenExpiry(): Date {
-        return Date(System.currentTimeMillis() + refreshTokenTtlDays * 24 * 60 * 60 * 1000)
+        return Date.from(LocalDateTime.now().plusDays(refreshTokenTtlDays).toInstant(ZoneOffset.UTC))
     }
     
     fun verifyToken(token: String): DecodedJWT? {

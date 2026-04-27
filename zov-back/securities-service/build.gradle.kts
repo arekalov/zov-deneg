@@ -35,13 +35,12 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
-    
+
     // Testing
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.ktor.client.content.negotiation)
-
 
     // Testcontainers
     testImplementation(libs.testcontainers)

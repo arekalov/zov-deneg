@@ -8,16 +8,19 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/zovdengi/collector/internal/collector"
-    "github.com/zovdengi/collector/internal/protocol"
-    "github.com/zovdengi/collector/internal/storage"
+	"example.com/collector/internal/collector"
+	"example.com/collector/internal/protocol"
+	"example.com/collector/storage"
 )
 
 func main() {
     log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 
     // ── Флаги с fallback на env ──────────────────────────────
-    chAddr := flag.String("ch-addr", getEnv("CLICKHOUSE_ADDR", "localhost:9000"),
+    // Поддержка переменных из clickhouse.env + старые для совместимости
+    chHost := getEnv("CLICKHOUSE_HOST", "localhost")
+    chPort := getEnv("CLICKHOUSE_PORT_NATIVE", "9000")
+    chAddr := flag.String("ch-addr", getEnvWithFallback("CLICKHOUSE_ADDR", chHost+":"+chPort),
         "ClickHouse address (host:port)")
     chDB := flag.String("ch-db", getEnv("CLICKHOUSE_DB", "securities"),
         "ClickHouse database")
@@ -67,4 +70,11 @@ func getEnv(key, fallback string) string {
         return v
     }
     return fallback
+}
+
+func getEnvWithFallback(primary, secondary string) string {
+    if v, ok := os.LookupEnv(primary); ok {
+        return v
+    }
+    return secondary
 }
