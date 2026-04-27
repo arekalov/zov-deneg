@@ -1,7 +1,8 @@
 package protocol
 
 const (
-    SocketPath = "/tmp/zovdengi/driver.sock"
+    DefaultSocketPath = "/tmp/zovdengi/driver.sock"
+    SocketPath        = "/tmp/zovdengi/driver.sock"
     Magic      uint16 = 0xDACE
     Version    uint8  = 0x01
     HeaderSize        = 9

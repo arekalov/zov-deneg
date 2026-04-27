@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"example.com/collector/internal/protocol"
-	"example.com/collector/internal/storage"
+	"example.com/collector/storage"
 )
 
 type Collector struct {
