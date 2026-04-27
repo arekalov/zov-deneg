@@ -35,9 +35,9 @@ services:
     depends_on:
       clickhouse:
         condition: service_healthy
+    env_file:
+      - ./zov-back/env/clickhouse.env
     environment:
-      CLICKHOUSE_ADDR: clickhouse:9000
-      CLICKHOUSE_DB: securities
       SOCKET_PATH: /tmp/zovdengi/driver.sock
     volumes:
       - shared_socket:/tmp/zovdengi
