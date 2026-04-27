@@ -36,10 +36,6 @@ internal class ZovMockAssetJson @Inject constructor(
 
     fun portfolio(): String = read(ZovMockAssetPaths.PORTFOLIO_HOLDINGS)
 
-    fun securitiesList(): String = read(ZovMockAssetPaths.SECURITIES_LIST)
-
-    fun transactionsList(): String = read(ZovMockAssetPaths.TRANSACTIONS_LIST)
-
     fun balance(): String = read(ZovMockAssetPaths.BALANCE)
 
     fun balanceAfterWithdraw(): String = read(ZovMockAssetPaths.BALANCE_AFTER_WITHDRAW)

@@ -110,8 +110,9 @@
     <string name="history_filter_buys">Покупки</string>
     <string name="history_filter_sells">Продажи</string>
     <string name="history_filter_deposits">Пополнения</string>
-    <string name="history_filter_withdrawals">Снятия</string>
+    <string name="history_filter_withdrawals">Выводы</string>
     <string name="history_empty">Операций пока нет</string>
+    <string name="list_load_more">Далее</string>
 
     <string name="security_tab_overview">Обзор</string>
     <string name="security_tab_order_book">Стакан</string>

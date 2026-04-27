@@ -69,8 +69,8 @@ private fun mockGetJson(
     return when (path) {
         ZovApiPaths.PORTFOLIO_SUMMARY -> json.portfolioSummary()
         ZovApiPaths.PORTFOLIO -> json.portfolio()
-        ZovApiPaths.SECURITIES_LIST -> json.securitiesList()
-        ZovApiPaths.TRANSACTIONS -> json.transactionsList()
+        ZovApiPaths.SECURITIES_LIST -> json.securitiesListPaged(parameters)
+        ZovApiPaths.TRANSACTIONS -> json.transactionsListPaged(parameters)
         ZovApiPaths.BALANCE -> json.balance()
         ZovApiPaths.USERS_ME -> json.userProfile()
         ZovApiPaths.ORDERS -> json.ordersList()

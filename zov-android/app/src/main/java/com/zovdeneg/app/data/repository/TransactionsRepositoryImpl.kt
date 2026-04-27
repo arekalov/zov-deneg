@@ -3,6 +3,7 @@ package com.zovdeneg.app.data.repository
 import com.zovdeneg.app.data.format.ZovRubDisplay
 import com.zovdeneg.app.data.remote.api.ZovTransactionsApi
 import com.zovdeneg.app.data.remote.dto.TransactionRemoteDto
+import com.zovdeneg.app.domain.PageEnvelope
 import com.zovdeneg.app.domain.transactions.Transaction
 import com.zovdeneg.app.domain.transactions.TransactionSide
 import com.zovdeneg.app.domain.transactions.TransactionsRepository
@@ -19,14 +20,24 @@ import javax.inject.Singleton
 internal class TransactionsRepositoryImpl @Inject constructor(
     private val transactionsApi: ZovTransactionsApi,
 ) : TransactionsRepository {
-    override suspend fun getTransactions(): Result<List<Transaction>> =
+    override suspend fun getTransactionsPage(
+        page: Int,
+        pageSize: Int,
+        type: String?,
+    ): Result<PageEnvelope<Transaction>> =
         runCatching {
-            transactionsApi.getTransactionsList().data.map { it.toDomain() }
+            val dto = transactionsApi.getTransactionsPage(page, pageSize, type)
+            PageEnvelope(
+                items = dto.data.map { it.toDomain() },
+                page = dto.pagination.page,
+                pageSize = dto.pagination.pageSize,
+                totalPages = dto.pagination.totalPages,
+            )
         }
 
     private fun TransactionRemoteDto.toDomain(): Transaction {
         val label =
-            when (type.lowercase(Locale.getDefault())) {
+            when (type.lowercase(Locale.ROOT)) {
                 "buy" -> "Покупка"
                 "sell" -> "Продажа"
                 "deposit" -> "Пополнение"
@@ -48,7 +59,7 @@ internal class TransactionsRepositoryImpl @Inject constructor(
     }
 
     private fun String.toTransactionSide(): TransactionSide =
-        when (lowercase(Locale.getDefault())) {
+        when (lowercase(Locale.ROOT)) {
             "buy" -> TransactionSide.PURCHASE
             "sell" -> TransactionSide.SALE
             "deposit" -> TransactionSide.DEPOSIT

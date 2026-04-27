@@ -6,6 +6,7 @@ import com.zovdeneg.app.domain.balance.BrokerageBalance
 import com.zovdeneg.app.domain.market.SecuritiesRepository
 import com.zovdeneg.app.domain.market.SecurityDetail
 import com.zovdeneg.app.domain.market.SecurityOrderBook
+import com.zovdeneg.app.domain.PageEnvelope
 import com.zovdeneg.app.domain.market.SecurityListItem
 import com.zovdeneg.app.domain.market.SecurityPriceHistory
 import com.zovdeneg.app.domain.orders.OrderReceipt
@@ -48,18 +49,27 @@ class LoadSecurityPriceHistoryUseCase @Inject constructor(
         securitiesRepository.getSecurityPriceHistory(ticker, fromEpochSeconds, toEpochSeconds)
 }
 
-class LoadPopularSecuritiesUseCase @Inject constructor(
+class LoadSecuritiesPageUseCase @Inject constructor(
     private val securitiesRepository: SecuritiesRepository,
 ) {
-    suspend operator fun invoke(): Result<List<SecurityListItem>> =
-        securitiesRepository.getPopularSecurities()
+    suspend operator fun invoke(
+        query: String,
+        type: String?,
+        page: Int,
+        pageSize: Int,
+    ): Result<PageEnvelope<SecurityListItem>> =
+        securitiesRepository.getSecuritiesPage(query, type, page, pageSize)
 }
 
-class LoadTransactionsUseCase @Inject constructor(
+class LoadTransactionsPageUseCase @Inject constructor(
     private val transactionsRepository: TransactionsRepository,
 ) {
-    suspend operator fun invoke(): Result<List<Transaction>> =
-        transactionsRepository.getTransactions()
+    suspend operator fun invoke(
+        page: Int,
+        pageSize: Int,
+        type: String? = null,
+    ): Result<PageEnvelope<Transaction>> =
+        transactionsRepository.getTransactionsPage(page, pageSize, type)
 }
 
 data class HomePortfolioSnapshot(

@@ -20,18 +20,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -123,12 +120,6 @@ private fun MainHomeOrdersRow(onOpenOrders: () -> Unit) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
     ZovBalanceStrip(onClick = onOpenOrders) {
-        Icon(
-            Icons.AutoMirrored.Filled.List,
-            contentDescription = null,
-            tint = c.primary,
-            modifier = Modifier.size(ZovHalfUnit * 3),
-        )
         Column(
             Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(ZovHalfUnit),
@@ -286,7 +277,6 @@ internal fun SearchTabScreen(
     onOpenSecurity: (securityId: String, displayTicker: String) -> Unit,
 ) {
     val searchUi by viewModel.uiState.collectAsStateWithLifecycle()
-    val visibleSecurities = remember(searchUi) { searchUi.visibleSecurities() }
     val chipResIds =
         listOf(
             R.string.filter_all,
@@ -306,9 +296,9 @@ internal fun SearchTabScreen(
             }
         }
         SearchTabPopularSection(
-            visibleSecurities = visibleSecurities,
             searchUi = searchUi,
             onOpenSecurity = onOpenSecurity,
+            onLoadMore = viewModel::loadMore,
         )
     }
 }
@@ -316,7 +306,6 @@ internal fun SearchTabScreen(
 @Composable
 internal fun HistoryTabScreen(viewModel: ZovHistoryTabViewModel) {
     val historyUi by viewModel.uiState.collectAsStateWithLifecycle()
-    val visibleTxs = remember(historyUi) { historyUi.visibleTransactions() }
     val filterResIds =
         listOf(
             R.string.history_filter_all,
@@ -331,7 +320,11 @@ internal fun HistoryTabScreen(viewModel: ZovHistoryTabViewModel) {
             historyUi = historyUi,
             onSelectFilter = viewModel::setFilterIndex,
         )
-        HistoryTabTransactionsSection(visibleTxs = visibleTxs, historyUi = historyUi)
+        HistoryTabTransactionsSection(
+            transactions = historyUi.transactions,
+            historyUi = historyUi,
+            onLoadMore = viewModel::loadMore,
+        )
     }
 }
 
