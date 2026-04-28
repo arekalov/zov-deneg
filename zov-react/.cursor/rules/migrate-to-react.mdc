@@ -1,0 +1,128 @@
+---
+alwaysApply: true
+---
+## 🧠 General Migration Rules
+
+### 1. UI (Jetpack Compose → React)
+- `@Composable` → functional component
+- `Column` / `Row` → `<div>` with flexbox or Ionic components
+- `LazyColumn` → `.map()` or virtualized list
+- `Modifier` → CSS / className
+- `remember {}` → `useState`
+- `LaunchedEffect` → `useEffect`
+
+---
+
+### 2. State Management
+
+| Android         | React                          |
+|-----------------|--------------------------------|
+| mutableStateOf  | useState                       |
+| StateFlow       | react-query / useState         |
+| ViewModel       | custom hooks                   |
+
+---
+
+### 3. Networking
+
+- Replace Repository calls with `react-query`
+- All async calls must go through:
+  - `useQuery` for GET
+  - `useMutation` for POST/PUT/DELETE
+
+#### Example
+```ts
+const { data, isLoading } = useQuery({
+  queryKey: ['user'],
+  queryFn: getUser
+})
+```
+
+### 4. Forms
+
+All forms MUST use:
+* formik
+* zod for validation
+
+#### Example
+```
+const formik = useFormik({
+  initialValues: {},
+  validationSchema: toFormikValidationSchema(zodSchema),
+  onSubmit: () => {}
+})
+```
+
+### 5. Validation
+* Replace Kotlin validation logic with zod
+* No inline validation in components
+* All schemas must be in /schemas
+
+### 6. Auth
+* Use react-auth-kit
+* No manual token handling
+* Replace SharedPreferences → react-auth-kit storage
+
+### 7. Side Effects
+* No side effects in render
+* Use:
+    * useEffect
+    * react-query lifecycle (onSuccess, onError)
+
+
+### 9. Styling
+
+Priority:
+1. Ionic components
+2. CSS modules / scoped styles
+3. Tailwind (if present)
+
+Rules:
+
+1. Avoid inline styles
+2. Prefer className
+3. Keep styles separated
+
+### 10. Error Handling
+Must be handled in:
+* react-query (onError)
+* UI state
+
+#### Example:
+```
+useQuery({
+  queryKey: ['data'],
+  queryFn: fetchData,
+  onError: (e) => console.error(e)
+})
+```
+
+## Migration Workflow
+1. Identify type: UI / ViewModel / Repository / Model
+2. Convert:
+* UI → component
+* ViewModel → hook
+* Repository → API service
+* Model → TS type
+3. Add:
+* typing (TypeScript required)
+* react-query (if async)
+* formik + zod (if form)
+
+## Anti-patterns (DO NOT DO)
+* No class components
+* No direct fetch in components
+* No global mutable state
+* No inline validation
+* No business logic in JSX
+* No copying Kotlin logic blindly
+
+## File Structure (React)
+zov-react/
+  src/
+    components/
+    pages/
+    hooks/
+    services/
+    types/
+    schemas/
