@@ -27,7 +27,8 @@ data class RegisterStep1UiState(
     val firstName: String = "",
     val lastName: String = "",
     val email: String = "",
-    val phone: String = "",
+    /** Десять цифр российского мобильного без префикса +7 (в поле отображается с префиксом +7). */
+    val phoneDigits10: String = "",
     val password: String = "",
     val isSubmitting: Boolean = false,
     val validationError: Boolean = false,
@@ -47,7 +48,7 @@ class ZovRegisterStep1ViewModel @Inject constructor(
                 firstName = savedStateHandle.get<String>(KEY_FIRST).orEmpty(),
                 lastName = savedStateHandle.get<String>(KEY_LAST).orEmpty(),
                 email = savedStateHandle.get<String>(KEY_EMAIL).orEmpty(),
-                phone = savedStateHandle.get<String>(KEY_PHONE).orEmpty(),
+                phoneDigits10 = extractNationalTenDigits(savedStateHandle.get<String>(KEY_PHONE).orEmpty()),
                 password = savedStateHandle.get<String>(KEY_PASSWORD).orEmpty(),
             ),
         )
@@ -74,9 +75,10 @@ class ZovRegisterStep1ViewModel @Inject constructor(
         _uiState.update { it.copy(email = value, validationError = false, submitError = null) }
     }
 
-    fun setPhone(value: String) {
-        savedStateHandle[KEY_PHONE] = value
-        _uiState.update { it.copy(phone = value, validationError = false, submitError = null) }
+    fun setPhoneDigits10(value: String) {
+        val digits = extractNationalTenDigits(value)
+        savedStateHandle[KEY_PHONE] = digits
+        _uiState.update { it.copy(phoneDigits10 = digits, validationError = false, submitError = null) }
     }
 
     fun setPassword(value: String) {
@@ -86,12 +88,12 @@ class ZovRegisterStep1ViewModel @Inject constructor(
 
     fun submit(onSuccess: () -> Unit) {
         val s = _uiState.value
-        if (s.hasStep1ValidationErrors()) {
+        if (!s.canSubmitStep1()) {
             _uiState.update { it.copy(validationError = true) }
             return
         }
-        val normalizedPhone = normalizePhone(s.phone)
-        if (!normalizedPhone.matches(PHONE_REGEX)) {
+        val normalizedPhone = registerPhoneE164FromNationalTen(s.phoneDigits10)
+        if (!normalizedPhone.matches(REGISTER_PHONE_E164)) {
             _uiState.update { it.copy(validationError = true) }
             return
         }
@@ -122,23 +124,5 @@ class ZovRegisterStep1ViewModel @Inject constructor(
                     },
                 )
         }
-    }
-
-    private fun RegisterStep1UiState.hasStep1ValidationErrors(): Boolean =
-        listOf(firstName, lastName, email, phone).any(String::isBlank) || password.length < 8
-
-    private fun normalizePhone(raw: String): String {
-        val digits = raw.filter { it.isDigit() || it == '+' }
-        return when {
-            digits.startsWith("+7") && digits.length == 12 -> digits
-            digits.startsWith("8") && digits.length == 11 -> "+7" + digits.drop(1)
-            digits.startsWith("7") && digits.length == 11 -> "+" + digits
-            digits.length == 10 -> "+7$digits"
-            else -> raw.trim()
-        }
-    }
-
-    private companion object {
-        val PHONE_REGEX = Regex("^\\+7\\d{10}$")
     }
 }

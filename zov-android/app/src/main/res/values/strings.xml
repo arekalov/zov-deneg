@@ -16,6 +16,7 @@
     <string name="nav_top_sign_up">Регистрация</string>
     <string name="nav_top_detail_prefix">Детали · </string>
     <string name="nav_top_buy_title">Покупка · %1$s</string>
+    <string name="nav_top_sell_title">Продажа · %1$s</string>
     <string name="nav_top_orders">Заявки</string>
     <string name="nav_top_order_detail">Заявка</string>
 
@@ -102,12 +103,17 @@
     <string name="home_orders_active_count">Активных заявок: %1$d</string>
 
     <string name="search_placeholder">Название или тикер…</string>
-    <string name="search_popular">Популярные акции</string>
+    <string name="search_popular">Популярные бумаги</string>
     <string name="search_popular_empty">Список бумаг пуст или не удалось загрузить</string>
     <string name="filter_all">Все</string>
     <string name="filter_stocks">Акции</string>
     <string name="filter_bonds">Облигации</string>
     <string name="filter_etf">ETF</string>
+
+    <string name="security_type_short_stock">Акция</string>
+    <string name="security_type_short_bond">Облигация</string>
+    <string name="security_type_short_etf">ETF</string>
+    <string name="asset_row_subtitle_with_type">%1$s · %2$s</string>
 
     <string name="history_filter_all">Все</string>
     <string name="history_filter_buys">Покупки</string>
@@ -141,8 +147,10 @@
     <string name="security_lot_value_format">%1$d шт.</string>
     <string name="security_portfolio_badge">В портфеле: %1$d шт. · ср. %2$s</string>
     <string name="action_buy">Купить</string>
+    <string name="action_sell">Продать</string>
 
     <string name="buy_title_format">Купить %1$s</string>
+    <string name="sell_title_format">Продать %1$s</string>
     <string name="buy_lots_label">Количество лотов</string>
     <string name="action_place_order">Разместить заявку</string>
 
@@ -184,6 +192,10 @@
     <string name="order_cancel_failed">Не удалось отменить заявку</string>
     <string name="order_cancelled_snackbar">Заявка отменена</string>
     <string name="buy_order_hint">К заявке · %1$d шт. · цена лота %2$s</string>
+    <string name="sell_order_hint">К продаже · %1$d шт. · цена лота %2$s</string>
+    <string name="sell_precheck_cannot_lot">Недостаточно бумаг в портфеле для продажи минимум одного лота.</string>
+    <string name="sell_error_insufficient_securities">Недостаточно бумаг для сделки.</string>
+    <string name="sell_error_insufficient_securities_reason">Недостаточно бумаг: %1$s</string>
     <string name="error_submit_order">Не удалось разместить заявку</string>
     <string name="buy_precheck_insufficient_balance">По стакану (лучшая цена покупки) на эту заявку не хватает средств на счёте. Уменьшите число лотов или пополните брокерский счёт.</string>
     <string name="buy_error_insufficient_funds">Недостаточно средств для сделки.</string>
@@ -207,7 +219,11 @@
     <string name="biometric_hardware_unavailable">Биометрия недоступна на этом устройстве</string>
     <string name="biometric_not_recognized">Не распознано. Повторите</string>
     <string name="biometric_login_disabled">Включите вход по отпечатку в профиле или при регистрации</string>
-    <string name="register_validation_error">Проверьте поля: телефон +7XXXXXXXXXX, пароль не короче 8 символов</string>
+    <string name="register_validation_error">Проверьте все поля: имя и фамилию, 10 цифр телефона после +7, почту и пароль (не короче 8 символов)</string>
+    <string name="hint_register_phone">10 цифр номера без +7 (как на клавиатуре телефона)</string>
+    <string name="hint_register_email">Формат: имя@домен.зона</string>
+    <string name="error_register_phone_incomplete">Введите 10 цифр после +7</string>
+    <string name="error_register_email_invalid">Некорректный адрес электронной почты</string>
     <string name="register_network_error">Не удалось зарегистрироваться</string>
     <string name="field_password">Пароль</string>
     <string name="hint_password_min">Не менее 8 символов</string>

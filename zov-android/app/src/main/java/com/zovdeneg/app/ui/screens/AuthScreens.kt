@@ -1,7 +1,8 @@
 package com.zovdeneg.app.ui.screens
 
 import com.zovdeneg.app.R
-import com.zovdeneg.app.ui.auth.RegisterStep1UiState
+import com.zovdeneg.app.ui.auth.canSubmitStep1
+import com.zovdeneg.app.ui.auth.isRegisterPhoneComplete
 import com.zovdeneg.app.ui.auth.ZovLoginViewModel
 import com.zovdeneg.app.ui.auth.ZovRegisterFlowViewModel
 import com.zovdeneg.app.ui.auth.ZovRegisterStep1ViewModel
@@ -24,6 +25,7 @@ import com.zovdeneg.app.ui.components.ZovBiometricFilledButton
 import com.zovdeneg.app.ui.components.ZovCenteredCircularProgress
 import com.zovdeneg.app.ui.components.ZovPinDots
 import com.zovdeneg.app.ui.components.ZovPinKeypad
+import com.zovdeneg.app.ui.components.ZovRuPhone10OutlinedField
 import com.zovdeneg.app.ui.components.ZovScrollScreen
 import com.zovdeneg.app.ui.theme.ZovAppTheme
 import com.zovdeneg.app.ui.theme.ZovTheme
@@ -48,7 +50,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -287,7 +288,7 @@ private fun LoginCredentialBlock(
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
-    val phone by viewModel.credentialPhone.collectAsStateWithLifecycle()
+    val phoneDigits10 by viewModel.credentialPhoneDigits10.collectAsStateWithLifecycle()
     val password by viewModel.credentialPassword.collectAsStateWithLifecycle()
     val credentialError by viewModel.credentialError.collectAsStateWithLifecycle()
     val submitting by viewModel.credentialSubmitting.collectAsStateWithLifecycle()
@@ -295,11 +296,9 @@ private fun LoginCredentialBlock(
         title = stringResource(R.string.auth_welcome),
         subtitle = stringResource(R.string.auth_login_phone_password_subtitle),
     )
-    OutlinedTextField(
-        value = phone,
-        onValueChange = viewModel::setCredentialPhone,
-        label = { Text(stringResource(R.string.field_phone)) },
-        modifier = Modifier.fillMaxWidth(),
+    ZovRuPhone10OutlinedField(
+        phoneDigits10 = phoneDigits10,
+        onPhoneDigits10Change = viewModel::setCredentialPhoneDigits10,
         enabled = !submitting,
     )
     ZovAuthPasswordOutlinedField(
@@ -329,7 +328,7 @@ private fun LoginCredentialBlock(
                 onNeedPinSetup = onNeedPinSetupAfterLogin,
             )
         },
-        enabled = !submitting && phone.isNotBlank() && password.isNotBlank(),
+        enabled = !submitting && isRegisterPhoneComplete(phoneDigits10) && password.isNotBlank(),
         modifier = Modifier.fillMaxWidth(),
         colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = c.onPrimary),
     ) {
@@ -363,46 +362,6 @@ private fun RegisterProgress(activeStep: Int) {
             )
         }
     }
-}
-
-@Composable
-private fun RegisterStep1TextFields(
-    state: RegisterStep1UiState,
-    viewModel: ZovRegisterStep1ViewModel,
-) {
-    OutlinedTextField(
-        value = state.firstName,
-        onValueChange = viewModel::setFirstName,
-        label = { Text(stringResource(R.string.field_first_name)) },
-        modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = state.lastName,
-        onValueChange = viewModel::setLastName,
-        label = { Text(stringResource(R.string.field_last_name)) },
-        modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = state.phone,
-        onValueChange = viewModel::setPhone,
-        label = { Text(stringResource(R.string.field_phone)) },
-        modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = state.email,
-        onValueChange = viewModel::setEmail,
-        label = { Text(stringResource(R.string.field_email)) },
-        modifier = Modifier.fillMaxWidth(),
-    )
-    ZovAuthPasswordOutlinedField(
-        state = ZovAuthPasswordFieldState(
-            value = state.password,
-            onValueChange = viewModel::setPassword,
-        ),
-        label = { Text(stringResource(R.string.field_password)) },
-        modifier = Modifier.fillMaxWidth(),
-        supportingText = { Text(stringResource(R.string.hint_password_min)) },
-    )
 }
 
 @Composable
@@ -451,7 +410,7 @@ fun RegisterDataScreen(
         )
         Button(
             onClick = { viewModel.submit(onNext) },
-            enabled = !state.isSubmitting,
+            enabled = state.canSubmitStep1() && !state.isSubmitting,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = c.onPrimary),
         ) { Text(stringResource(R.string.action_continue), style = t.bodyMed14) }

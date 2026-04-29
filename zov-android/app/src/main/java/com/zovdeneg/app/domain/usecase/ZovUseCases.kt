@@ -26,9 +26,24 @@ import javax.inject.Inject
 
 class LoadSecurityDetailUseCase @Inject constructor(
     private val securitiesRepository: SecuritiesRepository,
+    private val portfolioRepository: PortfolioRepository,
 ) {
-    suspend operator fun invoke(ticker: String): Result<SecurityDetail> =
-        securitiesRepository.getSecurityDetail(ticker)
+    suspend operator fun invoke(ticker: String): Result<SecurityDetail> {
+        val detail =
+            securitiesRepository.getSecurityDetail(ticker).getOrElse { e ->
+                return Result.failure(e)
+            }
+        if (detail.portfolioQuantity != null) {
+            return Result.success(detail)
+        }
+        val holdings = portfolioRepository.refreshHoldings().getOrNull() ?: return Result.success(detail)
+        val holding =
+            holdings.find { it.detailNavKey.equals(detail.securityId, ignoreCase = true) }
+                ?: holdings.find { it.ticker.equals(detail.ticker, ignoreCase = true) }
+        val qty = holding?.quantity ?: return Result.success(detail)
+        if (qty < 1) return Result.success(detail)
+        return Result.success(detail.copy(portfolioQuantity = qty))
+    }
 }
 
 class LoadSecurityOrderBookUseCase @Inject constructor(
@@ -93,6 +108,13 @@ class PlaceMarketBuyOrderUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(securityId: String, quantity: Int): Result<OrderReceipt> =
         ordersRepository.placeMarketBuy(securityId, quantity)
+}
+
+class PlaceMarketSellOrderUseCase @Inject constructor(
+    private val ordersRepository: OrdersRepository,
+) {
+    suspend operator fun invoke(securityId: String, quantity: Int): Result<OrderReceipt> =
+        ordersRepository.placeMarketSell(securityId, quantity)
 }
 
 class LoadUserOrdersUseCase @Inject constructor(
