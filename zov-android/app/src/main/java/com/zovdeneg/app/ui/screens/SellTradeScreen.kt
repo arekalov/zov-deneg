@@ -6,6 +6,7 @@ import com.zovdeneg.app.ui.components.LocalZovSnackbarScope
 import com.zovdeneg.app.ui.components.ZovCenteredCircularProgress
 import com.zovdeneg.app.ui.components.ZovScrollScreen
 import com.zovdeneg.app.ui.theme.ZovTheme
+import com.zovdeneg.app.ui.trade.MarketOrderLotsRow
 import com.zovdeneg.app.ui.trade.SellSubmitHint
 import com.zovdeneg.app.ui.trade.SellUiState
 import com.zovdeneg.app.ui.trade.SellViewModel
@@ -83,6 +84,7 @@ private fun SellScreenOrderContent(
                 isSubmitting = state.isSubmitting,
                 maxLots = state.maxSellLots,
                 onBump = viewModel::bumpLots,
+                onSetLots = viewModel::setLots,
             )
             Text(
                 stringResource(

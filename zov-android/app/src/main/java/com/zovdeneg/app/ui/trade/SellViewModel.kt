@@ -118,6 +118,14 @@ class SellViewModel @Inject constructor(
         }
     }
 
+    fun setLots(lots: Int) {
+        _uiState.update { s ->
+            val cap = s.maxSellLots
+            if (cap < 1) return@update s
+            s.copy(lots = lots.coerceIn(1, cap), submitHint = SellSubmitHint.None)
+        }
+    }
+
     fun submitOrder() {
         if (!_uiState.value.canSubmitMarketSell) return
         val detail = _uiState.value.detail ?: return

@@ -8,6 +8,7 @@ import com.zovdeneg.app.ui.common.ZovShapeMedium
 import com.zovdeneg.app.ui.components.ZovBalanceStrip
 import com.zovdeneg.app.ui.components.ZovFilterChip
 import com.zovdeneg.app.ui.components.ZovOutlinedRow
+import com.zovdeneg.app.ui.components.ZovPullToRefreshScrollScreen
 import com.zovdeneg.app.ui.components.ZovScrollScreen
 import com.zovdeneg.app.ui.components.ZovSummaryCard
 import com.zovdeneg.app.ui.home.MainHomeViewModel
@@ -46,6 +47,20 @@ private data class MainHomePositionsState(
     val activeOrdersCount: Int,
 )
 
+private data class MainHomePullRefresh(
+    val isRefreshing: Boolean,
+    val onRefresh: () -> Unit,
+)
+
+private data class MainHomeScrollModel(
+    val pullRefresh: MainHomePullRefresh,
+    val positionsState: MainHomePositionsState,
+    val summaryBlock: MainHomeSummaryBlockTexts,
+    val onOpenBrokerAccount: () -> Unit,
+    val onOpenOrders: () -> Unit,
+    val onOpenSecurity: (securityId: String, displayTicker: String) -> Unit,
+)
+
 @Composable
 internal fun MainHomeScreen(
     viewModel: MainHomeViewModel,
@@ -56,45 +71,48 @@ internal fun MainHomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val placeholder = stringResource(R.string.home_em_dash)
     MainHomeScrollContent(
-        positionsState = MainHomePositionsState(
-            holdings = uiState.holdings,
-            activeOrdersCount = uiState.activeOrdersCount,
+        model = MainHomeScrollModel(
+            pullRefresh = MainHomePullRefresh(
+                isRefreshing = uiState.isPullRefreshing,
+                onRefresh = viewModel::pullToRefresh,
+            ),
+            positionsState = MainHomePositionsState(
+                holdings = uiState.holdings,
+                activeOrdersCount = uiState.activeOrdersCount,
+            ),
+            summaryBlock = MainHomeSummaryBlockTexts(
+                amountText = uiState.portfolioAmountRub ?: placeholder,
+                gainText = uiState.totalGainText ?: placeholder,
+                brokerageBalanceLine = uiState.brokerageTotalRub ?: placeholder,
+            ),
+            onOpenBrokerAccount = onOpenBrokerAccount,
+            onOpenOrders = onOpenOrders,
+            onOpenSecurity = onOpenSecurity,
         ),
-        summaryBlock = MainHomeSummaryBlockTexts(
-            amountText = uiState.portfolioAmountRub ?: placeholder,
-            gainText = uiState.totalGainText ?: placeholder,
-            brokerageBalanceLine = uiState.brokerageTotalRub ?: placeholder,
-        ),
-        onOpenBrokerAccount = onOpenBrokerAccount,
-        onOpenOrders = onOpenOrders,
-        onOpenSecurity = onOpenSecurity,
     )
 }
 
 @Composable
-private fun MainHomeScrollContent(
-    positionsState: MainHomePositionsState,
-    summaryBlock: MainHomeSummaryBlockTexts,
-    onOpenBrokerAccount: () -> Unit,
-    onOpenOrders: () -> Unit,
-    onOpenSecurity: (securityId: String, displayTicker: String) -> Unit,
-) {
-    ZovScrollScreen {
+private fun MainHomeScrollContent(model: MainHomeScrollModel) {
+    ZovPullToRefreshScrollScreen(
+        isRefreshing = model.pullRefresh.isRefreshing,
+        onRefresh = model.pullRefresh.onRefresh,
+    ) {
         MainHomePortfolioSummaryCard(
-            amountText = summaryBlock.amountText,
-            gainText = summaryBlock.gainText,
+            amountText = model.summaryBlock.amountText,
+            gainText = model.summaryBlock.gainText,
         )
         MainHomeBrokerBalanceRow(
-            brokerageBalanceLine = summaryBlock.brokerageBalanceLine,
-            onOpenBrokerAccount = onOpenBrokerAccount,
+            brokerageBalanceLine = model.summaryBlock.brokerageBalanceLine,
+            onOpenBrokerAccount = model.onOpenBrokerAccount,
         )
         MainHomeOrdersRow(
-            activeOrdersCount = positionsState.activeOrdersCount,
-            onOpenOrders = onOpenOrders,
+            activeOrdersCount = model.positionsState.activeOrdersCount,
+            onOpenOrders = model.onOpenOrders,
         )
         MainHomeHoldingsSection(
-            holdings = positionsState.holdings,
-            onOpenSecurity = onOpenSecurity,
+            holdings = model.positionsState.holdings,
+            onOpenSecurity = model.onOpenSecurity,
         )
     }
 }
@@ -339,7 +357,10 @@ internal fun SearchTabScreen(
             R.string.filter_bonds,
             R.string.filter_etf,
         )
-    ZovScrollScreen {
+    ZovPullToRefreshScrollScreen(
+        isRefreshing = searchUi.isPullRefreshing,
+        onRefresh = viewModel::pullToRefresh,
+    ) {
         SearchTabSearchField(value = searchUi.query, onValueChange = viewModel::setQuery)
         Row(horizontalArrangement = Arrangement.spacedBy(ZovItemSpacing)) {
             chipResIds.forEachIndexed { i, resId ->
@@ -388,15 +409,18 @@ internal fun HistoryTabScreen(viewModel: ZovHistoryTabViewModel) {
 private fun MainHomePreviewLight() {
     ZovAppTheme(darkTheme = false) {
         MainHomeScrollContent(
-            positionsState = MainHomePositionsState(holdings = emptyList(), activeOrdersCount = 1),
-            summaryBlock = MainHomeSummaryBlockTexts(
-                amountText = "1 234 567,89 ₽",
-                gainText = "+12 345,67 ₽ (+2,3%)",
-                brokerageBalanceLine = "45 320,00 ₽",
+            model = MainHomeScrollModel(
+                pullRefresh = MainHomePullRefresh(isRefreshing = false, onRefresh = {}),
+                positionsState = MainHomePositionsState(holdings = emptyList(), activeOrdersCount = 1),
+                summaryBlock = MainHomeSummaryBlockTexts(
+                    amountText = "1 234 567,89 ₽",
+                    gainText = "+12 345,67 ₽ (+2,3%)",
+                    brokerageBalanceLine = "45 320,00 ₽",
+                ),
+                onOpenBrokerAccount = {},
+                onOpenOrders = {},
+                onOpenSecurity = { _, _ -> },
             ),
-            onOpenBrokerAccount = {},
-            onOpenOrders = {},
-            onOpenSecurity = { _, _ -> },
         )
     }
 }
@@ -406,15 +430,18 @@ private fun MainHomePreviewLight() {
 private fun MainHomePreviewDark() {
     ZovAppTheme(darkTheme = true) {
         MainHomeScrollContent(
-            positionsState = MainHomePositionsState(holdings = emptyList(), activeOrdersCount = 1),
-            summaryBlock = MainHomeSummaryBlockTexts(
-                amountText = "1 234 567,89 ₽",
-                gainText = "+12 345,67 ₽ (+2,3%)",
-                brokerageBalanceLine = "45 320,00 ₽",
+            model = MainHomeScrollModel(
+                pullRefresh = MainHomePullRefresh(isRefreshing = false, onRefresh = {}),
+                positionsState = MainHomePositionsState(holdings = emptyList(), activeOrdersCount = 1),
+                summaryBlock = MainHomeSummaryBlockTexts(
+                    amountText = "1 234 567,89 ₽",
+                    gainText = "+12 345,67 ₽ (+2,3%)",
+                    brokerageBalanceLine = "45 320,00 ₽",
+                ),
+                onOpenBrokerAccount = {},
+                onOpenOrders = {},
+                onOpenSecurity = { _, _ -> },
             ),
-            onOpenBrokerAccount = {},
-            onOpenOrders = {},
-            onOpenSecurity = { _, _ -> },
         )
     }
 }

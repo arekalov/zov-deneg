@@ -17,6 +17,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,21 @@ private val chartTimeHourMinute: DateTimeFormatter =
 private val chartTimeDayMonth: DateTimeFormatter =
     DateTimeFormatter.ofPattern("dd.MM").withZone(ZoneId.of("Europe/Moscow"))
 
+/** Чуть более яркий зелёный линии и заливки относительно `primary` (тёмная тема). */
+private val chartGreenBoostTarget = Color(0xFF5DFF95)
+
+private fun chartLineGreen(primary: Color): Color =
+    lerp(primary, chartGreenBoostTarget, fraction = 0.22f)
+
+/** Светлая тема: линия ближе к насыщенному «позитивному» зелёному, без разбеливания к мяте. */
+private fun chartLineGreenLight(primary: Color, positive: Color): Color =
+    lerp(primary, positive, fraction = 0.55f)
+
+private fun Color.isLightUiBackground(): Boolean {
+    val luma = red * 0.299f + green * 0.587f + blue * 0.114f
+    return luma > 0.55f
+}
+
 @OptIn(ExperimentalTextApi::class)
 @Composable
 fun ZovSecurityPriceChart(
@@ -43,12 +59,24 @@ fun ZovSecurityPriceChart(
     val lastTs = points.lastOrNull()?.timestampSeconds ?: 0L
     key(chartRange, points.size, firstTs, lastTs) {
         val lineData = remember(points) { points.toSortedPriceLineData() }
-        val lineColor = c.primary
+        val lightBg = c.background.isLightUiBackground()
+        val lineColor =
+            if (lightBg) {
+                chartLineGreenLight(c.primary, c.positive)
+            } else {
+                chartLineGreen(c.primary)
+            }
+        val (areaTopAlpha, areaBottomAlpha, areaFillAlpha) =
+            if (lightBg) {
+                Triple(0.58f, 0.14f, 0.5f)
+            } else {
+                Triple(0.42f, 0.06f, 0.38f)
+            }
         val areaGradient =
             ChartyColor.Gradient(
                 listOf(
-                    lineColor.copy(alpha = 0.42f),
-                    lineColor.copy(alpha = 0.06f),
+                    lineColor.copy(alpha = areaTopAlpha),
+                    lineColor.copy(alpha = areaBottomAlpha),
                 ),
             )
         val labelStyle = TextStyle(color = c.onSurfaceVariant, fontSize = 9.sp)
@@ -75,7 +103,7 @@ fun ZovSecurityPriceChart(
             color = areaGradient,
             lineConfig = lineConfig,
             scaffoldConfig = scaffoldConfig,
-            fillAlpha = 0.38f,
+            fillAlpha = areaFillAlpha,
             onPointClick = null,
         )
     }

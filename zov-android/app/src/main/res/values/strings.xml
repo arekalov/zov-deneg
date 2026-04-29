@@ -145,7 +145,13 @@
     <string name="security_exchange_label">Биржа</string>
     <string name="security_lot_label">Лот</string>
     <string name="security_lot_value_format">%1$d шт.</string>
-    <string name="security_portfolio_badge">В портфеле: %1$d шт. · ср. %2$s</string>
+    <string name="security_portfolio_card_title">В портфеле</string>
+    <string name="security_portfolio_qty_label">Штук в позиции</string>
+    <string name="security_portfolio_total_value_label">Стоимость позиции</string>
+    <string name="security_portfolio_avg_price_label">Средняя цена</string>
+    <string name="security_portfolio_unit_price_label">Цена 1 шт.</string>
+    <string name="security_portfolio_unit_day_change_label">Изм. за день (1 шт.)</string>
+    <string name="security_portfolio_position_result_label">Результат позиции</string>
     <string name="action_buy">Купить</string>
     <string name="action_sell">Продать</string>
 

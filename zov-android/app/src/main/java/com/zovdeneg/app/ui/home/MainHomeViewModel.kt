@@ -26,7 +26,14 @@ data class MainHomeUiState(
     val holdings: List<Holding> = emptyList(),
     val activeOrdersCount: Int = 0,
     val isLoading: Boolean = true,
+    /** Жест «потянуть вниз» на главной: обновление котировок и портфеля. */
+    val isPullRefreshing: Boolean = false,
     val loadFailed: Boolean = false,
+    /**
+     * Монотонно растёт при каждом тихом опросе портфеля, чтобы [MutableStateFlow] не отбрасывал
+     * обновление при тех же строках/списке (сравнение [equals] у data class).
+     */
+    val quietRefreshStamp: Long = 0L,
 )
 
 @HiltViewModel
@@ -46,6 +53,17 @@ class MainHomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, loadFailed = false) }
             loadPortfolioAndBalance()
+        }
+    }
+
+    fun pullToRefresh() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isPullRefreshing = true, loadFailed = false) }
+            try {
+                loadPortfolioAndBalance()
+            } finally {
+                _uiState.update { it.copy(isPullRefreshing = false) }
+            }
         }
     }
 
@@ -76,7 +94,9 @@ class MainHomeViewModel @Inject constructor(
                     holdings = holdings.getOrNull().orEmpty(),
                     activeOrdersCount = activeOrdersCount,
                     isLoading = false,
+                    isPullRefreshing = false,
                     loadFailed = summary.isFailure,
+                    quietRefreshStamp = 0L,
                 )
             }
         }
@@ -105,6 +125,7 @@ class MainHomeViewModel @Inject constructor(
                     holdings = holdings.getOrNull() ?: prev.holdings,
                     activeOrdersCount = nextActiveOrders ?: prev.activeOrdersCount,
                     loadFailed = prev.loadFailed,
+                    quietRefreshStamp = prev.quietRefreshStamp + 1L,
                 )
             }
         }

@@ -1,6 +1,7 @@
 package com.zovdeneg.app.navigation
 
 import com.zovdeneg.app.R
+import com.zovdeneg.app.ui.home.MainHomeViewModel
 import com.zovdeneg.app.ui.common.ZovSpace6
 import com.zovdeneg.app.ui.common.ZovTopBarContentHeight
 import com.zovdeneg.app.ui.common.ZovTouchMin
@@ -38,7 +39,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -50,10 +53,16 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 
 private data class BottomDestination(
     val route: String,
@@ -100,6 +109,36 @@ private val mainTabRoutes =
 private val bottomBarRoutes =
     mainTabRoutes + ZovRoutes.PROFILE
 
+/**
+ * Пока открыт «основной» каркас с нижней навигацией, периодически подтягиваем портфель и заявки
+ * (блок «Позиции» на главной и счётчики), даже если пользователь на другой вкладке.
+ */
+@Composable
+private fun MainHomePortfolioPollingEffect(
+    enabled: Boolean,
+    navController: NavHostController,
+) {
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val navStack by navController.currentBackStackEntryAsState()
+    val homeNavEntry =
+        remember(navStack) {
+            runCatching { navController.getBackStackEntry(ZovRoutes.MAIN_HOME) }.getOrNull()
+        }
+    if (homeNavEntry == null) return
+
+    val homeVm: MainHomeViewModel = hiltViewModel(homeNavEntry)
+
+    LaunchedEffect(enabled, homeVm, lifecycle) {
+        if (!enabled) return@LaunchedEffect
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                delay(MainHomeViewModel.QUIET_REFRESH_INTERVAL_MS)
+                homeVm.refreshQuietly()
+            }
+        }
+    }
+}
+
 @Composable
 private fun tradeFlowTopTitle(route: String?, displayTickerArg: String): String? =
     when (route) {
@@ -109,24 +148,55 @@ private fun tradeFlowTopTitle(route: String?, displayTickerArg: String): String?
     }
 
 @Composable
+private fun rememberDetailToolbarSuffix(
+    route: String?,
+    backStack: NavBackStackEntry?,
+    displayTickerArg: String,
+): String {
+    val suffix by produceState(
+        initialValue = displayTickerArg,
+        route,
+        backStack,
+        displayTickerArg,
+    ) {
+        if (route != ZovRoutes.DETAIL || backStack == null) {
+            value = displayTickerArg
+            return@produceState
+        }
+        backStack.savedStateHandle
+            .getStateFlow(DETAIL_TOOLBAR_TITLE_KEY, displayTickerArg)
+            .collect { value = it }
+    }
+    return suffix
+}
+
+@Composable
+private fun topBarTitleForTabsAndDetail(
+    route: String?,
+    detailToolbarSuffix: String,
+): String? =
+    when (route) {
+        ZovRoutes.MAIN_HOME -> stringResource(R.string.nav_top_home)
+        ZovRoutes.MAIN_SEARCH -> stringResource(R.string.nav_top_search)
+        ZovRoutes.MAIN_HISTORY -> stringResource(R.string.nav_top_history)
+        ZovRoutes.PROFILE -> stringResource(R.string.nav_top_profile)
+        ZovRoutes.EDIT_PROFILE -> stringResource(R.string.nav_top_edit_profile)
+        ZovRoutes.CHANGE_PIN -> stringResource(R.string.nav_top_change_pin)
+        ZovRoutes.DEPOSIT -> stringResource(R.string.nav_top_deposit)
+        in registerRoutes -> stringResource(R.string.nav_top_sign_up)
+        ZovRoutes.DETAIL -> stringResource(R.string.nav_top_detail_prefix) + detailToolbarSuffix
+        ZovRoutes.ORDERS_LIST -> stringResource(R.string.nav_top_orders)
+        ZovRoutes.ORDER_DETAIL -> stringResource(R.string.nav_top_order_detail)
+        else -> null
+    }
+
+@Composable
 internal fun zovTopBarTitle(route: String?, backStack: NavBackStackEntry?): String? {
     val displayTickerArg =
         backStack?.arguments?.getString("displayTicker").orEmpty().replace('_', '/')
+    val detailToolbarSuffix = rememberDetailToolbarSuffix(route, backStack, displayTickerArg)
     return tradeFlowTopTitle(route, displayTickerArg)
-        ?: when (route) {
-            ZovRoutes.MAIN_HOME -> stringResource(R.string.nav_top_home)
-            ZovRoutes.MAIN_SEARCH -> stringResource(R.string.nav_top_search)
-            ZovRoutes.MAIN_HISTORY -> stringResource(R.string.nav_top_history)
-            ZovRoutes.PROFILE -> stringResource(R.string.nav_top_profile)
-            ZovRoutes.EDIT_PROFILE -> stringResource(R.string.nav_top_edit_profile)
-            ZovRoutes.CHANGE_PIN -> stringResource(R.string.nav_top_change_pin)
-            ZovRoutes.DEPOSIT -> stringResource(R.string.nav_top_deposit)
-            in registerRoutes -> stringResource(R.string.nav_top_sign_up)
-            ZovRoutes.DETAIL -> stringResource(R.string.nav_top_detail_prefix) + displayTickerArg
-            ZovRoutes.ORDERS_LIST -> stringResource(R.string.nav_top_orders)
-            ZovRoutes.ORDER_DETAIL -> stringResource(R.string.nav_top_order_detail)
-            else -> null
-        }
+        ?: topBarTitleForTabsAndDetail(route, detailToolbarSuffix)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -212,7 +282,9 @@ private fun ZovNavBottomBar(
                 selected = selected,
                 onClick = {
                     navController.navigate(dest.route) {
-                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        // Якорь «Главная», а не findStartDestination() (LOGIN уже снят со стека) —
+                        // иначе вкладки могут выкидывать MAIN_HOME и ломать getBackStackEntry + поллинг.
+                        popUpTo(ZovRoutes.MAIN_HOME) { saveState = true }
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -290,6 +362,10 @@ fun ZovNavHost(modifier: Modifier = Modifier) {
                     .padding(inner),
                 contentAlignment = Alignment.TopCenter,
             ) {
+                MainHomePortfolioPollingEffect(
+                    enabled = showBottomBar,
+                    navController = navController,
+                )
                 ZovNavGraphHost(navController = navController, modifier = Modifier.fillMaxSize())
             }
         }

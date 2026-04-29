@@ -8,6 +8,8 @@ data class Holding(
     val deltaPositive: Boolean,
     /** Количество бумаг в портфеле (штуки), для UI и сверки с деталями инструмента. */
     val quantity: Int,
+    val averagePriceLine: String,
+    val currentPriceLine: String,
     /** UUID для zov-back или тикер для мок-HTTP. */
     val detailNavKey: String = ticker,
     /** Как в OpenAPI `Security.type`: `stock`, `bond`, `etf`. */

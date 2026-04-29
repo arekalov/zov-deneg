@@ -4,14 +4,13 @@ import com.zovdeneg.app.R
 import com.zovdeneg.app.domain.market.SecurityDetail
 import com.zovdeneg.app.domain.market.SecurityOrderBook
 import com.zovdeneg.app.domain.market.SecurityOrderBookRow
-import com.zovdeneg.app.ui.common.ZovFieldInnerPadding
 import com.zovdeneg.app.ui.common.ZovItemSpacing
-import com.zovdeneg.app.ui.common.ZovShapeMedium
 import com.zovdeneg.app.ui.components.LocalZovSnackbarHostState
 import com.zovdeneg.app.ui.components.LocalZovSnackbarScope
 import com.zovdeneg.app.ui.deposit.DepositScreenLoadedContent
 import com.zovdeneg.app.ui.deposit.DepositSuccessSideEffect
 import com.zovdeneg.app.ui.components.ZovCenteredCircularProgress
+import com.zovdeneg.app.ui.components.ZovPullToRefreshScrollScreen
 import com.zovdeneg.app.ui.components.ZovScrollScreen
 import com.zovdeneg.app.ui.deposit.DepositUiState
 import com.zovdeneg.app.ui.deposit.DepositViewModel
@@ -25,21 +24,16 @@ import com.zovdeneg.app.ui.trade.SecurityDetailAboutCompanyCard
 import com.zovdeneg.app.ui.trade.SecurityDetailOrderBookTab
 import com.zovdeneg.app.ui.trade.SecurityDetailPortfolioBanner
 import com.zovdeneg.app.ui.trade.SecurityDetailPriceChartBlock
+import com.zovdeneg.app.ui.trade.MarketOrderLotsRow
 import com.zovdeneg.app.ui.trade.SecurityDetailUiState
 import com.zovdeneg.app.ui.trade.SecurityDetailViewModel
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -49,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -93,6 +86,10 @@ private val previewSecurityDetail =
             "Предоставляет полный спектр банковских услуг физическим и юридическим лицам.",
         portfolioQuantity = 10,
         portfolioAvgPriceLine = "285 ₽",
+        portfolioCurrentValueLine = "2 981,2 ₽",
+        portfolioPositionDeltaLine = "+132,5 ₽ (+4,65%)",
+        portfolioPositionDeltaPositive = true,
+        portfolioUnitPriceLine = "298,12 ₽",
         orderBook = previewSecurityOrderBook,
     )
 
@@ -113,6 +110,8 @@ fun SecurityDetailScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     SecurityDetailScreenContent(
         uiState = state,
+        isPullRefreshing = state.isPullRefreshing,
+        onPullRefresh = viewModel::pullToRefresh,
         callbacks = SecurityDetailScreenCallbacks(
             onRetry = viewModel::retry,
             onBuy = onBuy,
@@ -156,43 +155,15 @@ private fun SecurityDetailTabs(selectedTab: Int, onSelectTab: (Int) -> Unit) {
 }
 
 @Composable
-private fun SecurityDetailBuySellActionsRow(
-    detail: SecurityDetail,
-    onBuy: () -> Unit,
-    onSell: () -> Unit,
-) {
+private fun SecurityDetailBuySellActionsRow(onBuy: () -> Unit) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
-    if (detail.canSellAtLeastOneLot) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ZovItemSpacing),
-        ) {
-            OutlinedButton(
-                onClick = onSell,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = c.negative),
-            ) {
-                Text(stringResource(R.string.action_sell), style = t.bodyMed14)
-            }
-            Button(
-                onClick = onBuy,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = c.primary,
-                    contentColor = c.onPrimary,
-                ),
-            ) { Text(stringResource(R.string.action_buy), style = t.bodyMed14) }
-        }
-    } else {
-        Button(
-            onClick = onBuy,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = c.primary,
-                contentColor = c.onPrimary,
-            ),
-        ) { Text(stringResource(R.string.action_buy), style = t.bodyMed14) }
+    Button(
+        onClick = onBuy,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = c.onPrimary),
+    ) {
+        Text(stringResource(R.string.action_buy), style = t.bodyMed14)
     }
 }
 
@@ -220,7 +191,7 @@ private fun SecurityDetailLoadedSection(
             chartRange = uiState.chartRange,
             onSelectChartRange = callbacks.onSelectChartRange,
         )
-        SecurityDetailPortfolioBanner(detail)
+        SecurityDetailPortfolioBanner(detail = detail, onSell = callbacks.onSell)
         SecurityDetailAboutCompanyCard(detail)
     } else {
         when {
@@ -234,16 +205,14 @@ private fun SecurityDetailLoadedSection(
             else -> SecurityDetailOrderBookTab(detail = detail)
         }
     }
-    SecurityDetailBuySellActionsRow(
-        detail = detail,
-        onBuy = callbacks.onBuy,
-        onSell = callbacks.onSell,
-    )
+    SecurityDetailBuySellActionsRow(onBuy = callbacks.onBuy)
 }
 
 @Composable
 private fun SecurityDetailScreenContent(
     uiState: SecurityDetailUiState,
+    isPullRefreshing: Boolean,
+    onPullRefresh: () -> Unit,
     callbacks: SecurityDetailScreenCallbacks,
 ) {
     val c = ZovTheme.colors
@@ -254,7 +223,10 @@ private fun SecurityDetailScreenContent(
             callbacks.onOrderBookTabSelected()
         }
     }
-    ZovScrollScreen {
+    ZovPullToRefreshScrollScreen(
+        isRefreshing = isPullRefreshing,
+        onRefresh = onPullRefresh,
+    ) {
         when {
             uiState.isLoading -> {
                 Spacer(Modifier.height(ZovItemSpacing))
@@ -285,43 +257,6 @@ private fun SecurityDetailScreenContent(
                     Text(stringResource(R.string.action_retry), style = t.bodyMed14)
                 }
             }
-        }
-    }
-}
-
-@Composable
-internal fun MarketOrderLotsRow(
-    lots: Int,
-    isSubmitting: Boolean,
-    maxLots: Int? = null,
-    onBump: (Int) -> Unit,
-) {
-    val c = ZovTheme.colors
-    val t = ZovTheme.text
-    Row(
-        Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(ZovItemSpacing),
-    ) {
-        OutlinedButton(
-            onClick = { onBump(-1) },
-            enabled = !isSubmitting && lots > 1,
-        ) {
-            Text("−", style = t.titleSemi20)
-        }
-        Text(
-            lots.toString(),
-            style = t.pinAmount20,
-            modifier = Modifier
-                .weight(1f)
-                .background(c.surfaceContainer, RoundedCornerShape(ZovShapeMedium))
-                .padding(ZovFieldInnerPadding),
-        )
-        OutlinedButton(
-            onClick = { onBump(1) },
-            enabled = !isSubmitting && (maxLots == null || lots < maxLots),
-        ) {
-            Text("+", style = t.titleSemi20)
         }
     }
 }
@@ -427,6 +362,7 @@ private fun BuyScreenOrderContent(
                 lots = state.lots,
                 isSubmitting = state.isSubmitting,
                 onBump = viewModel::bumpLots,
+                onSetLots = viewModel::setLots,
             )
             Text(
                 stringResource(
@@ -535,6 +471,8 @@ private fun DetailPreviewLight() {
                 detail = previewSecurityDetail,
                 detailFailed = false,
             ),
+            isPullRefreshing = false,
+            onPullRefresh = {},
             callbacks = SecurityDetailScreenCallbacks(
                 onRetry = {},
                 onBuy = {},
@@ -556,6 +494,8 @@ private fun DetailPreviewDark() {
                 detail = previewSecurityDetail,
                 detailFailed = false,
             ),
+            isPullRefreshing = false,
+            onPullRefresh = {},
             callbacks = SecurityDetailScreenCallbacks(
                 onRetry = {},
                 onBuy = {},

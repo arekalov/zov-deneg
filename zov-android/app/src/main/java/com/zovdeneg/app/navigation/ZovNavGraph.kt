@@ -44,12 +44,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import com.zovdeneg.app.BuildConfig
-import kotlinx.coroutines.delay
 
 @Composable
 internal fun ZovNavGraphHost(
@@ -214,7 +210,6 @@ private fun NavGraphBuilder.registerFlowStep4(navController: NavHostController) 
 private fun NavGraphBuilder.zovTabDestinations(navController: NavHostController) {
     composable(ZovRoutes.MAIN_HOME) { homeEntry ->
         val homeVm: MainHomeViewModel = hiltViewModel()
-        val homeLifecycle = LocalLifecycleOwner.current.lifecycle
         val homeRefreshTick by homeEntry.savedStateHandle
             .getStateFlow(MAIN_HOME_DATA_REFRESH_TICK_KEY, 0L)
             .collectAsStateWithLifecycle()
@@ -222,14 +217,6 @@ private fun NavGraphBuilder.zovTabDestinations(navController: NavHostController)
             if (homeRefreshTick != 0L) {
                 homeVm.refresh()
                 homeEntry.savedStateHandle[MAIN_HOME_DATA_REFRESH_TICK_KEY] = 0L
-            }
-        }
-        LaunchedEffect(homeVm, homeLifecycle) {
-            homeLifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                while (true) {
-                    delay(MainHomeViewModel.QUIET_REFRESH_INTERVAL_MS)
-                    homeVm.refreshQuietly()
-                }
             }
         }
         MainHomeScreen(

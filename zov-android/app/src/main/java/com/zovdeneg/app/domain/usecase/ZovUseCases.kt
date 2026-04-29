@@ -33,16 +33,31 @@ class LoadSecurityDetailUseCase @Inject constructor(
             securitiesRepository.getSecurityDetail(ticker).getOrElse { e ->
                 return Result.failure(e)
             }
-        if (detail.portfolioQuantity != null) {
+        val needsPortfolioEnrichment =
+            detail.portfolioQuantity == null ||
+                detail.portfolioCurrentValueLine == null ||
+                detail.portfolioUnitPriceLine == null
+        if (!needsPortfolioEnrichment) {
             return Result.success(detail)
         }
         val holdings = portfolioRepository.refreshHoldings().getOrNull() ?: return Result.success(detail)
         val holding =
             holdings.find { it.detailNavKey.equals(detail.securityId, ignoreCase = true) }
                 ?: holdings.find { it.ticker.equals(detail.ticker, ignoreCase = true) }
-        val qty = holding?.quantity ?: return Result.success(detail)
+                ?: return Result.success(detail)
+        val qty = holding.quantity
         if (qty < 1) return Result.success(detail)
-        return Result.success(detail.copy(portfolioQuantity = qty))
+        return Result.success(
+            detail.copy(
+                portfolioQuantity = detail.portfolioQuantity ?: qty,
+                portfolioAvgPriceLine = detail.portfolioAvgPriceLine ?: holding.averagePriceLine,
+                portfolioCurrentValueLine = detail.portfolioCurrentValueLine ?: holding.valueText,
+                portfolioPositionDeltaLine = detail.portfolioPositionDeltaLine ?: holding.deltaText,
+                portfolioPositionDeltaPositive = detail.portfolioPositionDeltaPositive
+                    ?: holding.deltaPositive,
+                portfolioUnitPriceLine = detail.portfolioUnitPriceLine ?: holding.currentPriceLine,
+            ),
+        )
     }
 }
 

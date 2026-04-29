@@ -3,6 +3,7 @@ package com.zovdeneg.app.ui.trade
 import com.zovdeneg.app.domain.market.PriceHistoryPoint
 import com.zovdeneg.app.domain.market.SecurityDetail
 import com.zovdeneg.app.domain.usecase.LoadSecurityDetailUseCase
+import com.zovdeneg.app.navigation.DETAIL_TOOLBAR_TITLE_KEY
 import com.zovdeneg.app.domain.usecase.LoadSecurityOrderBookUseCase
 import com.zovdeneg.app.domain.usecase.LoadSecurityPriceHistoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,11 +32,12 @@ data class SecurityDetailUiState(
     val orderBookLoading: Boolean = false,
     val orderBookLoadFailed: Boolean = false,
     val isLoading: Boolean = true,
+    val isPullRefreshing: Boolean = false,
 )
 
 @HiltViewModel
 class SecurityDetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     private val loadSecurityDetail: LoadSecurityDetailUseCase,
     private val loadSecurityOrderBook: LoadSecurityOrderBookUseCase,
     private val loadSecurityPriceHistory: LoadSecurityPriceHistoryUseCase,
@@ -52,9 +54,70 @@ class SecurityDetailViewModel @Inject constructor(
         load()
     }
 
+    private fun publishToolbarTitle(detail: SecurityDetail) {
+        savedStateHandle[DETAIL_TOOLBAR_TITLE_KEY] = detail.toolbarDisplayName()
+    }
+
     fun retry() {
         orderBookFetchStarted = false
         load()
+    }
+
+    fun pullToRefresh() {
+        viewModelScope.launch {
+            orderBookFetchStarted = false
+            val previous = _uiState.value
+            _uiState.update { it.copy(isPullRefreshing = true) }
+            try {
+                loadSecurityDetail(securityNavId).fold(
+                    onSuccess = { detail ->
+                        publishToolbarTitle(detail)
+                        _uiState.update {
+                            it.copy(
+                                detail = detail,
+                                isLoading = false,
+                                detailFailed = false,
+                                chartLoading = true,
+                                chartFailed = false,
+                                priceHistory = emptyList(),
+                                orderBookLoading = false,
+                                orderBookLoadFailed = false,
+                            )
+                        }
+                        fetchPriceHistory(_uiState.value.chartRange)
+                    },
+                    onFailure = {
+                        _uiState.update { s ->
+                            val keep = s.detail ?: previous.detail
+                            if (keep != null) {
+                                s.copy(
+                                    detail = keep,
+                                    isLoading = false,
+                                    detailFailed = false,
+                                )
+                            } else {
+                                SecurityDetailUiState(
+                                    detail = null,
+                                    detailFailed = true,
+                                    isLoading = false,
+                                    chartLoading = true,
+                                    chartFailed = false,
+                                    priceHistory = emptyList(),
+                                    chartRange = SecurityChartRange.ONE_DAY,
+                                    orderBookLoading = false,
+                                    orderBookLoadFailed = false,
+                                )
+                            }
+                        }
+                        if (_uiState.value.detail == null) {
+                            fetchPriceHistory(SecurityChartRange.ONE_DAY)
+                        }
+                    },
+                )
+            } finally {
+                _uiState.update { it.copy(isPullRefreshing = false) }
+            }
+        }
     }
 
     fun selectChartRange(range: SecurityChartRange) {
@@ -112,6 +175,7 @@ class SecurityDetailViewModel @Inject constructor(
             }
             loadSecurityDetail(securityNavId).fold(
                 onSuccess = { detail ->
+                    publishToolbarTitle(detail)
                     _uiState.update {
                         it.copy(
                             detail = detail,

@@ -40,6 +40,7 @@ internal class SecuritiesRepositoryImpl @Inject constructor(
                 page = dto.pagination.page,
                 pageSize = dto.pagination.pageSize,
                 totalPages = dto.pagination.totalPages,
+                totalItems = dto.pagination.totalItems,
             )
         }
 
@@ -79,6 +80,10 @@ internal class SecuritiesRepositoryImpl @Inject constructor(
             portfolioAvgPriceLine = portfolioAvgPriceLine?.takeIf { it.isNotBlank() }?.let { line ->
                 ZovRubDisplay.formatApiDecimalToRubLine(line.removeSuffix("₽").trim())
             },
+            portfolioCurrentValueLine = null,
+            portfolioPositionDeltaLine = null,
+            portfolioPositionDeltaPositive = null,
+            portfolioUnitPriceLine = null,
             orderBook = orderBook?.toDomain(),
         )
 

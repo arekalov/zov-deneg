@@ -31,6 +31,7 @@ data class SearchTabUiState(
     val hasMore: Boolean = false,
     val isLoading: Boolean = true,
     val isLoadingMore: Boolean = false,
+    val isPullRefreshing: Boolean = false,
     val loadFailed: Boolean = false,
 )
 
@@ -88,6 +89,18 @@ class ZovSearchTabViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMore = true) }
             fetchSecuritiesPage(page = s.lastLoadedPage + 1, append = true)
+        }
+    }
+
+    fun pullToRefresh() {
+        searchDebounceJob?.cancel()
+        viewModelScope.launch {
+            _uiState.update { it.copy(isPullRefreshing = true, loadFailed = false) }
+            try {
+                fetchSecuritiesPage(page = 1, append = false)
+            } finally {
+                _uiState.update { it.copy(isPullRefreshing = false) }
+            }
         }
     }
 

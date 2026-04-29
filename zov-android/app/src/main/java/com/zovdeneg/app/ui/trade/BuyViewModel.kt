@@ -126,6 +126,13 @@ class BuyViewModel @Inject constructor(
         }
     }
 
+    fun setLots(lots: Int) {
+        _uiState.update { s ->
+            if (s.detail == null) return@update s
+            s.copy(lots = lots.coerceIn(1, 99), submitHint = BuySubmitHint.None).withRecalculatedHint()
+        }
+    }
+
     fun submitOrder() {
         if (!_uiState.value.canSubmitMarketBuy) return
         val detail = _uiState.value.detail ?: return

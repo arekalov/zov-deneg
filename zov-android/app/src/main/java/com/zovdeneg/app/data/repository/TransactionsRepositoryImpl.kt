@@ -32,6 +32,7 @@ internal class TransactionsRepositoryImpl @Inject constructor(
                 page = dto.pagination.page,
                 pageSize = dto.pagination.pageSize,
                 totalPages = dto.pagination.totalPages,
+                totalItems = dto.pagination.totalItems,
             )
         }
 
