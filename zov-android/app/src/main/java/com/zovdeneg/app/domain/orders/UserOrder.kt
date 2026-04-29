@@ -15,4 +15,6 @@ data class UserOrder(
     val updatedAtEpochSeconds: Long,
 ) {
     fun isCancellable(): Boolean = status == "pending"
+
+    fun isActive(): Boolean = status == "pending" || status == "partial"
 }

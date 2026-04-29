@@ -41,6 +41,11 @@ private data class MainHomeSummaryBlockTexts(
     val brokerageBalanceLine: String,
 )
 
+private data class MainHomePositionsState(
+    val holdings: List<Holding>,
+    val activeOrdersCount: Int,
+)
+
 @Composable
 internal fun MainHomeScreen(
     viewModel: MainHomeViewModel,
@@ -51,7 +56,10 @@ internal fun MainHomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val placeholder = stringResource(R.string.home_em_dash)
     MainHomeScrollContent(
-        holdings = uiState.holdings,
+        positionsState = MainHomePositionsState(
+            holdings = uiState.holdings,
+            activeOrdersCount = uiState.activeOrdersCount,
+        ),
         summaryBlock = MainHomeSummaryBlockTexts(
             amountText = uiState.portfolioAmountRub ?: placeholder,
             gainText = uiState.totalGainText ?: placeholder,
@@ -65,7 +73,7 @@ internal fun MainHomeScreen(
 
 @Composable
 private fun MainHomeScrollContent(
-    holdings: List<Holding>,
+    positionsState: MainHomePositionsState,
     summaryBlock: MainHomeSummaryBlockTexts,
     onOpenBrokerAccount: () -> Unit,
     onOpenOrders: () -> Unit,
@@ -81,10 +89,13 @@ private fun MainHomeScrollContent(
             onOpenBrokerAccount = onOpenBrokerAccount,
         )
         MainHomeOrdersRow(
-            bondPositionsCount = holdings.count { it.securityTypeKey == "bond" },
+            activeOrdersCount = positionsState.activeOrdersCount,
             onOpenOrders = onOpenOrders,
         )
-        MainHomeHoldingsSection(holdings = holdings, onOpenSecurity = onOpenSecurity)
+        MainHomeHoldingsSection(
+            holdings = positionsState.holdings,
+            onOpenSecurity = onOpenSecurity,
+        )
     }
 }
 
@@ -120,7 +131,7 @@ private fun MainHomePortfolioSummaryCard(amountText: String, gainText: String) {
 
 @Composable
 private fun MainHomeOrdersRow(
-    bondPositionsCount: Int,
+    activeOrdersCount: Int,
     onOpenOrders: () -> Unit,
 ) {
     val c = ZovTheme.colors
@@ -132,17 +143,12 @@ private fun MainHomeOrdersRow(
         ) {
             Text(
                 stringResource(R.string.home_orders_strip_title),
-                style = t.subtitleReg13,
-                color = c.onSurfaceVariant,
-            )
-            Text(
-                stringResource(R.string.home_orders_strip_subtitle),
                 style = t.titleSemi20,
                 color = c.onSurface,
             )
             Text(
-                stringResource(R.string.home_orders_bonds_in_portfolio, bondPositionsCount),
-                style = t.labelReg12,
+                stringResource(R.string.home_orders_active_count, activeOrdersCount),
+                style = t.subtitleReg13,
                 color = c.onSurfaceVariant,
             )
         }
@@ -356,7 +362,7 @@ internal fun HistoryTabScreen(viewModel: ZovHistoryTabViewModel) {
 private fun MainHomePreviewLight() {
     ZovAppTheme(darkTheme = false) {
         MainHomeScrollContent(
-            holdings = emptyList(),
+            positionsState = MainHomePositionsState(holdings = emptyList(), activeOrdersCount = 1),
             summaryBlock = MainHomeSummaryBlockTexts(
                 amountText = "1 234 567,89 ₽",
                 gainText = "+12 345,67 ₽ (+2,3%)",
@@ -374,7 +380,7 @@ private fun MainHomePreviewLight() {
 private fun MainHomePreviewDark() {
     ZovAppTheme(darkTheme = true) {
         MainHomeScrollContent(
-            holdings = emptyList(),
+            positionsState = MainHomePositionsState(holdings = emptyList(), activeOrdersCount = 1),
             summaryBlock = MainHomeSummaryBlockTexts(
                 amountText = "1 234 567,89 ₽",
                 gainText = "+12 345,67 ₽ (+2,3%)",

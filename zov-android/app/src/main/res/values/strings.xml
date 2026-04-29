@@ -99,8 +99,7 @@
     <string name="home_holdings">Позиции</string>
     <string name="home_no_positions">Пока нет открытых позиций</string>
     <string name="home_orders_strip_title">Заявки</string>
-    <string name="home_orders_strip_subtitle">Активные и завершённые</string>
-    <string name="home_orders_bonds_in_portfolio">Облигаций в портфеле · %1$d</string>
+    <string name="home_orders_active_count">Активных заявок: %1$d</string>
 
     <string name="search_placeholder">Название или тикер…</string>
     <string name="search_popular">Популярные акции</string>
