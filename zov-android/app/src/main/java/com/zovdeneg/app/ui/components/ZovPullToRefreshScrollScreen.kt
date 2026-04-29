@@ -8,9 +8,12 @@ import com.zovdeneg.app.ui.theme.ZovTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -42,15 +45,19 @@ fun ZovPullToRefreshScrollScreen(
             state = pullState,
             modifier = Modifier.fillMaxSize(),
         ) {
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = ZovHorizontalPadding)
-                    .padding(bottom = ZovSpace4),
-                verticalArrangement = Arrangement.spacedBy(ZovScrollBodySpacing),
-                content = content,
-            )
+            val scrollState = rememberScrollState()
+            BoxWithConstraints(Modifier.fillMaxSize()) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = maxHeight)
+                        .verticalScroll(scrollState)
+                        .padding(horizontal = ZovHorizontalPadding)
+                        .padding(bottom = ZovSpace4),
+                    verticalArrangement = Arrangement.spacedBy(ZovScrollBodySpacing),
+                    content = content,
+                )
+            }
         }
     }
 }
