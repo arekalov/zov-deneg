@@ -21,10 +21,19 @@ internal fun ZovRubWholeAmountDigitsField(
     onValueChange: (String) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
+    allowKopecks: Boolean = false,
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
-    val placeholder = stringResource(R.string.amount_digits_placeholder)
+    val placeholder =
+        stringResource(
+            if (allowKopecks) {
+                R.string.amount_decimal_rub_placeholder
+            } else {
+                R.string.amount_digits_placeholder
+            },
+        )
+    val amountKeyboardType = if (allowKopecks) KeyboardType.Decimal else KeyboardType.Number
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -34,7 +43,7 @@ internal fun ZovRubWholeAmountDigitsField(
         placeholder = { Text(placeholder, style = t.bodyReg14, color = c.onSurfaceVariant) },
         singleLine = true,
         textStyle = t.pinAmount20.copy(color = c.onSurface),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        keyboardOptions = KeyboardOptions(keyboardType = amountKeyboardType),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = c.outline,
             unfocusedBorderColor = c.outline,

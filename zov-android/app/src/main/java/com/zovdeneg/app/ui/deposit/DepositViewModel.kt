@@ -30,17 +30,49 @@ internal val depositAmountDecimals = listOf("1000.00", "5000.00", "10000.00", "5
 
 private const val MAX_AMOUNT_DIGITS = 15
 
+private const val MAX_WITHDRAW_WHOLE_DIGITS = 13
+
+private const val MAX_WITHDRAW_FRAC_DIGITS = 2
+
 private fun chipIndexToAmountDigits(index: Int): String =
     depositAmountDecimals[index.coerceIn(0, depositAmountDecimals.lastIndex)].substringBefore('.')
 
 private fun digitsOnlyFiltered(input: String): String =
     input.filter { it.isDigit() }.take(MAX_AMOUNT_DIGITS)
 
+/** Ввод суммы вывода: цифры и одна запятая или точка, до двух знаков после разделителя. */
+private fun withdrawAmountInputFiltered(raw: String): String {
+    val n = raw.replace('.', ',')
+    val firstComma = n.indexOf(',')
+    if (firstComma == -1) {
+        return n.filter { it.isDigit() }.take(MAX_WITHDRAW_WHOLE_DIGITS)
+    }
+    var whole = n.substring(0, firstComma).filter { it.isDigit() }.take(MAX_WITHDRAW_WHOLE_DIGITS)
+    val afterComma = n.substring(firstComma + 1).replace(",", "")
+    val frac = afterComma.filter { it.isDigit() }.take(MAX_WITHDRAW_FRAC_DIGITS)
+    if (whole.isEmpty() && frac.isNotEmpty()) {
+        whole = "0"
+    }
+    return "$whole,$frac"
+}
+
 /** Целые рубли (строка из цифр) → строка для API (`1234.00`). `null`, если пусто или не положительно. */
 private fun wholeRublesDigitsToApiDecimal(digits: String): String? {
     val d = digits.filter { it.isDigit() }
     if (d.isEmpty()) return null
     val bd = runCatching { BigDecimal(d) }.getOrNull() ?: return null
+    if (bd <= BigDecimal.ZERO) return null
+    return bd.setScale(2, RoundingMode.HALF_UP).toPlainString()
+}
+
+/** Сумма вывода с необязательными копейками → строка для API. `null`, если пусто или не положительно. */
+private fun withdrawAmountInputToApiDecimal(input: String): String? {
+    var n = input.trim().replace(',', '.')
+    while (n.endsWith('.')) {
+        n = n.dropLast(1)
+    }
+    if (n.isEmpty()) return null
+    val bd = runCatching { BigDecimal(n) }.getOrNull() ?: return null
     if (bd <= BigDecimal.ZERO) return null
     return bd.setScale(2, RoundingMode.HALF_UP).toPlainString()
 }
@@ -65,7 +97,7 @@ data class DepositUiState(
     val selectedDepositChipIndex: Int = 2,
     /** Сумма пополнения: только цифры, целые рубли (например `10000`). */
     val depositAmountDigits: String = chipIndexToAmountDigits(2),
-    /** Сумма вывода: только цифры, целые рубли. */
+    /** Сумма вывода: рубли, запятая или точка для копеек (до двух знаков). */
     val withdrawAmountDigits: String = "1000",
     val pendingSuccess: DepositSheetSuccess? = null,
 ) {
@@ -78,7 +110,7 @@ data class DepositUiState(
             val bal = balance ?: return DepositWithdrawBlockReason.NO_BALANCE_DATA
             val available = brokerageAvailableRub(bal) ?: return DepositWithdrawBlockReason.NO_BALANCE_DATA
             if (available <= BigDecimal.ZERO) return DepositWithdrawBlockReason.ZERO_AVAILABLE
-            val api = wholeRublesDigitsToApiDecimal(withdrawAmountDigits) ?: return DepositWithdrawBlockReason.NONE
+            val api = withdrawAmountInputToApiDecimal(withdrawAmountDigits) ?: return DepositWithdrawBlockReason.NONE
             val want = runCatching { BigDecimal(api) }.getOrNull() ?: return DepositWithdrawBlockReason.NONE
             return if (want > available) {
                 DepositWithdrawBlockReason.EXCEEDS_BALANCE
@@ -89,7 +121,7 @@ data class DepositUiState(
 
     val canSubmitWithdrawAmount: Boolean
         get() =
-            wholeRublesDigitsToApiDecimal(withdrawAmountDigits) != null &&
+            withdrawAmountInputToApiDecimal(withdrawAmountDigits) != null &&
                 withdrawBlockReason == DepositWithdrawBlockReason.NONE
 }
 
@@ -148,7 +180,7 @@ class DepositViewModel @Inject constructor(
     fun setWithdrawAmountDigits(value: String) {
         _uiState.update {
             it.copy(
-                withdrawAmountDigits = digitsOnlyFiltered(value),
+                withdrawAmountDigits = withdrawAmountInputFiltered(value),
                 actionFailed = false,
             )
         }
@@ -180,7 +212,7 @@ class DepositViewModel @Inject constructor(
     fun withdrawWithEnteredAmount() {
         val state = _uiState.value
         if (!state.canSubmitWithdrawAmount) return
-        val amount = wholeRublesDigitsToApiDecimal(state.withdrawAmountDigits) ?: return
+        val amount = withdrawAmountInputToApiDecimal(state.withdrawAmountDigits) ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isWorking = true, actionFailed = false) }
             submitBrokerageWithdraw(amount).fold(

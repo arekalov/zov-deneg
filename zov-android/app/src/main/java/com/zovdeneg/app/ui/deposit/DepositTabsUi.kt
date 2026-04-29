@@ -121,6 +121,7 @@ internal fun WithdrawTabContent(
         value = model.withdrawAmountDigits,
         onValueChange = onWithdrawAmountDigitsChange,
         label = stringResource(R.string.withdraw_amount_label),
+        allowKopecks = true,
     )
     when {
         model.actionFailed ->
