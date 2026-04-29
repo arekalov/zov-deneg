@@ -11,6 +11,7 @@ import zov.deneg.client.SecuritiesClient
 import zov.deneg.data.OrderRepository
 import zov.deneg.data.PortfolioRepository
 import zov.deneg.data.BalanceRepository
+import zov.deneg.data.TransactionRepository
 import zov.deneg.models.*
 import java.math.BigDecimal
 import java.util.*
@@ -19,7 +20,8 @@ fun Routing.configureOrderRoutes(
     orderRepository: OrderRepository,
     portfolioRepository: PortfolioRepository,
     balanceRepository: BalanceRepository,
-    securitiesClient: SecuritiesClient
+    securitiesClient: SecuritiesClient,
+    transactionRepository: TransactionRepository
 ) {
 
     // GET /orders - List user orders with filters
@@ -80,7 +82,7 @@ fun Routing.configureOrderRoutes(
             ))
         }
 
-        // POST /orders - Create new order
+        // POST /orders - Create and instantly execute order
         post("/orders") {
             val principal = call.principal<JWTPrincipal>() ?: run {
                 call.respond(HttpStatusCode.Unauthorized, ErrorResponse(
@@ -137,25 +139,159 @@ fun Routing.configureOrderRoutes(
                 return@post
             }
 
-            // Create the order with security details
-            val order = orderRepository.create(
-                userId = UUID.fromString(userId),
-                securityId = securityId,
-                ticker = security.ticker,
-                type = OrderType.MARKET,
-                side = request.side,
-                quantity = request.quantity
-            )
-
-            if (order == null) {
+            // Parse price from security
+            val price = try {
+                BigDecimal(security.lastPrice)
+            } catch (e: NumberFormatException) {
                 call.respond(HttpStatusCode.InternalServerError, ErrorResponse(
-                    code = "INTERNAL_ERROR",
-                    message = "Не удалось создать заявку"
+                    code = "INVALID_PRICE",
+                    message = "Некорректная цена инструмента"
                 ))
                 return@post
             }
 
-            call.respond(HttpStatusCode.Created, order)
+            val totalAmount = price.multiply(BigDecimal.valueOf(request.quantity.toLong()))
+            val commission = totalAmount.multiply(BigDecimal("0.001")) // 0.1% commission
+
+            // Execute order based on side (BUY/SELL)
+            try {
+                if (request.side == OrderSide.BUY) {
+                    // Check if user has sufficient balance
+                    val balance = balanceRepository.getBalance(UUID.fromString(userId))
+                    val requiredAmount = totalAmount.add(commission)
+                    
+                    if (BigDecimal(balance.available) < requiredAmount) {
+                        call.respond(HttpStatusCode.BadRequest, ErrorResponse(
+                            code = "INSUFFICIENT_FUNDS",
+                            message = "Недостаточно средств для покупки. Требуется: $requiredAmount, Доступно: ${balance.available}"
+                        ))
+                        return@post
+                    }
+
+                    // Withdraw funds from balance
+                    balanceRepository.withdraw(UUID.fromString(userId), requiredAmount)
+
+                    // Update portfolio
+                    portfolioRepository.updateAfterTrade(
+                        userId = UUID.fromString(userId),
+                        securityId = securityId,
+                        ticker = security.ticker,
+                        securityName = security.name,
+                        quantity = request.quantity,
+                        price = price,
+                        isBuy = true
+                    )
+
+                    // Create and execute order in single operation
+                    val order = orderRepository.createAndExecute(
+                        userId = UUID.fromString(userId),
+                        securityId = securityId,
+                        ticker = security.ticker,
+                        type = OrderType.MARKET,
+                        side = request.side,
+                        quantity = request.quantity,
+                        executedPrice = price,
+                        totalAmount = totalAmount,
+                        commission = commission
+                    )
+
+                    if (order == null) {
+                        call.respond(HttpStatusCode.InternalServerError, ErrorResponse(
+                            code = "INTERNAL_ERROR",
+                            message = "Не удалось создать заявку"
+                        ))
+                        return@post
+                    }
+
+                    // Create transaction record
+                    transactionRepository.create(
+                        userId = UUID.fromString(userId),
+                        type = TransactionType.BUY,
+                        amount = requiredAmount,
+                        securityId = securityId,
+                        ticker = security.ticker,
+                        securityName = security.name,
+                        quantity = request.quantity,
+                        price = price,
+                        commission = commission,
+                        orderId = UUID.fromString(order.id)
+                    )
+
+                    call.respond(HttpStatusCode.Created, order)
+
+                } else {
+                    // SELL - Check if user has the securities in portfolio
+                    val portfolioItem = portfolioRepository.get(UUID.fromString(userId), securityId)
+                    val availableQty = portfolioItem?.quantity ?: 0
+
+                    if (availableQty < request.quantity) {
+                        call.respond(HttpStatusCode.BadRequest, ErrorResponse(
+                            code = "INSUFFICIENT_SECURITIES",
+                            message = "Недостаточно ценных бумаг. Требуется: $request.quantity, Доступно: $availableQty"
+                        ))
+                        return@post
+                    }
+
+                    // Credit funds to balance (minus commission)
+                    val netAmount = totalAmount.subtract(commission)
+                    balanceRepository.deposit(UUID.fromString(userId), netAmount)
+
+                    // Update portfolio (reduce position)
+                    portfolioRepository.updateAfterTrade(
+                        userId = UUID.fromString(userId),
+                        securityId = securityId,
+                        ticker = security.ticker,
+                        securityName = security.name,
+                        quantity = request.quantity,
+                        price = price,
+                        isBuy = false
+                    )
+
+                    // Create and execute order in single operation
+                    val order = orderRepository.createAndExecute(
+                        userId = UUID.fromString(userId),
+                        securityId = securityId,
+                        ticker = security.ticker,
+                        type = OrderType.MARKET,
+                        side = request.side,
+                        quantity = request.quantity,
+                        executedPrice = price,
+                        totalAmount = totalAmount,
+                        commission = commission
+                    )
+
+                    if (order == null) {
+                        call.respond(HttpStatusCode.InternalServerError, ErrorResponse(
+                            code = "INTERNAL_ERROR",
+                            message = "Не удалось создать заявку"
+                        ))
+                        return@post
+                    }
+
+                    // Create transaction record
+                    transactionRepository.create(
+                        userId = UUID.fromString(userId),
+                        type = TransactionType.SELL,
+                        amount = netAmount,
+                        securityId = securityId,
+                        ticker = security.ticker,
+                        securityName = security.name,
+                        quantity = request.quantity,
+                        price = price,
+                        commission = commission,
+                        orderId = UUID.fromString(order.id)
+                    )
+
+                    call.respond(HttpStatusCode.Created, order)
+                }
+
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, ErrorResponse(
+                    code = "EXECUTION_ERROR",
+                    message = "Ошибка при исполнении заявки: ${e.message}"
+                ))
+                return@post
+            }
         }
 
         // GET /orders/{orderId} - Get order details
