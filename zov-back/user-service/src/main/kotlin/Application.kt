@@ -44,7 +44,7 @@ fun Application.module() {
         configureBalanceRoutes(balanceRepository, transactionRepository)
         configureTransactionRoutes(transactionRepository)
         configurePortfolioRoutes(portfolioRepository)
-        configureOrderRoutes(orderRepository, portfolioRepository, balanceRepository, securitiesClient)
+        configureOrderRoutes(orderRepository, portfolioRepository, balanceRepository, securitiesClient, transactionRepository)
     }
 }
 

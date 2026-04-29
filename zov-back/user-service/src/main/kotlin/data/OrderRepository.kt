@@ -37,6 +37,39 @@ class OrderRepository(private val database: Database) {
     }
 
     /**
+     * Create and execute order instantly (single operation)
+     */
+    fun createAndExecute(
+        userId: UUID,
+        securityId: UUID,
+        ticker: String,
+        type: OrderType,
+        side: OrderSide,
+        quantity: Int,
+        executedPrice: BigDecimal,
+        totalAmount: BigDecimal,
+        commission: BigDecimal? = null
+    ): Order? = transaction(database) {
+        val inserted = OrdersTable.insert {
+            it[OrdersTable.userId] = userId
+            it[OrdersTable.securityId] = securityId
+            it[OrdersTable.ticker] = ticker
+            it[OrdersTable.type] = type.name.lowercase()
+            it[OrdersTable.side] = side.name.lowercase()
+            it[OrdersTable.status] = OrderStatus.EXECUTED.name.lowercase()
+            it[OrdersTable.quantity] = quantity
+            it[OrdersTable.executedPrice] = executedPrice
+            it[OrdersTable.executedQuantity] = quantity
+            it[OrdersTable.totalAmount] = totalAmount
+            it[OrdersTable.commission] = commission
+            it[OrdersTable.createdAt] = Instant.now()
+            it[OrdersTable.updatedAt] = Instant.now()
+        }
+
+        inserted.resultedValues?.firstOrNull()?.toOrder()
+    }
+
+    /**
      * Get order by ID
      */
     fun findById(id: UUID): Order? = transaction(database) {
