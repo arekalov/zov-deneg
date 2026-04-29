@@ -51,6 +51,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zovdeneg.app.BuildConfig
 
 @Composable
 internal fun ZovNavGraphHost(
@@ -155,6 +156,7 @@ private fun NavGraphBuilder.registerFlowStep2(navController: NavHostController) 
 
 private fun NavGraphBuilder.registerFlowStep3(navController: NavHostController) {
     composable(ZovRoutes.REGISTER_STEP3) {
+        val context = LocalContext.current
         val registerVm: ZovRegisterFlowViewModel =
             hiltViewModel(registerFlowBackStackEntry(navController))
         LaunchedEffect(Unit) { registerVm.clearDraft() }
@@ -162,7 +164,19 @@ private fun NavGraphBuilder.registerFlowStep3(navController: NavHostController) 
             viewModel = registerVm,
             onContinue = {
                 if (registerVm.tryFinishSecondPinStep()) {
-                    navController.navigate(ZovRoutes.REGISTER_STEP4)
+                    if (BuildConfig.IS_BIOMETRY_AVAILABLE) {
+
+                        EntryPointAccessors.fromApplication(
+                            context.applicationContext,
+                            ZovLocalAuthEntryPoint::class.java,
+                        ).localAuthStorage().setBiometricUnlockEnabled(false)
+
+                        navController.navigate(ZovRoutes.MAIN_HOME) {
+                            popUpTo(ZovRoutes.LOGIN) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(ZovRoutes.REGISTER_STEP4)
+                    }
                 }
             },
         )

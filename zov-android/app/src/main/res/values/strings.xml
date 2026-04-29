@@ -59,6 +59,7 @@
 
     <string name="register_personal_details">Личные данные</string>
     <string name="register_step_1_of_4">Шаг 1 из 4</string>
+    <string name="register_step_1_of_3">Шаг 1 из 3</string>
     <string name="register_verify_hint">Мы отправим код подтверждения на указанный номер телефона</string>
     <string name="action_continue">Продолжить</string>
     <string name="register_already_have_account">Уже есть аккаунт? </string>
@@ -66,8 +67,10 @@
 
     <string name="register_create_pin">Придумайте PIN</string>
     <string name="register_step_2_of_4">Шаг 2 из 4 · запомните код</string>
+    <string name="register_step_2_of_3">Шаг 2 из 3 · запомните код</string>
     <string name="register_confirm_pin">Подтвердите PIN</string>
     <string name="register_step_3_of_4">Шаг 3 из 4</string>
+    <string name="register_step_3_of_3">Шаг 3 из 3</string>
     <string name="register_pin_mismatch">PIN не совпал. Введите тот же код ещё раз</string>
 
     <string name="register_biometric_title">Вход по биометрии</string>

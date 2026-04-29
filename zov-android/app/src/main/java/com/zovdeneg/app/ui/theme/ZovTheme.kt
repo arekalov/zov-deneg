@@ -9,6 +9,8 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.graphics.Color
+import com.zovdeneg.app.BuildConfig
 
 object ZovTheme {
     val colors: ZovColors
@@ -51,9 +53,23 @@ fun ZovAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    val zovColors = if (darkTheme) ZovColors.Dark else ZovColors.Light
+    val baseColors = if (darkTheme) ZovColors.Dark else ZovColors.Light
+
+    val zovColors = if (BuildConfig.IS_BIOMETRY_AVAILABLE) {
+        baseColors.copy(
+            primary = Color(0xFF018A39), // любой другой цвет (например зелёный)
+            primaryContainer = Color(0xFF78CE9D),
+            onPrimary = Color(0xFFFFFFFF),
+            positive = Color(0xFF018A39),
+            )
+    } else {
+        baseColors
+    }
+
     val zovText = ZovTextStyles.Default
-    val materialColors = if (darkTheme) zovColors.toMaterialDark() else zovColors.toMaterialLight()
+    val materialColors =
+        if (darkTheme) zovColors.toMaterialDark() else zovColors.toMaterialLight()
+
     CompositionLocalProvider(
         LocalZovColors provides zovColors,
         LocalZovTypography provides zovText,

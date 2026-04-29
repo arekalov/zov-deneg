@@ -36,6 +36,8 @@ android {
 
         val useMockHttp =
             localProperties.getProperty("zov.useMockHttp")?.trim()?.equals("true", ignoreCase = true) == true
+        val isBiometryEnabled =
+            localProperties.getProperty("zov.isBiometryEnabled")?.trim()?.equals("true", ignoreCase = true) == true
         val userApiBase =
             if (useMockHttp) {
                 "https://api.zovdeneg.mock"
@@ -54,6 +56,7 @@ android {
         buildConfigField("String", "API_BASE_URL", "\"$userApiBase/\"")
         buildConfigField("String", "SECURITIES_API_BASE_URL", "\"$securitiesApiBase/\"")
         buildConfigField("boolean", "USE_MOCK_HTTP_ENGINE", if (useMockHttp) "true" else "false")
+        buildConfigField("boolean", "IS_BIOMETRY_AVAILABLE", if (isBiometryEnabled) "false" else "true")
     }
 
     buildTypes {
@@ -66,6 +69,7 @@ android {
             buildConfigField("String", "API_BASE_URL", "\"https://api.zovdengi.ru/v1/\"")
             buildConfigField("String", "SECURITIES_API_BASE_URL", "\"https://api.zovdengi.ru/v1/\"")
             buildConfigField("boolean", "USE_MOCK_HTTP_ENGINE", "false")
+            buildConfigField("boolean", "IS_BIOMETRY_AVAILABLE", "false")
         }
     }
     compileOptions {

@@ -3,12 +3,12 @@
 
 # --- Эмулятор Android (AVD): «localhost бэка на Mac» = 10.0.2.2 ---
 # Это тот же хост, что в OpenAPI env: scheme http + host localhost:8080
-zov.userApiBaseUrl=http://10.0.2.2:8080
-zov.securitiesApiBaseUrl=http://10.0.2.2:8081
+# zov.userApiBaseUrl=http://10.0.2.2:8080
+# zov.securitiesApiBaseUrl=http://10.0.2.2:8081
 
 # --- Физическое устройство в той же Wi‑Fi: IP твоего Mac в сети ---
-# zov.userApiBaseUrl=http://192.168.0.5:8080
-# zov.securitiesApiBaseUrl=http://192.168.0.5:8081
+zov.userApiBaseUrl=http://192.168.0.195:8080
+zov.securitiesApiBaseUrl=http://192.168.0.195:8081
 
 # --- Вариант с adb reverse (тогда в эмуляторе 127.0.0.1 = Mac) ---
 # В терминале: adb reverse tcp:8080 tcp:8080 && adb reverse tcp:8081 tcp:8081
@@ -18,3 +18,4 @@ zov.securitiesApiBaseUrl=http://10.0.2.2:8081
 # Реальный бэкенд: не указывайте zov.useMockHttp или явно zov.useMockHttp=false (так по умолчанию в сборке).
 # Мок HTTP без бэка (Ktor MockEngine + JSON из assets/mock/) — только для автономной вёрстки UI:
 # zov.useMockHttp=true
+# zov.isBiometryEnabled=true

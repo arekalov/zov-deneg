@@ -65,6 +65,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zovdeneg.app.BuildConfig
 
 private data class LoginScreenPinState(
     val pinLen: Int,
@@ -257,12 +258,14 @@ private fun LoginScreenColumn(
                     }
                 },
             )
-            LoginBiometricBlock(
-                viewModel = viewModel,
-                remoteSessionSyncing = pinState.remoteSessionSyncing,
-                onLoggedIn = callbacks.onLoggedIn,
-                onBiometricHint = { biometricHint = it },
-            )
+            if (!BuildConfig.IS_BIOMETRY_AVAILABLE) {
+                LoginBiometricBlock(
+                    viewModel = viewModel,
+                    remoteSessionSyncing = pinState.remoteSessionSyncing,
+                    onLoggedIn = callbacks.onLoggedIn,
+                    onBiometricHint = { biometricHint = it },
+                )
+            }
         } else {
             LoginCredentialBlock(
                 viewModel = viewModel,
@@ -337,11 +340,14 @@ private fun LoginCredentialBlock(
 @Composable
 private fun RegisterProgress(activeStep: Int) {
     val c = ZovTheme.colors
+
+    val stepsCount = if (BuildConfig.IS_BIOMETRY_AVAILABLE) 3 else 4
+
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(ZovTightGap),
     ) {
-        repeat(4) { i ->
+        repeat(stepsCount) { i ->
             Box(
                 Modifier
                     .weight(1f)
@@ -412,7 +418,12 @@ fun RegisterDataScreen(
         RegisterProgress(0)
         Spacer(Modifier.height(ZovItemSpacing))
         Text(stringResource(R.string.register_personal_details), style = t.titleSemi20, color = c.onSurface)
-        Text(stringResource(R.string.register_step_1_of_4), style = t.subtitleReg13, color = c.onSurfaceVariant)
+        Text(stringResource(
+            if (BuildConfig.IS_BIOMETRY_AVAILABLE)
+                R.string.register_step_1_of_3
+            else
+                R.string.register_step_1_of_4
+        ), style = t.subtitleReg13, color = c.onSurfaceVariant)
         RegisterStep1TextFields(state = state, viewModel = viewModel)
         if (state.validationError) {
             Text(
@@ -476,7 +487,12 @@ internal fun RegisterPinScreen(
                 verticalArrangement = Arrangement.spacedBy(ZovTightGap),
             ) {
                 Text(stringResource(R.string.register_create_pin), style = t.titleSemi20, color = c.onSurface)
-                Text(stringResource(R.string.register_step_2_of_4), style = t.subtitleReg13, color = c.onSurfaceVariant)
+                Text(stringResource(
+                    if (BuildConfig.IS_BIOMETRY_AVAILABLE)
+                        R.string.register_step_2_of_3
+                    else
+                        R.string.register_step_2_of_4
+                ), style = t.subtitleReg13, color = c.onSurfaceVariant)
             }
             Spacer(Modifier.height(ZovSpace4))
             ZovPinDots(filledCount = pinLen, total = 4)
@@ -513,7 +529,12 @@ internal fun RegisterPinConfirmScreen(
                 verticalArrangement = Arrangement.spacedBy(ZovTightGap),
             ) {
                 Text(stringResource(R.string.register_confirm_pin), style = t.titleSemi20, color = c.onSurface)
-                Text(stringResource(R.string.register_step_3_of_4), style = t.subtitleReg13, color = c.onSurfaceVariant)
+                Text(stringResource(
+                    if (BuildConfig.IS_BIOMETRY_AVAILABLE)
+                        R.string.register_step_3_of_3
+                    else
+                        R.string.register_step_3_of_4
+                ), style = t.subtitleReg13, color = c.onSurfaceVariant)
             }
             Spacer(Modifier.height(ZovSpace4))
             ZovPinDots(filledCount = pinLen, total = 4)

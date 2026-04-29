@@ -31,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zovdeneg.app.BuildConfig
 import com.zovdeneg.app.R
 import com.zovdeneg.app.domain.profile.UserProfile
 import com.zovdeneg.app.ui.common.ZovHalfUnit
@@ -132,25 +133,27 @@ private fun ProfileScreenLoaded(
             tint = c.onSurfaceVariant,
         )
     }
-    Text(
-        stringResource(R.string.profile_section_app),
-        style = t.captionUpper11,
-        color = c.onSurfaceVariant,
-    )
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    if (!BuildConfig.IS_BIOMETRY_AVAILABLE) {
         Text(
-            stringResource(R.string.profile_sign_in_fingerprint),
-            style = t.bodyReg14,
-            color = c.onSurface,
+            stringResource(R.string.profile_section_app),
+            style = t.captionUpper11,
+            color = c.onSurfaceVariant,
         )
-        Switch(
-            checked = biometricUnlockEnabled,
-            onCheckedChange = actions.onBiometricUnlockChange,
-        )
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                stringResource(R.string.profile_sign_in_fingerprint),
+                style = t.bodyReg14,
+                color = c.onSurface,
+            )
+            Switch(
+                checked = biometricUnlockEnabled,
+                onCheckedChange = actions.onBiometricUnlockChange,
+            )
+        }
     }
     Button(onClick = actions.onLogout, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.action_sign_out), style = t.bodyMed14)
