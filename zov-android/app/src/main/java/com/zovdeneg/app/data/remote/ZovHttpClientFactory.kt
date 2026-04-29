@@ -8,6 +8,7 @@ import io.ktor.client.plugins.auth.authProviders
 import io.ktor.client.plugins.auth.providers.BearerAuthProvider
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
+import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
@@ -66,16 +67,17 @@ internal object ZovHttpClientFactory {
                 }
             }
             if (httpLogEnabled) {
-                // HEADERS: BODY на OkHttp иногда даёт «unexpected end of stream» из‑за повторного чтения потока.
+                // OkHttp: тело ответа логируется в OkHttp‑интерцепторе через peekBody.
+                // MockEngine: безопасно включить BODY в Ktor Logging.
                 install(Logging) {
                     logger = ZovHttpLogger
-                    level = LogLevel.HEADERS
+                    level = if (engine is MockEngine) LogLevel.BODY else LogLevel.HEADERS
                 }
             }
             defaultRequest {
                 url(baseUrl)
                 contentType(ContentType.Application.Json)
-                if (httpLogEnabled) {
+                if (httpLogEnabled && engine !is MockEngine) {
                     headers.append(HttpHeaders.Connection, "close")
                 }
             }
@@ -99,13 +101,13 @@ internal object ZovHttpClientFactory {
             if (httpLogEnabled) {
                 install(Logging) {
                     logger = ZovHttpLogger
-                    level = LogLevel.HEADERS
+                    level = if (engine is MockEngine) LogLevel.BODY else LogLevel.HEADERS
                 }
             }
             defaultRequest {
                 url(baseUrl)
                 contentType(ContentType.Application.Json)
-                if (httpLogEnabled) {
+                if (httpLogEnabled && engine !is MockEngine) {
                     headers.append(HttpHeaders.Connection, "close")
                 }
             }

@@ -80,7 +80,10 @@ private fun MainHomeScrollContent(
             brokerageBalanceLine = summaryBlock.brokerageBalanceLine,
             onOpenBrokerAccount = onOpenBrokerAccount,
         )
-        MainHomeOrdersRow(onOpenOrders = onOpenOrders)
+        MainHomeOrdersRow(
+            bondPositionsCount = holdings.count { it.securityTypeKey == "bond" },
+            onOpenOrders = onOpenOrders,
+        )
         MainHomeHoldingsSection(holdings = holdings, onOpenSecurity = onOpenSecurity)
     }
 }
@@ -116,7 +119,10 @@ private fun MainHomePortfolioSummaryCard(amountText: String, gainText: String) {
 }
 
 @Composable
-private fun MainHomeOrdersRow(onOpenOrders: () -> Unit) {
+private fun MainHomeOrdersRow(
+    bondPositionsCount: Int,
+    onOpenOrders: () -> Unit,
+) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
     ZovBalanceStrip(onClick = onOpenOrders) {
@@ -133,6 +139,11 @@ private fun MainHomeOrdersRow(onOpenOrders: () -> Unit) {
                 stringResource(R.string.home_orders_strip_subtitle),
                 style = t.titleSemi20,
                 color = c.onSurface,
+            )
+            Text(
+                stringResource(R.string.home_orders_bonds_in_portfolio, bondPositionsCount),
+                style = t.labelReg12,
+                color = c.onSurfaceVariant,
             )
         }
         Icon(
@@ -191,6 +202,7 @@ private fun MainHomeHoldingsSection(
                     delta = h.deltaText,
                     deltaPositive = h.deltaPositive,
                     ticker = h.ticker,
+                    isBond = h.securityTypeKey == "bond",
                 ),
             ) { onOpenSecurity(h.detailNavKey, h.ticker) }
         }
@@ -209,6 +221,8 @@ internal data class AssetRowData(
     val delta: String,
     val deltaPositive: Boolean,
     val ticker: String,
+    /** Облигации: в карточке только полное название ([subtitle]), без тикера и второй строки. */
+    val isBond: Boolean = false,
 )
 
 @Composable
@@ -219,9 +233,18 @@ internal fun AssetRow(
     val c = ZovTheme.colors
     val t = ZovTheme.text
     ZovOutlinedRow(onClick = onClick) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ZovHalfUnit)) {
-            Text(data.ticker, style = t.sectionSemi16, color = c.onSurface)
-            Text(data.subtitle, style = t.labelReg12, color = c.onSurfaceVariant)
+        if (data.isBond) {
+            Text(
+                text = data.subtitle,
+                modifier = Modifier.weight(1f),
+                style = t.sectionSemi16,
+                color = c.onSurface,
+            )
+        } else {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ZovHalfUnit)) {
+                Text(data.ticker, style = t.sectionSemi16, color = c.onSurface)
+                Text(data.subtitle, style = t.labelReg12, color = c.onSurfaceVariant)
+            }
         }
         Column(
             horizontalAlignment = Alignment.End,

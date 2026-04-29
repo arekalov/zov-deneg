@@ -17,6 +17,9 @@ import kotlin.math.sin
 
 private const val MOCK_PRICE_HISTORY_POINT_TARGET = 96
 
+private val NavKeyAsUuidRegex =
+    Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+
 internal fun mockSecurityOrderBook(navKeyRaw: String, securityDetailsRoot: JsonObject): String {
     val tickerKey = resolveTickerKey(navKeyRaw, securityDetailsRoot)
     val detail = securityDetailsRoot[tickerKey]?.jsonObject ?: securityDetailsRoot["__DEFAULT__"]!!.jsonObject
@@ -48,6 +51,7 @@ internal fun mockSecurityOrderBook(navKeyRaw: String, securityDetailsRoot: JsonO
 }
 
 internal fun mockSecurityDetail(tickerRaw: String, securityDetailsRoot: JsonObject): String {
+    val navTrimmed = tickerRaw.trim()
     val t = resolveTickerKey(tickerRaw, securityDetailsRoot).uppercase(Locale.getDefault())
     val root = securityDetailsRoot
     val hit = root[t]
@@ -57,6 +61,7 @@ internal fun mockSecurityDetail(tickerRaw: String, securityDetailsRoot: JsonObje
     }
     val base = root["__DEFAULT__"]!!.jsonObject
     val positive = t.hashCode() % 2 == 0
+    val useNavUuidAsSecurityId = NavKeyAsUuidRegex.matches(navTrimmed)
     val out: JsonObject =
         buildJsonObject {
             base.forEach { (k, v) ->
@@ -70,6 +75,13 @@ internal fun mockSecurityDetail(tickerRaw: String, securityDetailsRoot: JsonObje
                         )
 
                     "changePositive" -> put("changePositive", positive)
+                    "securityId" ->
+                        if (useNavUuidAsSecurityId) {
+                            put("securityId", navTrimmed)
+                        } else {
+                            put(k, v)
+                        }
+
                     else -> put(k, v)
                 }
             }

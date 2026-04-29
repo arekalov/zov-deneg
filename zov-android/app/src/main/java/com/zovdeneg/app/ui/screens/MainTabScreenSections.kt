@@ -1,6 +1,7 @@
 package com.zovdeneg.app.ui.screens
 
 import com.zovdeneg.app.R
+import com.zovdeneg.app.domain.market.SecurityKind
 import com.zovdeneg.app.domain.transactions.Transaction
 import com.zovdeneg.app.ui.common.ZovItemSpacing
 import com.zovdeneg.app.ui.common.ZovUnit
@@ -58,6 +59,7 @@ internal fun SearchTabPopularSection(
                         delta = item.deltaText,
                         deltaPositive = item.deltaPositive,
                         ticker = item.ticker,
+                        isBond = item.kind == SecurityKind.BOND,
                     ),
                 ) { onOpenSecurity(item.detailNavKey, item.ticker) }
             }

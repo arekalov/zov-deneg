@@ -19,6 +19,13 @@ import java.math.RoundingMode
 
 import javax.inject.Inject
 
+enum class DepositWithdrawBlockReason {
+    NONE,
+    NO_BALANCE_DATA,
+    ZERO_AVAILABLE,
+    EXCEEDS_BALANCE,
+}
+
 internal val depositAmountDecimals = listOf("1000.00", "5000.00", "10000.00", "50000.00")
 
 private const val MAX_AMOUNT_DIGITS = 15
@@ -36,6 +43,12 @@ private fun wholeRublesDigitsToApiDecimal(digits: String): String? {
     val bd = runCatching { BigDecimal(d) }.getOrNull() ?: return null
     if (bd <= BigDecimal.ZERO) return null
     return bd.setScale(2, RoundingMode.HALF_UP).toPlainString()
+}
+
+private fun brokerageAvailableRub(balance: BrokerageBalance): BigDecimal? {
+    val raw = balance.availableDecimal.trim().replace(',', '.')
+    if (raw.isEmpty()) return null
+    return runCatching { BigDecimal(raw) }.getOrNull()
 }
 
 enum class DepositSheetSuccess {
@@ -58,7 +71,26 @@ data class DepositUiState(
 ) {
     val canSubmitDepositAmount: Boolean get() = wholeRublesDigitsToApiDecimal(depositAmountDigits) != null
 
-    val canSubmitWithdrawAmount: Boolean get() = wholeRublesDigitsToApiDecimal(withdrawAmountDigits) != null
+    val withdrawBlockReason: DepositWithdrawBlockReason
+        get() {
+            if (isLoading) return DepositWithdrawBlockReason.NONE
+            if (loadFailed) return DepositWithdrawBlockReason.NO_BALANCE_DATA
+            val bal = balance ?: return DepositWithdrawBlockReason.NO_BALANCE_DATA
+            val available = brokerageAvailableRub(bal) ?: return DepositWithdrawBlockReason.NO_BALANCE_DATA
+            if (available <= BigDecimal.ZERO) return DepositWithdrawBlockReason.ZERO_AVAILABLE
+            val api = wholeRublesDigitsToApiDecimal(withdrawAmountDigits) ?: return DepositWithdrawBlockReason.NONE
+            val want = runCatching { BigDecimal(api) }.getOrNull() ?: return DepositWithdrawBlockReason.NONE
+            return if (want > available) {
+                DepositWithdrawBlockReason.EXCEEDS_BALANCE
+            } else {
+                DepositWithdrawBlockReason.NONE
+            }
+        }
+
+    val canSubmitWithdrawAmount: Boolean
+        get() =
+            wholeRublesDigitsToApiDecimal(withdrawAmountDigits) != null &&
+                withdrawBlockReason == DepositWithdrawBlockReason.NONE
 }
 
 @HiltViewModel
@@ -146,7 +178,9 @@ class DepositViewModel @Inject constructor(
     }
 
     fun withdrawWithEnteredAmount() {
-        val amount = wholeRublesDigitsToApiDecimal(_uiState.value.withdrawAmountDigits) ?: return
+        val state = _uiState.value
+        if (!state.canSubmitWithdrawAmount) return
+        val amount = wholeRublesDigitsToApiDecimal(state.withdrawAmountDigits) ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isWorking = true, actionFailed = false) }
             submitBrokerageWithdraw(amount).fold(

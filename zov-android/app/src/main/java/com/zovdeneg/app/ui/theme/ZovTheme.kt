@@ -55,16 +55,26 @@ fun ZovAppTheme(
 ) {
     val baseColors = if (darkTheme) ZovColors.Dark else ZovColors.Light
 
-    val zovColors = if (BuildConfig.IS_BIOMETRY_AVAILABLE) {
-        baseColors.copy(
-            primary = Color(0xFF018A39), // любой другой цвет (например зелёный)
-            primaryContainer = Color(0xFF78CE9D),
-            onPrimary = Color(0xFFFFFFFF),
-            positive = Color(0xFF018A39),
-            )
-    } else {
-        baseColors
-    }
+    val zovColors =
+        if (BuildConfig.IS_BIOMETRY_AVAILABLE) {
+            if (darkTheme) {
+                baseColors.copy(
+                    primary = Color(0xFF4ADE80),
+                    primaryContainer = Color(0xFF3A6248),
+                    onPrimary = Color(0xFF052E16),
+                    positive = Color(0xFF86EFAC),
+                )
+            } else {
+                baseColors.copy(
+                    primary = Color(0xFF16A34A),
+                    primaryContainer = Color(0xFFC8EDD0),
+                    onPrimary = Color(0xFFFFFFFF),
+                    positive = Color(0xFF059669),
+                )
+            }
+        } else {
+            baseColors
+        }
 
     val zovText = ZovTextStyles.Default
     val materialColors =

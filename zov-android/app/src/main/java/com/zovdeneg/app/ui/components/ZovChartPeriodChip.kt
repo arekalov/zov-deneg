@@ -9,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -17,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun ZovChartPeriodChip(
@@ -30,17 +30,9 @@ fun ZovChartPeriodChip(
     val pill = RoundedCornerShape(percent = 50)
     Box(
         modifier
-            .heightIn(min = ZovChipHeight)
-            .then(
-                if (selected) {
-                    Modifier
-                        .height(ZovChipHeight)
-                        .clip(pill)
-                        .background(c.primaryContainer)
-                } else {
-                    Modifier
-                },
-            )
+            .height(ZovChipHeight)
+            .clip(pill)
+            .background(if (selected) c.primaryContainer else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = ZovSpace4, vertical = ZovTightGap),
         contentAlignment = Alignment.Center,

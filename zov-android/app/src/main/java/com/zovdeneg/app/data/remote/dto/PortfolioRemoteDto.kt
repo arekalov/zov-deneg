@@ -7,6 +7,8 @@ internal data class PortfolioSecurityRemoteDto(
     val id: String,
     val ticker: String,
     val name: String,
+    /** `stock` | `bond` | `etf` — см. OpenAPI `Security.type`. */
+    val type: String? = null,
 )
 
 @Serializable

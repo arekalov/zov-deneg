@@ -17,6 +17,7 @@ import com.zovdeneg.app.ui.deposit.DepositUiState
 import com.zovdeneg.app.ui.deposit.DepositViewModel
 import com.zovdeneg.app.ui.theme.ZovAppTheme
 import com.zovdeneg.app.ui.theme.ZovTheme
+import com.zovdeneg.app.ui.trade.BuySubmitHint
 import com.zovdeneg.app.ui.trade.BuyUiState
 import com.zovdeneg.app.ui.trade.BuyViewModel
 import com.zovdeneg.app.ui.trade.SecurityChartRange
@@ -309,6 +310,51 @@ fun BuyScreen(
 }
 
 @Composable
+private fun BuySubmitHintBanner(hint: BuySubmitHint) {
+    val c = ZovTheme.colors
+    val t = ZovTheme.text
+    when (val h = hint) {
+        BuySubmitHint.None -> {}
+        BuySubmitHint.EstimatedInsufficientBalance ->
+            Text(
+                stringResource(R.string.buy_precheck_insufficient_balance),
+                style = t.bodyReg14,
+                color = c.negative,
+            )
+
+        BuySubmitHint.NoAvailableFunds ->
+            Text(
+                stringResource(R.string.buy_error_no_available_funds),
+                style = t.bodyReg14,
+                color = c.negative,
+            )
+
+        BuySubmitHint.BalanceUnavailable ->
+            Text(
+                stringResource(R.string.buy_error_balance_unavailable),
+                style = t.bodyReg14,
+                color = c.negative,
+            )
+
+        is BuySubmitHint.InsufficientFundsFromApi -> {
+            val msg = h.serverMessage?.trim().orEmpty()
+            Text(
+                if (msg.isNotEmpty()) {
+                    stringResource(R.string.buy_error_insufficient_funds_reason, msg)
+                } else {
+                    stringResource(R.string.buy_error_insufficient_funds)
+                },
+                style = t.bodyReg14,
+                color = c.negative,
+            )
+        }
+
+        BuySubmitHint.GenericFailure ->
+            Text(stringResource(R.string.error_submit_order), style = t.bodyReg14, color = c.negative)
+    }
+}
+
+@Composable
 private fun BuyScreenOrderContent(
     state: BuyUiState,
     label: String,
@@ -345,12 +391,10 @@ private fun BuyScreenOrderContent(
                 style = t.subtitleReg14,
                 color = c.onSurfaceVariant,
             )
-            if (state.submitFailed) {
-                Text(stringResource(R.string.error_submit_order), style = t.bodyReg14, color = c.negative)
-            }
+            BuySubmitHintBanner(state.submitHint)
             Button(
                 onClick = { viewModel.submitOrder() },
-                enabled = !state.isSubmitting,
+                enabled = state.canSubmitMarketBuy,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = c.primary,

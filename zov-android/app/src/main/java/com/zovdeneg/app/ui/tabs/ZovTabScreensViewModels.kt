@@ -18,7 +18,9 @@ import androidx.lifecycle.viewModelScope
 
 import javax.inject.Inject
 
-private const val LIST_PAGE_SIZE = 4
+private const val SECURITIES_LIST_PAGE_SIZE = 20
+
+private const val TRANSACTIONS_LIST_PAGE_SIZE = 4
 private const val SEARCH_DEBOUNCE_MS = 400L
 
 data class SearchTabUiState(
@@ -101,7 +103,7 @@ class ZovSearchTabViewModel @Inject constructor(
         val snapshot = _uiState.value
         val type = searchApiType(snapshot.filterIndex)
         val query = snapshot.query.trim()
-        loadSecuritiesPage(query, type, page, LIST_PAGE_SIZE).fold(
+        loadSecuritiesPage(query, type, page, SECURITIES_LIST_PAGE_SIZE).fold(
             onSuccess = { env ->
                 _uiState.update {
                     val merged = if (append) it.securities + env.items else env.items
@@ -199,7 +201,7 @@ class ZovHistoryTabViewModel @Inject constructor(
 
     private suspend fun fetchTransactionsPage(page: Int, append: Boolean) {
         val type = historyApiType()
-        loadTransactionsPage(page, LIST_PAGE_SIZE, type).fold(
+        loadTransactionsPage(page, TRANSACTIONS_LIST_PAGE_SIZE, type).fold(
             onSuccess = { env ->
                 _uiState.update {
                     val merged = if (append) it.transactions + env.items else env.items

@@ -100,6 +100,7 @@
     <string name="home_no_positions">Пока нет открытых позиций</string>
     <string name="home_orders_strip_title">Заявки</string>
     <string name="home_orders_strip_subtitle">Активные и завершённые</string>
+    <string name="home_orders_bonds_in_portfolio">Облигаций в портфеле · %1$d</string>
 
     <string name="search_placeholder">Название или тикер…</string>
     <string name="search_popular">Популярные акции</string>
@@ -185,8 +186,16 @@
     <string name="order_cancelled_snackbar">Заявка отменена</string>
     <string name="buy_order_hint">К заявке · %1$d шт. · цена лота %2$s</string>
     <string name="error_submit_order">Не удалось разместить заявку</string>
+    <string name="buy_precheck_insufficient_balance">По стакану (лучшая цена покупки) на эту заявку не хватает средств на счёте. Уменьшите число лотов или пополните брокерский счёт.</string>
+    <string name="buy_error_insufficient_funds">Недостаточно средств для сделки.</string>
+    <string name="buy_error_insufficient_funds_reason">Недостаточно средств: %1$s</string>
+    <string name="buy_error_no_available_funds">На брокерском счёте нет доступных средств для покупки. Пополните счёт.</string>
+    <string name="buy_error_balance_unavailable">Не удалось проверить баланс счёта. Обновите экран или попробуйте позже.</string>
     <string name="error_submit_deposit">Не удалось пополнить счёт</string>
     <string name="error_submit_withdraw">Не удалось вывести средства</string>
+    <string name="withdraw_exceeds_available">Сумма вывода больше доступного остатка на счёте.</string>
+    <string name="withdraw_no_available_balance">Нет доступных средств для вывода.</string>
+    <string name="withdraw_balance_unavailable">Не удалось получить баланс. Обновите экран или попробуйте позже.</string>
     <string name="balance_available">Доступно: %1$s</string>
     <string name="balance_blocked">В резерве: %1$s</string>
     <string name="balance_total">Всего: %1$s</string>

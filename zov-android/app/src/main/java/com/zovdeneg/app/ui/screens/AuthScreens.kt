@@ -418,12 +418,17 @@ fun RegisterDataScreen(
         RegisterProgress(0)
         Spacer(Modifier.height(ZovItemSpacing))
         Text(stringResource(R.string.register_personal_details), style = t.titleSemi20, color = c.onSurface)
-        Text(stringResource(
-            if (BuildConfig.IS_BIOMETRY_AVAILABLE)
-                R.string.register_step_1_of_3
-            else
-                R.string.register_step_1_of_4
-        ), style = t.subtitleReg13, color = c.onSurfaceVariant)
+        Text(
+            stringResource(
+                if (BuildConfig.IS_BIOMETRY_AVAILABLE) {
+                    R.string.register_step_1_of_3
+                } else {
+                    R.string.register_step_1_of_4
+                },
+            ),
+            style = t.subtitleReg13,
+            color = c.onSurfaceVariant,
+        )
         RegisterStep1TextFields(state = state, viewModel = viewModel)
         if (state.validationError) {
             Text(
@@ -450,23 +455,7 @@ fun RegisterDataScreen(
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = c.onPrimary),
         ) { Text(stringResource(R.string.action_continue), style = t.bodyMed14) }
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                stringResource(R.string.register_already_have_account),
-                style = t.subtitleReg13,
-                color = c.onSurfaceVariant,
-            )
-            TextButton(onClick = onLogin) {
-                Text(
-                    stringResource(R.string.action_sign_in),
-                    style = t.subtitleReg13,
-                    color = c.primary,
-                )
-            }
-        }
+        RegisterDataScreenBottomBar(onLogin = onLogin)
     }
 }
 
@@ -487,12 +476,17 @@ internal fun RegisterPinScreen(
                 verticalArrangement = Arrangement.spacedBy(ZovTightGap),
             ) {
                 Text(stringResource(R.string.register_create_pin), style = t.titleSemi20, color = c.onSurface)
-                Text(stringResource(
-                    if (BuildConfig.IS_BIOMETRY_AVAILABLE)
-                        R.string.register_step_2_of_3
-                    else
-                        R.string.register_step_2_of_4
-                ), style = t.subtitleReg13, color = c.onSurfaceVariant)
+                Text(
+                    stringResource(
+                        if (BuildConfig.IS_BIOMETRY_AVAILABLE) {
+                            R.string.register_step_2_of_3
+                        } else {
+                            R.string.register_step_2_of_4
+                        },
+                    ),
+                    style = t.subtitleReg13,
+                    color = c.onSurfaceVariant,
+                )
             }
             Spacer(Modifier.height(ZovSpace4))
             ZovPinDots(filledCount = pinLen, total = 4)
@@ -529,12 +523,17 @@ internal fun RegisterPinConfirmScreen(
                 verticalArrangement = Arrangement.spacedBy(ZovTightGap),
             ) {
                 Text(stringResource(R.string.register_confirm_pin), style = t.titleSemi20, color = c.onSurface)
-                Text(stringResource(
-                    if (BuildConfig.IS_BIOMETRY_AVAILABLE)
-                        R.string.register_step_3_of_3
-                    else
-                        R.string.register_step_3_of_4
-                ), style = t.subtitleReg13, color = c.onSurfaceVariant)
+                Text(
+                    stringResource(
+                        if (BuildConfig.IS_BIOMETRY_AVAILABLE) {
+                            R.string.register_step_3_of_3
+                        } else {
+                            R.string.register_step_3_of_4
+                        },
+                    ),
+                    style = t.subtitleReg13,
+                    color = c.onSurfaceVariant,
+                )
             }
             Spacer(Modifier.height(ZovSpace4))
             ZovPinDots(filledCount = pinLen, total = 4)

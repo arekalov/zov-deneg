@@ -11,7 +11,8 @@
       "security": {
         "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         "ticker": "SBER",
-        "name": "Сбербанк"
+        "name": "Сбербанк",
+        "type": "stock"
       },
       "quantity": 120,
       "averagePrice": "276.00",
@@ -19,6 +20,21 @@
       "currentValue": "33120.00",
       "profitLoss": "2640.00",
       "profitLossPct": "8.50"
+    },
+    {
+      "securityId": "b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22",
+      "security": {
+        "id": "b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22",
+        "ticker": "SU26238RMFS4",
+        "name": "ОФЗ 26238",
+        "type": "bond"
+      },
+      "quantity": 10,
+      "averagePrice": "92.50",
+      "currentPrice": "93.10",
+      "currentValue": "9310.00",
+      "profitLoss": "60.00",
+      "profitLossPct": "0.65"
     }
   ]
 }

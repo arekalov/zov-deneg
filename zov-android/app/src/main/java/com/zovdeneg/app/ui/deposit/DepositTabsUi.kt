@@ -7,15 +7,18 @@ import com.zovdeneg.app.ui.components.ZovFilterChip
 import com.zovdeneg.app.ui.components.ZovRubWholeAmountDigitsField
 import com.zovdeneg.app.ui.theme.ZovTheme
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 
@@ -33,6 +36,7 @@ internal data class WithdrawTabModel(
     val balance: BrokerageBalance?,
     val withdrawAmountDigits: String,
     val canSubmitWithdrawAmount: Boolean,
+    val withdrawBlockReason: DepositWithdrawBlockReason,
     val isWorking: Boolean,
     val actionFailed: Boolean,
 )
@@ -70,7 +74,12 @@ internal fun DepositTabContent(
         label = stringResource(R.string.deposit_amount_label),
     )
     Spacer(Modifier.height(ZovItemSpacing))
-    Row(horizontalArrangement = Arrangement.spacedBy(ZovItemSpacing)) {
+    val chipScroll = rememberScrollState()
+    Row(
+        modifier = Modifier.horizontalScroll(chipScroll),
+        horizontalArrangement = Arrangement.spacedBy(ZovItemSpacing),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         model.chipResIds.forEachIndexed { i, resId ->
             ZovFilterChip(
                 label = stringResource(resId),
@@ -113,12 +122,34 @@ internal fun WithdrawTabContent(
         onValueChange = onWithdrawAmountDigitsChange,
         label = stringResource(R.string.withdraw_amount_label),
     )
-    if (model.actionFailed) {
-        Text(
-            stringResource(R.string.error_submit_withdraw),
-            style = t.bodyReg14,
-            color = c.negative,
-        )
+    when {
+        model.actionFailed ->
+            Text(
+                stringResource(R.string.error_submit_withdraw),
+                style = t.bodyReg14,
+                color = c.negative,
+            )
+
+        model.withdrawBlockReason == DepositWithdrawBlockReason.EXCEEDS_BALANCE ->
+            Text(
+                stringResource(R.string.withdraw_exceeds_available),
+                style = t.bodyReg14,
+                color = c.negative,
+            )
+
+        model.withdrawBlockReason == DepositWithdrawBlockReason.ZERO_AVAILABLE ->
+            Text(
+                stringResource(R.string.withdraw_no_available_balance),
+                style = t.bodyReg14,
+                color = c.negative,
+            )
+
+        model.withdrawBlockReason == DepositWithdrawBlockReason.NO_BALANCE_DATA ->
+            Text(
+                stringResource(R.string.withdraw_balance_unavailable),
+                style = t.bodyReg14,
+                color = c.negative,
+            )
     }
     Button(
         onClick = onWithdraw,
@@ -158,6 +189,7 @@ internal fun DepositScreenLoadedContent(
                 balance = state.balance,
                 withdrawAmountDigits = state.withdrawAmountDigits,
                 canSubmitWithdrawAmount = state.canSubmitWithdrawAmount,
+                withdrawBlockReason = state.withdrawBlockReason,
                 isWorking = state.isWorking,
                 actionFailed = state.actionFailed,
             ),

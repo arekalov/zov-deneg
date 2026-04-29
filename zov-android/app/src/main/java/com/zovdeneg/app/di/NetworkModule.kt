@@ -5,6 +5,7 @@ import com.zovdeneg.app.data.remote.ZovAuthTokenRefresher
 import com.zovdeneg.app.data.remote.ZovBearerAuthInvalidator
 import com.zovdeneg.app.data.remote.ZovBearerClientDeps
 import com.zovdeneg.app.data.remote.ZovHttpClientFactory
+import com.zovdeneg.app.data.remote.ZovOkHttpResponseBodyLoggingInterceptor
 import com.zovdeneg.app.data.remote.ZovJson
 import com.zovdeneg.app.data.remote.ZovSessionTokens
 import com.zovdeneg.app.data.remote.mock.ZovMockAssetJson
@@ -46,6 +47,9 @@ internal object NetworkModule {
                 readTimeout(60, TimeUnit.SECONDS)
                 writeTimeout(60, TimeUnit.SECONDS)
                 retryOnConnectionFailure(true)
+                if (BuildConfig.DEBUG) {
+                    addInterceptor(ZovOkHttpResponseBodyLoggingInterceptor)
+                }
             }
         }
 

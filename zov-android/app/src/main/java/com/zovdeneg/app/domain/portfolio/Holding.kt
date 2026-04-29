@@ -8,4 +8,6 @@ data class Holding(
     val deltaPositive: Boolean,
     /** UUID для zov-back или тикер для мок-HTTP. */
     val detailNavKey: String = ticker,
+    /** Как в OpenAPI `Security.type`: `stock`, `bond`, `etf`. */
+    val securityTypeKey: String = "stock",
 )

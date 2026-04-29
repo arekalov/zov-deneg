@@ -27,6 +27,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
             availableText = available.toRubDisplay(),
             blockedText = blocked.toRubDisplay(),
             totalText = total.toRubDisplay(),
+            availableDecimal = available.trim(),
         )
 
     private fun String.toRubDisplay(): String = ZovRubDisplay.formatApiDecimalToRubLine(this)

@@ -46,6 +46,13 @@ class MainHomeViewModel @Inject constructor(
         }
     }
 
+    /** Обновить портфель и баланс без полноэкранной загрузки (периодический опрос на главной). */
+    fun refreshQuietly() {
+        viewModelScope.launch {
+            mergeLatestPortfolioAndBalanceQuietly()
+        }
+    }
+
     private suspend fun loadPortfolioAndBalance() {
         supervisorScope {
             val snapshotAsync = async { refreshHomePortfolio() }
@@ -65,5 +72,33 @@ class MainHomeViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private suspend fun mergeLatestPortfolioAndBalanceQuietly() {
+        supervisorScope {
+            val snapshotAsync = async { refreshHomePortfolio() }
+            val balanceAsync = async { loadBrokerageBalance() }
+            val snapshot = snapshotAsync.await()
+            val balanceResult = balanceAsync.await()
+            val summary = snapshot.summary
+            val holdings = snapshot.holdings
+            _uiState.update { prev ->
+                prev.copy(
+                    portfolioAmountRub = summary.getOrNull()?.portfolioAmountRub
+                        ?: prev.portfolioAmountRub,
+                    totalGainText = summary.getOrNull()?.totalGainText
+                        ?: prev.totalGainText,
+                    brokerageTotalRub = balanceResult.getOrNull()?.totalText
+                        ?: prev.brokerageTotalRub,
+                    holdings = holdings.getOrNull() ?: prev.holdings,
+                    loadFailed = prev.loadFailed,
+                )
+            }
+        }
+    }
+
+    companion object {
+        /** Интервал тихого обновления данных на экране «Главная», пока он в foreground. */
+        const val QUIET_REFRESH_INTERVAL_MS = 12_000L
     }
 }

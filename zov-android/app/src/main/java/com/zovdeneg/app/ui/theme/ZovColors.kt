@@ -23,13 +23,13 @@ data class ZovColors(
             background = Color(0xFFF5F7FA),
             surface = Color(0xFFFFFFFF),
             surfaceContainer = Color(0xFFEDEEF0),
-            primary = Color(0xFF219638),
+            primary = Color(0xFF1FA855),
             onPrimary = Color(0xFFFFFFFF),
             onSurface = Color(0xFF17191C),
             onSurfaceVariant = Color(0xFF73757A),
             outline = Color(0xFFE0E3E6),
-            primaryContainer = Color(0xFFD9F0DB),
-            positive = Color(0xFF0D8C47),
+            primaryContainer = Color(0xFFC8EDD0),
+            positive = Color(0xFF059669),
             negative = Color(0xFFB82924),
         )
 
@@ -37,13 +37,13 @@ data class ZovColors(
             background = Color(0xFF101214),
             surface = Color(0xFF1A1C1E),
             surfaceContainer = Color(0xFF25282B),
-            primary = Color(0xFF7FD68E),
+            primary = Color(0xFF86EFAC),
             onPrimary = Color(0xFF003910),
             onSurface = Color(0xFFE8EAED),
             onSurfaceVariant = Color(0xFFB0B4BA),
             outline = Color(0xFF3D4249),
-            primaryContainer = Color(0xFF1E3D26),
-            positive = Color(0xFF5FD68A),
+            primaryContainer = Color(0xFF2D4F3A),
+            positive = Color(0xFF7AF0B2),
             negative = Color(0xFFFF8A80),
         )
     }

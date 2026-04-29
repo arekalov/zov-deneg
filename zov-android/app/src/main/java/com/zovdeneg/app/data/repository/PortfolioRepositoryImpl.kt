@@ -33,7 +33,13 @@ internal class PortfolioRepositoryImpl @Inject constructor(
             deltaText = "$rub ($pct)",
             deltaPositive = !profitLoss.trim().startsWith("-"),
             detailNavKey = securityId,
+            securityTypeKey = security.type.normalizedPortfolioSecurityType(),
         )
+    }
+
+    private fun String?.normalizedPortfolioSecurityType(): String {
+        val raw = this?.trim()?.lowercase().orEmpty()
+        return if (raw in setOf("bond", "etf", "stock")) raw else "stock"
     }
 
     private fun PortfolioSummaryDto.toDomain(): PortfolioSummary {

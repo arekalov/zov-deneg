@@ -32,9 +32,12 @@ object ZovRoutes {
 
     fun orderDetail(orderId: String) = "$ORDERS_LIST/${orderId.encodeTicker()}"
 
-    /** Вложенный маршрут: задать PIN после входа по паролю без локального PIN. */
-    fun registerFlowPinSetupAfterPassword(): String =
-        "$REGISTER_FLOW/$REGISTER_STEP2?freshPin=true"
+    /**
+     * Шаг PIN внутри графа [REGISTER_FLOW] (не полный путь от корня NavHost).
+     * После [navigate][androidx.navigation.NavController.navigate](REGISTER_FLOW) вызывать этот маршрут
+     * для сценария «вошли по паролю, локального PIN ещё нет».
+     */
+    fun registerStep2WithFreshPin(freshPin: Boolean) = "$REGISTER_STEP2?freshPin=$freshPin"
 
     private fun String.encodeTicker() = replace("/", "_")
 }

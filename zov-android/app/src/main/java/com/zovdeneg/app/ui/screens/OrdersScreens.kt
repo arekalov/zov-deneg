@@ -10,10 +10,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zovdeneg.app.R
@@ -28,6 +33,7 @@ import com.zovdeneg.app.ui.orders.OrderDetailViewModel
 import com.zovdeneg.app.ui.orders.OrdersListViewModel
 import com.zovdeneg.app.ui.theme.ZovTheme
 import java.time.Instant
+import kotlinx.coroutines.flow.collect
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -36,9 +42,23 @@ import java.util.Locale
 fun OrdersListScreen(
     viewModel: OrdersListViewModel = hiltViewModel(),
     onOpenOrder: (String) -> Unit,
+    onPortfolioMayHaveChanged: () -> Unit = {},
 ) {
     LaunchedEffect(Unit) {
         viewModel.refresh()
+    }
+    DisposableEffect(viewModel) {
+        viewModel.startOrdersPolling()
+        onDispose { viewModel.stopOrdersPolling() }
+    }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val onPortfolioRefresh by rememberUpdatedState(onPortfolioMayHaveChanged)
+    LaunchedEffect(viewModel, lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.portfolioRefreshRequests.collect {
+                onPortfolioRefresh()
+            }
+        }
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val c = ZovTheme.colors
