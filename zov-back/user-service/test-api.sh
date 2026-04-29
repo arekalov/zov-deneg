@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Complete User Service API Test Script
-BASE_URL="http://localhost:8080"
+BASE_URL="http://localhost:58233"
 RESULTS_FILE="/Users/m.s.taranenko/IdeaProjects/itmo/zov-deneg/zov-back/user-service/test-results.md"
 RAND=$RANDOM
 

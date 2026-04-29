@@ -44,42 +44,30 @@ func ReadMessage(conn net.Conn) (uint8, []byte, error) {
 }
 
 func ParseQuote(data []byte) (Quote, error) {
-	if len(data) < 2 {
-		return Quote{}, fmt.Errorf("quote: too short (%d bytes)", len(data))
-	}
-
-	tickerLen := int(le.Uint16(data[0:2]))
-	if len(data) != 2+tickerLen+26 {
-		return Quote{}, fmt.Errorf("quote: size %d != expected %d", len(data), 2+tickerLen+26)
+	if len(data) != 36 {
+		return Quote{}, fmt.Errorf("quote: expected 36 bytes, got %d", len(data))
 	}
 
 	var q Quote
-	q.Ticker = string(data[2 : 2+tickerLen])
-	q.TimestampMs = int64(le.Uint64(data[2+tickerLen : 2+tickerLen+8]))
-	q.Price = int64(le.Uint64(data[2+tickerLen+8 : 2+tickerLen+16]))
-	q.Volume = le.Uint32(data[2+tickerLen+16 : 2+tickerLen+20])
+	q.Ticker = string(data[0:16])
+	q.TimestampMs = int64(le.Uint64(data[16:24]))
+	q.Price = int64(le.Uint64(data[24:32]))
+	q.Volume = le.Uint32(data[32:36])
 	return q, nil
 }
 
 func ParseOrderBook(data []byte) (OrderBook, error) {
-	if len(data) < 2 {
-		return OrderBook{}, fmt.Errorf("orderbook: too short (%d bytes)", len(data))
-	}
-
-	tickerLen := int(le.Uint16(data[0:2]))
-	offset := 2 + tickerLen
-
-	if len(data) < offset+20 {
+	if len(data) < 36 {
 		return OrderBook{}, fmt.Errorf("orderbook: too short (%d bytes)", len(data))
 	}
 
 	var ob OrderBook
-	ob.Ticker = string(data[2 : 2+tickerLen])
-	ob.TimestampMs = int64(le.Uint64(data[offset : offset+8]))
-	ob.SnapshotID = le.Uint64(data[offset+8 : offset+16])
-	askN := int(le.Uint16(data[offset+16 : offset+18]))
-	bidN := int(le.Uint16(data[offset+18 : offset+20]))
-	offset += 20
+	ob.Ticker = string(data[0:16])
+	ob.TimestampMs = int64(le.Uint64(data[16:24]))
+	ob.SnapshotID = le.Uint64(data[24:32])
+	askN := int(le.Uint16(data[32:34]))
+	bidN := int(le.Uint16(data[34:36]))
+	offset := 36
 
 	expected := offset + (askN+bidN)*12
 	if len(data) != expected {
@@ -115,17 +103,11 @@ func ParseSessionStart(data []byte) (SessionStart, error) {
 	offset := 10
 	ss.Tickers = make([]string, count)
 	for i := 0; i < count; i++ {
-		if len(data) < offset+2 {
-			return SessionStart{}, fmt.Errorf("session_start: ticker %d length missing", i)
-		}
-		tickerLen := int(le.Uint16(data[offset : offset+2]))
-		offset += 2
-
-		if len(data) < offset+tickerLen {
+		if len(data) < offset+16 {
 			return SessionStart{}, fmt.Errorf("session_start: ticker %d data missing", i)
 		}
-		ss.Tickers[i] = string(data[offset : offset+tickerLen])
-		offset += tickerLen
+		ss.Tickers[i] = string(data[offset : offset+16])
+		offset += 16
 	}
 
 	if len(data) != offset {
