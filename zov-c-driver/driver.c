@@ -370,7 +370,7 @@ int main() {
     global_socket = connect_socket();
 
     for (int i = 0; i < SEC_COUNT; i++) {
-      prices[i] = 100.0 + i * 10;
+      prices[i] = 1000.0 + i * 10;
     }
 
     init_ob();
