@@ -137,7 +137,7 @@ VALUES (generateUUIDv4(), 'SBER', 'Сбербанк', 'Крупнейший ба
        (generateUUIDv4(), 'PG', 'Procter & Gamble', 'Consumer goods corporation', 'stock', 'SPB', 'Потребительский сектор', 1),
        (generateUUIDv4(), 'KO', 'Coca-Cola Company', 'Beverage company', 'stock', 'SPB', 'Потребительский сектор', 1),
        (generateUUIDv4(), 'PEP', 'PepsiCo Inc.', 'Food and beverage company', 'stock', 'SPB', 'Потребительский сектор', 1),
-       (generateUUIDv4(), 'MCD', 'McDonald\'s Corporation', 'Fast food restaurant', 'stock', 'SPB', 'Потребительский сектор', 1),
+       (generateUUIDv4(), 'MCD', 'McDonalds Corporation', 'Fast food restaurant', 'stock', 'SPB', 'Потребительский сектор', 1),
        (generateUUIDv4(), 'DIS', 'Walt Disney Company', 'Entertainment conglomerate', 'stock', 'SPB', 'Телекоммуникации', 1),
        (generateUUIDv4(), 'BA', 'Boeing Company', 'Aerospace manufacturer', 'stock', 'SPB', 'Другое', 1),
        (generateUUIDv4(), 'CAT', 'Caterpillar Inc.', 'Construction and mining equipment', 'stock', 'SPB', 'Другое', 1),

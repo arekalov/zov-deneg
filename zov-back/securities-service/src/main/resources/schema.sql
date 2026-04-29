@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS securities_latest
 
 -- ============================================================
 -- MV: при каждой вставке в quotes обновляем securities_latest
+-- Примечание: day_open_price вычисляется на лету в запросах через argMin
 -- ============================================================
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS securities_latest_mv

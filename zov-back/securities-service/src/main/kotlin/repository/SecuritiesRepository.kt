@@ -112,10 +112,22 @@ class SecuritiesRepository(private val dataSource: ClickHouseDataSource) {
                 s.sector,
                 s.lot_size,
                 sl.last_price,
-                sl.last_price - sl.day_open_price AS price_change,
-                round((sl.last_price - sl.day_open_price) / NULLIF(sl.day_open_price, 0) * 100, 2) AS price_change_pct
-            FROM `securities_dict` AS s
-            LEFT JOIN `securities_latest` AS sl ON s.id = sl.security_id
+                sl.last_price - COALESCE(open_day.price, sl.last_price) AS price_change,
+                round(
+                    (sl.last_price - COALESCE(open_day.price, sl.last_price)) /
+                    NULLIF(COALESCE(open_day.price, sl.last_price), 0) * 100, 2
+                ) AS price_change_pct
+            FROM securities_dict AS s
+            LEFT JOIN securities_latest AS sl ON s.id = sl.security_id
+            LEFT JOIN (
+                SELECT
+                    security_id,
+                    toDate(timestamp, 'UTC') AS trade_date,
+                    argMin(price, timestamp) AS price
+                FROM quotes
+                GROUP BY security_id, trade_date
+            ) AS open_day ON sl.security_id = open_day.security_id
+                AND toDate(sl.last_timestamp, 'UTC') = open_day.trade_date
             ${if (where.isNotEmpty()) "WHERE $where" else ""}
             ORDER BY s.ticker
             LIMIT $pageSize OFFSET $offset
@@ -173,10 +185,22 @@ class SecuritiesRepository(private val dataSource: ClickHouseDataSource) {
                     s.sector,
                     s.lot_size,
                     sl.last_price,
-                    sl.last_price - sl.day_open_price AS price_change,
-                    round((sl.last_price - sl.day_open_price) / NULLIF(sl.day_open_price, 0) * 100, 2) AS price_change_pct
-                FROM `securities_dict` AS s
-                LEFT JOIN `securities_latest` AS sl ON s.id = sl.security_id
+                    sl.last_price - COALESCE(open_day.price, sl.last_price) AS price_change,
+                    round(
+                        (sl.last_price - COALESCE(open_day.price, sl.last_price)) /
+                        NULLIF(COALESCE(open_day.price, sl.last_price), 0) * 100, 2
+                    ) AS price_change_pct
+                FROM securities_dict AS s
+                LEFT JOIN securities_latest AS sl ON s.id = sl.security_id
+                LEFT JOIN (
+                    SELECT
+                        security_id,
+                        toDate(timestamp, 'UTC') AS trade_date,
+                        argMin(price, timestamp) AS price
+                    FROM quotes
+                    GROUP BY security_id, trade_date
+                ) AS open_day ON sl.security_id = open_day.security_id
+                    AND toDate(sl.last_timestamp, 'UTC') = open_day.trade_date
                 WHERE s.id = '$id'
             """.trimIndent()
 
