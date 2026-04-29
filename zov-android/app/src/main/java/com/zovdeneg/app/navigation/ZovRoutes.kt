@@ -23,12 +23,16 @@ object ZovRoutes {
     const val ORDER_DETAIL = "orders/{orderId}"
     const val DETAIL = "detail/{securityId}/{displayTicker}"
     const val BUY = "buy/{securityId}/{displayTicker}"
+    const val SELL = "sell/{securityId}/{displayTicker}"
 
     fun detail(securityId: String, displayTicker: String) =
         "detail/${securityId.encodeTicker()}/${displayTicker.encodeTicker()}"
 
     fun buy(securityId: String, displayTicker: String) =
         "buy/${securityId.encodeTicker()}/${displayTicker.encodeTicker()}"
+
+    fun sell(securityId: String, displayTicker: String) =
+        "sell/${securityId.encodeTicker()}/${displayTicker.encodeTicker()}"
 
     fun orderDetail(orderId: String) = "$ORDERS_LIST/${orderId.encodeTicker()}"
 

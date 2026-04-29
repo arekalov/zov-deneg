@@ -32,6 +32,7 @@ internal class PortfolioRepositoryImpl @Inject constructor(
             valueText = ZovRubDisplay.formatApiDecimalToRubLine(currentValue.trim()),
             deltaText = "$rub ($pct)",
             deltaPositive = !profitLoss.trim().startsWith("-"),
+            quantity = quantity,
             detailNavKey = securityId,
             securityTypeKey = security.type.normalizedPortfolioSecurityType(),
         )

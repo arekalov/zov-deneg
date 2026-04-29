@@ -48,8 +48,8 @@ class ZovLoginViewModel @Inject constructor(
     private val _remoteSessionSyncing = MutableStateFlow(false)
     val remoteSessionSyncing: StateFlow<Boolean> = _remoteSessionSyncing.asStateFlow()
 
-    private val _credentialPhone = MutableStateFlow("")
-    val credentialPhone: StateFlow<String> = _credentialPhone.asStateFlow()
+    private val _credentialPhoneDigits10 = MutableStateFlow("")
+    val credentialPhoneDigits10: StateFlow<String> = _credentialPhoneDigits10.asStateFlow()
 
     private val _credentialPassword = MutableStateFlow("")
     val credentialPassword: StateFlow<String> = _credentialPassword.asStateFlow()
@@ -63,8 +63,8 @@ class ZovLoginViewModel @Inject constructor(
     fun shouldShowPinUnlock(): Boolean =
         localAuthStorage.hasPin() && authRepository.hasPersistedJwtPair()
 
-    fun setCredentialPhone(value: String) {
-        _credentialPhone.value = value
+    fun setCredentialPhoneDigits10(value: String) {
+        _credentialPhoneDigits10.value = extractNationalTenDigits(value)
         _credentialError.value = null
     }
 
@@ -77,8 +77,9 @@ class ZovLoginViewModel @Inject constructor(
         viewModelScope.launch {
             _credentialSubmitting.value = true
             _credentialError.value = null
+            val phoneE164 = registerPhoneE164FromNationalTen(_credentialPhoneDigits10.value)
             authRepository
-                .loginWithCredentials(_credentialPhone.value, _credentialPassword.value)
+                .loginWithCredentials(phoneE164, _credentialPassword.value)
                 .fold(
                     onSuccess = {
                         if (localAuthStorage.hasPin()) {

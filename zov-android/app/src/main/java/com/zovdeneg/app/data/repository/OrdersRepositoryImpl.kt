@@ -21,8 +21,16 @@ internal class OrdersRepositoryImpl @Inject constructor(
     private val ordersApi: ZovOrdersApi,
 ) : OrdersRepository {
     override suspend fun placeMarketBuy(securityId: String, quantity: Int): Result<OrderReceipt> =
+        placeMarketOrder { ordersApi.createMarketBuy(securityId, quantity) }
+
+    override suspend fun placeMarketSell(securityId: String, quantity: Int): Result<OrderReceipt> =
+        placeMarketOrder { ordersApi.createMarketSell(securityId, quantity) }
+
+    private suspend fun placeMarketOrder(
+        request: suspend () -> OrderResponseDto,
+    ): Result<OrderReceipt> =
         runCatching {
-            val dto = ordersApi.createMarketBuy(securityId, quantity)
+            val dto = request()
             OrderReceipt(
                 status = dto.status,
                 totalAmountText = dto.totalAmount,
@@ -31,13 +39,13 @@ internal class OrdersRepositoryImpl @Inject constructor(
             onSuccess = { Result.success(it) },
             onFailure = { e ->
                 when (e) {
-                    is ClientRequestException -> mapPlaceMarketBuyClientException(e)
+                    is ClientRequestException -> mapCreateOrderClientFailure(e)
                     else -> Result.failure(e)
                 }
             },
         )
 
-    private suspend fun mapPlaceMarketBuyClientException(e: ClientRequestException): Result<OrderReceipt> {
+    private suspend fun mapCreateOrderClientFailure(e: ClientRequestException): Result<OrderReceipt> {
         val bodyText = runCatching { e.response.bodyAsText() }.getOrNull().orEmpty()
         val parsed =
             runCatching { ZovJson.decodeFromString(ZovApiErrorBody.serializer(), bodyText) }.getOrNull()
@@ -45,6 +53,12 @@ internal class OrdersRepositoryImpl @Inject constructor(
             "INSUFFICIENT_FUNDS" ->
                 Result.failure(
                     InsufficientFundsForOrderException(
+                        parsed.message?.takeIf { it.isNotBlank() },
+                    ),
+                )
+            "INSUFFICIENT_SECURITIES" ->
+                Result.failure(
+                    InsufficientSecuritiesForOrderException(
                         parsed.message?.takeIf { it.isNotBlank() },
                     ),
                 )

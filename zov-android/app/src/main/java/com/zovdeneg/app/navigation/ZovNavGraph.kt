@@ -5,14 +5,11 @@ import com.zovdeneg.app.di.ZovLocalAuthEntryPoint
 import com.zovdeneg.app.ui.auth.ZovLoginViewModel
 import com.zovdeneg.app.ui.auth.ZovRegisterFlowViewModel
 import com.zovdeneg.app.ui.auth.ZovRegisterStep1ViewModel
-import com.zovdeneg.app.ui.deposit.DepositViewModel
 import com.zovdeneg.app.ui.home.MainHomeViewModel
 import com.zovdeneg.app.ui.profile.ChangePinViewModel
 import com.zovdeneg.app.ui.profile.EditProfileViewModel
 import com.zovdeneg.app.ui.profile.ProfileViewModel
-import com.zovdeneg.app.ui.screens.BuyScreen
 import com.zovdeneg.app.ui.screens.ChangePinScreen
-import com.zovdeneg.app.ui.screens.DepositScreen
 import com.zovdeneg.app.ui.screens.EditProfileScreen
 import com.zovdeneg.app.ui.screens.HistoryTabScreen
 import com.zovdeneg.app.ui.screens.LoginScreen
@@ -27,11 +24,8 @@ import com.zovdeneg.app.ui.screens.RegisterDataScreen
 import com.zovdeneg.app.ui.screens.RegisterPinConfirmScreen
 import com.zovdeneg.app.ui.screens.RegisterPinScreen
 import com.zovdeneg.app.ui.screens.SearchTabScreen
-import com.zovdeneg.app.ui.screens.SecurityDetailScreen
 import com.zovdeneg.app.ui.tabs.ZovHistoryTabViewModel
 import com.zovdeneg.app.ui.tabs.ZovSearchTabViewModel
-import com.zovdeneg.app.ui.trade.BuyViewModel
-import com.zovdeneg.app.ui.trade.SecurityDetailViewModel
 import dagger.hilt.android.EntryPointAccessors
 
 import androidx.compose.foundation.layout.fillMaxSize
@@ -359,49 +353,10 @@ private fun NavGraphBuilder.zovOrdersDestinations(navController: NavHostControll
 
 private fun NavGraphBuilder.zovTradeDestinations(navController: NavHostController) {
     zovOrdersDestinations(navController)
-    composable(ZovRoutes.DEPOSIT) {
-        val depositVm: DepositViewModel = hiltViewModel()
-        DepositScreen(
-            viewModel = depositVm,
-            onBack = { navController.popBackStack() },
-            onAfterBalanceChanged = {
-                navController.notifyPortfolioOrBalanceChangedExternally()
-                navController.popBackStack()
-            },
-        )
-    }
-    composable(
-        ZovRoutes.DETAIL,
-        arguments = listOf(
-            navArgument("securityId") { type = NavType.StringType },
-            navArgument("displayTicker") { type = NavType.StringType },
-        ),
-    ) { _ ->
-        val detailVm: SecurityDetailViewModel = hiltViewModel()
-        SecurityDetailScreen(
-            viewModel = detailVm,
-            onBuy = {
-                val d = detailVm.uiState.value.detail
-                if (d != null) {
-                    navController.navigate(ZovRoutes.buy(d.securityId, d.ticker))
-                }
-            },
-        )
-    }
-    composable(
-        ZovRoutes.BUY,
-        arguments = listOf(
-            navArgument("securityId") { type = NavType.StringType },
-            navArgument("displayTicker") { type = NavType.StringType },
-        ),
-    ) { _ ->
-        val buyVm: BuyViewModel = hiltViewModel()
-        BuyScreen(
-            viewModel = buyVm,
-            onBack = { navController.popBackStack() },
-            onPortfolioChanged = { navController.notifyPortfolioOrBalanceChangedExternally() },
-        )
-    }
+    zovTradeDeposit(navController)
+    zovSecurityDetail(navController)
+    zovSecurityBuy(navController)
+    zovSecuritySell(navController)
 }
 
 private fun NavGraphBuilder.zovProfileAndTradeDestinations(navController: NavHostController) {

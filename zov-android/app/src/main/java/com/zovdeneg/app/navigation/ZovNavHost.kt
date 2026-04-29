@@ -101,24 +101,32 @@ private val bottomBarRoutes =
     mainTabRoutes + ZovRoutes.PROFILE
 
 @Composable
+private fun tradeFlowTopTitle(route: String?, displayTickerArg: String): String? =
+    when (route) {
+        ZovRoutes.BUY -> stringResource(R.string.nav_top_buy_title, displayTickerArg)
+        ZovRoutes.SELL -> stringResource(R.string.nav_top_sell_title, displayTickerArg)
+        else -> null
+    }
+
+@Composable
 internal fun zovTopBarTitle(route: String?, backStack: NavBackStackEntry?): String? {
     val displayTickerArg =
         backStack?.arguments?.getString("displayTicker").orEmpty().replace('_', '/')
-    return when (route) {
-        ZovRoutes.MAIN_HOME -> stringResource(R.string.nav_top_home)
-        ZovRoutes.MAIN_SEARCH -> stringResource(R.string.nav_top_search)
-        ZovRoutes.MAIN_HISTORY -> stringResource(R.string.nav_top_history)
-        ZovRoutes.PROFILE -> stringResource(R.string.nav_top_profile)
-        ZovRoutes.EDIT_PROFILE -> stringResource(R.string.nav_top_edit_profile)
-        ZovRoutes.CHANGE_PIN -> stringResource(R.string.nav_top_change_pin)
-        ZovRoutes.DEPOSIT -> stringResource(R.string.nav_top_deposit)
-        in registerRoutes -> stringResource(R.string.nav_top_sign_up)
-        ZovRoutes.DETAIL -> stringResource(R.string.nav_top_detail_prefix) + displayTickerArg
-        ZovRoutes.BUY -> stringResource(R.string.nav_top_buy_title, displayTickerArg)
-        ZovRoutes.ORDERS_LIST -> stringResource(R.string.nav_top_orders)
-        ZovRoutes.ORDER_DETAIL -> stringResource(R.string.nav_top_order_detail)
-        else -> null
-    }
+    return tradeFlowTopTitle(route, displayTickerArg)
+        ?: when (route) {
+            ZovRoutes.MAIN_HOME -> stringResource(R.string.nav_top_home)
+            ZovRoutes.MAIN_SEARCH -> stringResource(R.string.nav_top_search)
+            ZovRoutes.MAIN_HISTORY -> stringResource(R.string.nav_top_history)
+            ZovRoutes.PROFILE -> stringResource(R.string.nav_top_profile)
+            ZovRoutes.EDIT_PROFILE -> stringResource(R.string.nav_top_edit_profile)
+            ZovRoutes.CHANGE_PIN -> stringResource(R.string.nav_top_change_pin)
+            ZovRoutes.DEPOSIT -> stringResource(R.string.nav_top_deposit)
+            in registerRoutes -> stringResource(R.string.nav_top_sign_up)
+            ZovRoutes.DETAIL -> stringResource(R.string.nav_top_detail_prefix) + displayTickerArg
+            ZovRoutes.ORDERS_LIST -> stringResource(R.string.nav_top_orders)
+            ZovRoutes.ORDER_DETAIL -> stringResource(R.string.nav_top_order_detail)
+            else -> null
+        }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

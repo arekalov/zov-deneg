@@ -96,18 +96,30 @@ private val previewSecurityDetail =
         orderBook = previewSecurityOrderBook,
     )
 
+private data class SecurityDetailScreenCallbacks(
+    val onRetry: () -> Unit,
+    val onBuy: () -> Unit,
+    val onSell: () -> Unit,
+    val onSelectChartRange: (SecurityChartRange) -> Unit,
+    val onOrderBookTabSelected: () -> Unit,
+)
+
 @Composable
 fun SecurityDetailScreen(
     viewModel: SecurityDetailViewModel,
     onBuy: () -> Unit,
+    onSell: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     SecurityDetailScreenContent(
         uiState = state,
-        onRetry = viewModel::retry,
-        onBuy = onBuy,
-        onSelectChartRange = viewModel::selectChartRange,
-        onOrderBookTabSelected = viewModel::loadOrderBookIfNeeded,
+        callbacks = SecurityDetailScreenCallbacks(
+            onRetry = viewModel::retry,
+            onBuy = onBuy,
+            onSell = onSell,
+            onSelectChartRange = viewModel::selectChartRange,
+            onOrderBookTabSelected = viewModel::loadOrderBookIfNeeded,
+        ),
     )
 }
 
@@ -144,11 +156,51 @@ private fun SecurityDetailTabs(selectedTab: Int, onSelectTab: (Int) -> Unit) {
 }
 
 @Composable
+private fun SecurityDetailBuySellActionsRow(
+    detail: SecurityDetail,
+    onBuy: () -> Unit,
+    onSell: () -> Unit,
+) {
+    val c = ZovTheme.colors
+    val t = ZovTheme.text
+    if (detail.canSellAtLeastOneLot) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(ZovItemSpacing),
+        ) {
+            OutlinedButton(
+                onClick = onSell,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = c.negative),
+            ) {
+                Text(stringResource(R.string.action_sell), style = t.bodyMed14)
+            }
+            Button(
+                onClick = onBuy,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = c.primary,
+                    contentColor = c.onPrimary,
+                ),
+            ) { Text(stringResource(R.string.action_buy), style = t.bodyMed14) }
+        }
+    } else {
+        Button(
+            onClick = onBuy,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = c.primary,
+                contentColor = c.onPrimary,
+            ),
+        ) { Text(stringResource(R.string.action_buy), style = t.bodyMed14) }
+    }
+}
+
+@Composable
 private fun SecurityDetailLoadedSection(
     tab: Int,
     uiState: SecurityDetailUiState,
-    onBuy: () -> Unit,
-    onSelectChartRange: (SecurityChartRange) -> Unit,
+    callbacks: SecurityDetailScreenCallbacks,
 ) {
     val detail = requireNotNull(uiState.detail)
     val c = ZovTheme.colors
@@ -166,7 +218,7 @@ private fun SecurityDetailLoadedSection(
             chartFailed = uiState.chartFailed,
             priceHistory = uiState.priceHistory,
             chartRange = uiState.chartRange,
-            onSelectChartRange = onSelectChartRange,
+            onSelectChartRange = callbacks.onSelectChartRange,
         )
         SecurityDetailPortfolioBanner(detail)
         SecurityDetailAboutCompanyCard(detail)
@@ -182,30 +234,24 @@ private fun SecurityDetailLoadedSection(
             else -> SecurityDetailOrderBookTab(detail = detail)
         }
     }
-    Button(
-        onClick = onBuy,
-        modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = c.primary,
-            contentColor = c.onPrimary,
-        ),
-    ) { Text(stringResource(R.string.action_buy), style = t.bodyMed14) }
+    SecurityDetailBuySellActionsRow(
+        detail = detail,
+        onBuy = callbacks.onBuy,
+        onSell = callbacks.onSell,
+    )
 }
 
 @Composable
 private fun SecurityDetailScreenContent(
     uiState: SecurityDetailUiState,
-    onRetry: () -> Unit,
-    onBuy: () -> Unit,
-    onSelectChartRange: (SecurityChartRange) -> Unit,
-    onOrderBookTabSelected: () -> Unit,
+    callbacks: SecurityDetailScreenCallbacks,
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
     var tab by remember { mutableIntStateOf(0) }
     LaunchedEffect(tab) {
         if (tab == 1) {
-            onOrderBookTabSelected()
+            callbacks.onOrderBookTabSelected()
         }
     }
     ZovScrollScreen {
@@ -219,8 +265,7 @@ private fun SecurityDetailScreenContent(
                 SecurityDetailLoadedSection(
                     tab = tab,
                     uiState = uiState,
-                    onBuy = onBuy,
-                    onSelectChartRange = onSelectChartRange,
+                    callbacks = callbacks,
                 )
             }
             uiState.detailFailed -> {
@@ -234,9 +279,9 @@ private fun SecurityDetailScreenContent(
                     chartFailed = uiState.chartFailed,
                     priceHistory = uiState.priceHistory,
                     chartRange = uiState.chartRange,
-                    onSelectChartRange = onSelectChartRange,
+                    onSelectChartRange = callbacks.onSelectChartRange,
                 )
-                Button(onClick = onRetry) {
+                Button(onClick = callbacks.onRetry) {
                     Text(stringResource(R.string.action_retry), style = t.bodyMed14)
                 }
             }
@@ -245,9 +290,10 @@ private fun SecurityDetailScreenContent(
 }
 
 @Composable
-private fun BuyLotsRow(
+internal fun MarketOrderLotsRow(
     lots: Int,
     isSubmitting: Boolean,
+    maxLots: Int? = null,
     onBump: (Int) -> Unit,
 ) {
     val c = ZovTheme.colors
@@ -273,7 +319,7 @@ private fun BuyLotsRow(
         )
         OutlinedButton(
             onClick = { onBump(1) },
-            enabled = !isSubmitting,
+            enabled = !isSubmitting && (maxLots == null || lots < maxLots),
         ) {
             Text("+", style = t.titleSemi20)
         }
@@ -377,7 +423,7 @@ private fun BuyScreenOrderContent(
                 color = c.onSurface,
             )
             Text(stringResource(R.string.buy_lots_label), style = t.labelMed12, color = c.onSurfaceVariant)
-            BuyLotsRow(
+            MarketOrderLotsRow(
                 lots = state.lots,
                 isSubmitting = state.isSubmitting,
                 onBump = viewModel::bumpLots,
@@ -489,10 +535,13 @@ private fun DetailPreviewLight() {
                 detail = previewSecurityDetail,
                 detailFailed = false,
             ),
-            onRetry = {},
-            onBuy = {},
-            onSelectChartRange = {},
-            onOrderBookTabSelected = {},
+            callbacks = SecurityDetailScreenCallbacks(
+                onRetry = {},
+                onBuy = {},
+                onSell = {},
+                onSelectChartRange = {},
+                onOrderBookTabSelected = {},
+            ),
         )
     }
 }
@@ -507,10 +556,13 @@ private fun DetailPreviewDark() {
                 detail = previewSecurityDetail,
                 detailFailed = false,
             ),
-            onRetry = {},
-            onBuy = {},
-            onSelectChartRange = {},
-            onOrderBookTabSelected = {},
+            callbacks = SecurityDetailScreenCallbacks(
+                onRetry = {},
+                onBuy = {},
+                onSell = {},
+                onSelectChartRange = {},
+                onOrderBookTabSelected = {},
+            ),
         )
     }
 }

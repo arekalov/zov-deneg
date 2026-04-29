@@ -16,6 +16,7 @@
     <string name="nav_top_sign_up">Регистрация</string>
     <string name="nav_top_detail_prefix">Детали · </string>
     <string name="nav_top_buy_title">Покупка · %1$s</string>
+    <string name="nav_top_sell_title">Продажа · %1$s</string>
     <string name="nav_top_orders">Заявки</string>
     <string name="nav_top_order_detail">Заявка</string>
 
@@ -146,8 +147,10 @@
     <string name="security_lot_value_format">%1$d шт.</string>
     <string name="security_portfolio_badge">В портфеле: %1$d шт. · ср. %2$s</string>
     <string name="action_buy">Купить</string>
+    <string name="action_sell">Продать</string>
 
     <string name="buy_title_format">Купить %1$s</string>
+    <string name="sell_title_format">Продать %1$s</string>
     <string name="buy_lots_label">Количество лотов</string>
     <string name="action_place_order">Разместить заявку</string>
 
@@ -189,6 +192,10 @@
     <string name="order_cancel_failed">Не удалось отменить заявку</string>
     <string name="order_cancelled_snackbar">Заявка отменена</string>
     <string name="buy_order_hint">К заявке · %1$d шт. · цена лота %2$s</string>
+    <string name="sell_order_hint">К продаже · %1$d шт. · цена лота %2$s</string>
+    <string name="sell_precheck_cannot_lot">Недостаточно бумаг в портфеле для продажи минимум одного лота.</string>
+    <string name="sell_error_insufficient_securities">Недостаточно бумаг для сделки.</string>
+    <string name="sell_error_insufficient_securities_reason">Недостаточно бумаг: %1$s</string>
     <string name="error_submit_order">Не удалось разместить заявку</string>
     <string name="buy_precheck_insufficient_balance">По стакану (лучшая цена покупки) на эту заявку не хватает средств на счёте. Уменьшите число лотов или пополните брокерский счёт.</string>
     <string name="buy_error_insufficient_funds">Недостаточно средств для сделки.</string>
