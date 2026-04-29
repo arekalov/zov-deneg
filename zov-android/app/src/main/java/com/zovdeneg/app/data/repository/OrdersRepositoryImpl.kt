@@ -5,6 +5,7 @@ import com.zovdeneg.app.data.remote.api.ZovOrdersApi
 import com.zovdeneg.app.data.remote.dto.OrderResponseDto
 import com.zovdeneg.app.data.remote.dto.ZovApiErrorBody
 import com.zovdeneg.app.domain.orders.InsufficientFundsForOrderException
+import com.zovdeneg.app.domain.orders.InsufficientSecuritiesForOrderException
 import com.zovdeneg.app.domain.orders.OrderReceipt
 import com.zovdeneg.app.domain.orders.OrdersRepository
 import com.zovdeneg.app.domain.orders.UserOrder

@@ -1,7 +1,7 @@
 package com.zovdeneg.app.ui.screens
 
 import com.zovdeneg.app.R
-import com.zovdeneg.app.ui.auth.RegisterStep1UiState
+import com.zovdeneg.app.ui.auth.canSubmitStep1
 import com.zovdeneg.app.ui.auth.ZovLoginViewModel
 import com.zovdeneg.app.ui.auth.ZovRegisterFlowViewModel
 import com.zovdeneg.app.ui.auth.ZovRegisterStep1ViewModel
@@ -366,46 +366,6 @@ private fun RegisterProgress(activeStep: Int) {
 }
 
 @Composable
-private fun RegisterStep1TextFields(
-    state: RegisterStep1UiState,
-    viewModel: ZovRegisterStep1ViewModel,
-) {
-    OutlinedTextField(
-        value = state.firstName,
-        onValueChange = viewModel::setFirstName,
-        label = { Text(stringResource(R.string.field_first_name)) },
-        modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = state.lastName,
-        onValueChange = viewModel::setLastName,
-        label = { Text(stringResource(R.string.field_last_name)) },
-        modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = state.phone,
-        onValueChange = viewModel::setPhone,
-        label = { Text(stringResource(R.string.field_phone)) },
-        modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = state.email,
-        onValueChange = viewModel::setEmail,
-        label = { Text(stringResource(R.string.field_email)) },
-        modifier = Modifier.fillMaxWidth(),
-    )
-    ZovAuthPasswordOutlinedField(
-        state = ZovAuthPasswordFieldState(
-            value = state.password,
-            onValueChange = viewModel::setPassword,
-        ),
-        label = { Text(stringResource(R.string.field_password)) },
-        modifier = Modifier.fillMaxWidth(),
-        supportingText = { Text(stringResource(R.string.hint_password_min)) },
-    )
-}
-
-@Composable
 fun RegisterDataScreen(
     viewModel: ZovRegisterStep1ViewModel,
     onNext: () -> Unit,
@@ -451,7 +411,7 @@ fun RegisterDataScreen(
         )
         Button(
             onClick = { viewModel.submit(onNext) },
-            enabled = !state.isSubmitting,
+            enabled = state.canSubmitStep1() && !state.isSubmitting,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = c.onPrimary),
         ) { Text(stringResource(R.string.action_continue), style = t.bodyMed14) }

@@ -208,7 +208,7 @@ private fun MainHomeHoldingsSection(
                     delta = h.deltaText,
                     deltaPositive = h.deltaPositive,
                     ticker = h.ticker,
-                    isBond = h.securityTypeKey == "bond",
+                    securityTypeKey = h.securityTypeKey,
                 ),
             ) { onOpenSecurity(h.detailNavKey, h.ticker) }
         }
@@ -227,9 +227,20 @@ internal data class AssetRowData(
     val delta: String,
     val deltaPositive: Boolean,
     val ticker: String,
-    /** Облигации: в карточке только полное название ([subtitle]), без тикера и второй строки. */
-    val isBond: Boolean = false,
+    /** Как в OpenAPI `Security.type`: `stock`, `bond`, `etf`. */
+    val securityTypeKey: String = "stock",
 )
+
+@Composable
+private fun securityTypeShortLabel(typeKey: String): String {
+    val resId =
+        when (typeKey) {
+            "bond" -> R.string.security_type_short_bond
+            "etf" -> R.string.security_type_short_etf
+            else -> R.string.security_type_short_stock
+        }
+    return stringResource(resId)
+}
 
 @Composable
 internal fun AssetRow(
@@ -238,18 +249,33 @@ internal fun AssetRow(
 ) {
     val c = ZovTheme.colors
     val t = ZovTheme.text
+    val typeLabel = securityTypeShortLabel(data.securityTypeKey)
+    val isBond = data.securityTypeKey == "bond"
     ZovOutlinedRow(onClick = onClick) {
-        if (data.isBond) {
-            Text(
-                text = data.subtitle,
-                modifier = Modifier.weight(1f),
-                style = t.sectionSemi16,
-                color = c.onSurface,
-            )
+        if (isBond) {
+            Column(
+                Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(ZovHalfUnit),
+            ) {
+                Text(
+                    text = typeLabel,
+                    style = t.labelReg12,
+                    color = c.onSurfaceVariant,
+                )
+                Text(
+                    text = data.subtitle,
+                    style = t.sectionSemi16,
+                    color = c.onSurface,
+                )
+            }
         } else {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ZovHalfUnit)) {
                 Text(data.ticker, style = t.sectionSemi16, color = c.onSurface)
-                Text(data.subtitle, style = t.labelReg12, color = c.onSurfaceVariant)
+                Text(
+                    text = stringResource(R.string.asset_row_subtitle_with_type, typeLabel, data.subtitle),
+                    style = t.labelReg12,
+                    color = c.onSurfaceVariant,
+                )
             }
         }
         Column(

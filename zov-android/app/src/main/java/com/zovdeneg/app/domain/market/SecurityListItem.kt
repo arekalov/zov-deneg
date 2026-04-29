@@ -16,3 +16,11 @@ enum class SecurityKind {
     BOND,
     ETF,
 }
+
+/** Ключ типа как в портфеле / OpenAPI (`stock`, `bond`, `etf`). */
+fun SecurityKind.toPortfolioTypeKey(): String =
+    when (this) {
+        SecurityKind.STOCK -> "stock"
+        SecurityKind.BOND -> "bond"
+        SecurityKind.ETF -> "etf"
+    }

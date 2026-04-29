@@ -19,11 +19,21 @@ internal class ZovOrdersApi @Inject constructor(
     private val client: HttpClient,
 ) {
     suspend fun createMarketBuy(securityId: String, quantity: Int): OrderResponseDto =
+        createMarketOrder(securityId, side = "buy", quantity = quantity)
+
+    suspend fun createMarketSell(securityId: String, quantity: Int): OrderResponseDto =
+        createMarketOrder(securityId, side = "sell", quantity = quantity)
+
+    private suspend fun createMarketOrder(
+        securityId: String,
+        side: String,
+        quantity: Int,
+    ): OrderResponseDto =
         client.post(ZovApiPaths.ORDERS) {
             setBody(
                 CreateOrderRequestDto(
                     securityId = securityId,
-                    side = "buy",
+                    side = side,
                     quantity = quantity,
                 ),
             )
