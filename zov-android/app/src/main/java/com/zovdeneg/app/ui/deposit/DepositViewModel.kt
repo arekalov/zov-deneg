@@ -1,6 +1,5 @@
 package com.zovdeneg.app.ui.deposit
 
-import com.zovdeneg.app.data.format.ZovRubDisplay
 import com.zovdeneg.app.domain.balance.BrokerageBalance
 import com.zovdeneg.app.domain.usecase.LoadBrokerageBalanceUseCase
 import com.zovdeneg.app.domain.usecase.SubmitBrokerageDepositUseCase
@@ -15,21 +14,33 @@ import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
+import java.math.BigDecimal
+import java.math.RoundingMode
+
 import javax.inject.Inject
 
 internal val depositAmountDecimals = listOf("1000.00", "5000.00", "10000.00", "50000.00")
 
-/** Сумма вывода в одном запросе (decimal string для API). */
-internal const val WITHDRAW_SELECTED_AMOUNT_DECIMAL: String = "1000.00"
+private const val MAX_AMOUNT_DIGITS = 15
+
+private fun chipIndexToAmountDigits(index: Int): String =
+    depositAmountDecimals[index.coerceIn(0, depositAmountDecimals.lastIndex)].substringBefore('.')
+
+private fun digitsOnlyFiltered(input: String): String =
+    input.filter { it.isDigit() }.take(MAX_AMOUNT_DIGITS)
+
+/** Целые рубли (строка из цифр) → строка для API (`1234.00`). `null`, если пусто или не положительно. */
+private fun wholeRublesDigitsToApiDecimal(digits: String): String? {
+    val d = digits.filter { it.isDigit() }
+    if (d.isEmpty()) return null
+    val bd = runCatching { BigDecimal(d) }.getOrNull() ?: return null
+    if (bd <= BigDecimal.ZERO) return null
+    return bd.setScale(2, RoundingMode.HALF_UP).toPlainString()
+}
 
 enum class DepositSheetSuccess {
     DEPOSIT,
     WITHDRAW,
-}
-
-private fun depositLineForChipIndex(index: Int): String {
-    val i = index.coerceIn(0, depositAmountDecimals.lastIndex)
-    return ZovRubDisplay.formatApiDecimalToRubLine(depositAmountDecimals[i])
 }
 
 data class DepositUiState(
@@ -39,12 +50,16 @@ data class DepositUiState(
     val isWorking: Boolean = false,
     val actionFailed: Boolean = false,
     val selectedDepositChipIndex: Int = 2,
-    /** Отображаемая сумма выбранного чипа пополнения (из API не приходит отдельно). */
-    val selectedDepositAmountLine: String = depositLineForChipIndex(2),
-    /** Сумма запроса вывода (см. [WITHDRAW_SELECTED_AMOUNT_DECIMAL]). */
-    val withdrawAmountLine: String = ZovRubDisplay.formatApiDecimalToRubLine(WITHDRAW_SELECTED_AMOUNT_DECIMAL),
+    /** Сумма пополнения: только цифры, целые рубли (например `10000`). */
+    val depositAmountDigits: String = chipIndexToAmountDigits(2),
+    /** Сумма вывода: только цифры, целые рубли. */
+    val withdrawAmountDigits: String = "1000",
     val pendingSuccess: DepositSheetSuccess? = null,
-)
+) {
+    val canSubmitDepositAmount: Boolean get() = wholeRublesDigitsToApiDecimal(depositAmountDigits) != null
+
+    val canSubmitWithdrawAmount: Boolean get() = wholeRublesDigitsToApiDecimal(withdrawAmountDigits) != null
+}
 
 @HiltViewModel
 class DepositViewModel @Inject constructor(
@@ -83,24 +98,36 @@ class DepositViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 selectedDepositChipIndex = index,
-                selectedDepositAmountLine = depositLineForChipIndex(index),
+                depositAmountDigits = chipIndexToAmountDigits(index),
                 actionFailed = false,
             )
         }
     }
 
-    fun depositSelectedChipAmount() {
-        val amount =
-            depositAmountDecimals[
-                _uiState.value.selectedDepositChipIndex.coerceIn(
-                    0,
-                    depositAmountDecimals.lastIndex,
-                ),
-            ]
+    fun setDepositAmountDigits(value: String) {
+        _uiState.update {
+            it.copy(
+                depositAmountDigits = digitsOnlyFiltered(value),
+                actionFailed = false,
+            )
+        }
+    }
+
+    fun setWithdrawAmountDigits(value: String) {
+        _uiState.update {
+            it.copy(
+                withdrawAmountDigits = digitsOnlyFiltered(value),
+                actionFailed = false,
+            )
+        }
+    }
+
+    fun depositWithEnteredAmount() {
+        val amount = wholeRublesDigitsToApiDecimal(_uiState.value.depositAmountDigits) ?: return
         depositSelectedAmount(amount)
     }
 
-    fun depositSelectedAmount(amountDecimal: String) {
+    private fun depositSelectedAmount(amountDecimal: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isWorking = true, actionFailed = false) }
             submitBrokerageDeposit(amountDecimal).fold(
@@ -118,10 +145,11 @@ class DepositViewModel @Inject constructor(
         }
     }
 
-    fun withdrawDemoAmount() {
+    fun withdrawWithEnteredAmount() {
+        val amount = wholeRublesDigitsToApiDecimal(_uiState.value.withdrawAmountDigits) ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isWorking = true, actionFailed = false) }
-            submitBrokerageWithdraw(WITHDRAW_SELECTED_AMOUNT_DECIMAL).fold(
+            submitBrokerageWithdraw(amount).fold(
                 onSuccess = { bal ->
                     _uiState.update {
                         it.copy(

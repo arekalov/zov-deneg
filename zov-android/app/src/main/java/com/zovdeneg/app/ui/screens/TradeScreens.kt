@@ -1,18 +1,16 @@
 package com.zovdeneg.app.ui.screens
 
 import com.zovdeneg.app.R
-import com.zovdeneg.app.domain.balance.BrokerageBalance
 import com.zovdeneg.app.domain.market.SecurityDetail
 import com.zovdeneg.app.domain.market.SecurityOrderBook
 import com.zovdeneg.app.domain.market.SecurityOrderBookRow
 import com.zovdeneg.app.ui.common.ZovFieldInnerPadding
-import com.zovdeneg.app.ui.common.ZovHorizontalPadding
 import com.zovdeneg.app.ui.common.ZovItemSpacing
 import com.zovdeneg.app.ui.common.ZovShapeMedium
 import com.zovdeneg.app.ui.components.LocalZovSnackbarHostState
 import com.zovdeneg.app.ui.components.LocalZovSnackbarScope
+import com.zovdeneg.app.ui.deposit.DepositScreenLoadedContent
 import com.zovdeneg.app.ui.deposit.DepositSuccessSideEffect
-import com.zovdeneg.app.ui.components.ZovFilterChip
 import com.zovdeneg.app.ui.components.ZovCenteredCircularProgress
 import com.zovdeneg.app.ui.components.ZovScrollScreen
 import com.zovdeneg.app.ui.deposit.DepositUiState
@@ -44,7 +42,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,6 +53,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
+import kotlinx.coroutines.launch
 
 private val previewSecurityOrderBook =
     SecurityOrderBook(
@@ -288,10 +287,11 @@ fun BuyScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = LocalZovSnackbarHostState.current
+    val snackbarScope = LocalZovSnackbarScope.current
     val successMsg = stringResource(R.string.order_submitted)
     LaunchedEffect(state.orderJustPlaced) {
         if (!state.orderJustPlaced) return@LaunchedEffect
-        snackbarHostState.showSnackbar(successMsg)
+        snackbarScope.launch { snackbarHostState.showSnackbar(successMsg) }
         onPortfolioChanged()
         viewModel.acknowledgeOrderPlaced()
         onBack()
@@ -361,111 +361,6 @@ private fun BuyScreenOrderContent(
     }
 }
 
-private data class DepositTabModel(
-    val chipResIds: List<Int>,
-    val amountChip: Int,
-    val balance: BrokerageBalance?,
-    val isWorking: Boolean,
-    val actionFailed: Boolean,
-    val selectedDepositAmountLine: String,
-)
-
-@Composable
-private fun DepositTabContent(
-    model: DepositTabModel,
-    onAmountChip: (Int) -> Unit,
-    onConfirmDeposit: () -> Unit,
-) {
-    val c = ZovTheme.colors
-    val t = ZovTheme.text
-    val balance = model.balance
-    if (balance != null) {
-        Text(
-            stringResource(R.string.balance_available, balance.availableText),
-            style = t.bodyReg14,
-            color = c.onSurface,
-        )
-        Text(
-            stringResource(R.string.balance_blocked, balance.blockedText),
-            style = t.subtitleReg13,
-            color = c.onSurfaceVariant,
-        )
-        Text(
-            stringResource(R.string.balance_total, balance.totalText),
-            style = t.subtitleReg13,
-            color = c.onSurfaceVariant,
-        )
-    }
-    Text(stringResource(R.string.deposit_amount_label), style = t.bodyMed14, color = c.onSurface)
-    Text(
-        model.selectedDepositAmountLine,
-        style = t.pinAmount20,
-        color = c.onSurface,
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surfaceContainer, RoundedCornerShape(ZovShapeMedium))
-            .padding(ZovHorizontalPadding),
-    )
-    Row(horizontalArrangement = Arrangement.spacedBy(ZovItemSpacing)) {
-        model.chipResIds.forEachIndexed { i, resId ->
-            ZovFilterChip(
-                label = stringResource(resId),
-                selected = model.amountChip == i,
-                onClick = { onAmountChip(i) },
-            )
-        }
-    }
-    if (model.actionFailed) {
-        Text(stringResource(R.string.error_submit_deposit), style = t.bodyReg14, color = c.negative)
-    }
-    Button(
-        onClick = onConfirmDeposit,
-        enabled = !model.isWorking,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(stringResource(R.string.deposit_action))
-    }
-}
-
-@Composable
-private fun WithdrawTabContent(
-    balance: BrokerageBalance?,
-    withdrawAmountLine: String,
-    isWorking: Boolean,
-    actionFailed: Boolean,
-    onWithdraw: () -> Unit,
-) {
-    val c = ZovTheme.colors
-    val t = ZovTheme.text
-    if (balance != null) {
-        Text(
-            stringResource(R.string.balance_available, balance.availableText),
-            style = t.bodyReg14,
-            color = c.onSurface,
-        )
-    }
-    Text(stringResource(R.string.withdraw_amount_label), style = t.bodyMed14, color = c.onSurface)
-    Text(
-        withdrawAmountLine,
-        style = t.pinAmount20,
-        color = c.onSurface,
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surfaceContainer, RoundedCornerShape(ZovShapeMedium))
-            .padding(ZovHorizontalPadding),
-    )
-    if (actionFailed) {
-        Text(
-            stringResource(R.string.error_submit_withdraw),
-            style = t.bodyReg14,
-            color = c.negative,
-        )
-    }
-    Button(onClick = onWithdraw, enabled = !isWorking, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.withdraw_action))
-    }
-}
-
 @Composable
 fun DepositScreen(
     viewModel: DepositViewModel,
@@ -529,31 +424,13 @@ private fun DepositScreenBody(
             Button(onClick = { viewModel.refresh() }) { Text(stringResource(R.string.action_retry)) }
         }
         else -> {
-            if (tab == 0) {
-                DepositTabContent(
-                    model = DepositTabModel(
-                        chipResIds = chipResIds,
-                        amountChip = state.selectedDepositChipIndex,
-                        balance = state.balance,
-                        isWorking = state.isWorking,
-                        actionFailed = state.actionFailed,
-                        selectedDepositAmountLine = state.selectedDepositAmountLine,
-                    ),
-                    onAmountChip = viewModel::selectDepositChip,
-                    onConfirmDeposit = viewModel::depositSelectedChipAmount,
-                )
-            } else {
-                WithdrawTabContent(
-                    balance = state.balance,
-                    withdrawAmountLine = state.withdrawAmountLine,
-                    isWorking = state.isWorking,
-                    actionFailed = state.actionFailed,
-                    onWithdraw = viewModel::withdrawDemoAmount,
-                )
-            }
-            TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.action_back))
-            }
+            DepositScreenLoadedContent(
+                state = state,
+                tab = tab,
+                chipResIds = chipResIds,
+                viewModel = viewModel,
+                onBack = onBack,
+            )
         }
     }
 }

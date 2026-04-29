@@ -149,6 +149,7 @@
     <string name="deposit_tab_deposit">Пополнение</string>
     <string name="deposit_tab_withdraw">Вывод</string>
     <string name="deposit_amount_label">Сумма пополнения</string>
+    <string name="amount_digits_placeholder">Только цифры, целые рубли</string>
     <string name="deposit_chip_1000">1 000 ₽</string>
     <string name="deposit_chip_5000">5 000 ₽</string>
     <string name="deposit_chip_10000">10 000 ₽</string>
