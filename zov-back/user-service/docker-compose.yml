@@ -27,6 +27,12 @@ services:
     container_name: user-service-app
     env_file:
       - .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_HOST: ${DB_HOST}
+      POSTGRES_PORT: ${DB_PORT}
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:
